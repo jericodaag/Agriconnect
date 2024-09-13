@@ -46,8 +46,8 @@ const DeactiveSellers = () => {
                 <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>
                     <img className='w-[45px] h-[45px]' src={`http://localhost:3000/images/category/${d}.jpg`} alt="" />
                 </td>
-                <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>Kazi Ariyan </td>
-                <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>ariyan@gmail.com</td>
+                <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>Jerico Daag </td>
+                <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>daageco@gmail.com</td>
                 <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>
                     <span>Pending</span> </td>
 

@@ -16,7 +16,7 @@ const Payments = () => {
         return (
         <div style={style} className='flex text-sm text-white font-medium'>
         <div className='w-[25%] p-2 whitespace-nowrap'>{index + 1}</div>
-        <div className='w-[25%] p-2 whitespace-nowrap'>$3434</div>
+        <div className='w-[25%] p-2 whitespace-nowrap'>₱3434</div>
         <div className='w-[25%] p-2 whitespace-nowrap'>
             <span className='py-[1px] px-[5px] bg-slate-300 text-blue-500 rounded-md text-sm'>Pending</span>
          </div>
@@ -34,7 +34,7 @@ const Payments = () => {
                 
                 <div className='flex justify-between items-center p-5 bg-[#fae8e8] rounded-md gap-3'>
                     <div className='flex flex-col justify-start items-start text-[#5c5a5a]'>
-                        <h2 className='text-2xl font-bold'>$3434</h2>
+                        <h2 className='text-2xl font-bold'>₱3434</h2>
                         <span className='text-sm font-bold'>Total Sales</span>
                     </div>
 
@@ -46,7 +46,7 @@ const Payments = () => {
 
                 <div className='flex justify-between items-center p-5 bg-[#fde2ff] rounded-md gap-3'>
                     <div className='flex flex-col justify-start items-start text-[#5c5a5a]'>
-                        <h2 className='text-2xl font-bold'>$150</h2>
+                        <h2 className='text-2xl font-bold'>₱150</h2>
                         <span className='text-sm font-bold'>Available Amount</span>
                     </div>
 
@@ -58,7 +58,7 @@ const Payments = () => {
 
                 <div className='flex justify-between items-center p-5 bg-[#e9feea] rounded-md gap-3'>
                     <div className='flex flex-col justify-start items-start text-[#5c5a5a]'>
-                        <h2 className='text-2xl font-bold'>$100</h2>
+                        <h2 className='text-2xl font-bold'>₱100</h2>
                         <span className='text-sm font-bold'>WithDrawal Amount</span>
                     </div>
 
@@ -70,7 +70,7 @@ const Payments = () => {
 
                 <div className='flex justify-between items-center p-5 bg-[#ecebff] rounded-md gap-3'>
                     <div className='flex flex-col justify-start items-start text-[#5c5a5a]'>
-                        <h2 className='text-2xl font-bold'>$0</h2>
+                        <h2 className='text-2xl font-bold'>₱0</h2>
                         <span className='text-sm font-bold'>Pending Amount</span>
                     </div>
 

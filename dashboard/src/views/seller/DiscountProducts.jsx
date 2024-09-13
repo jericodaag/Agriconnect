@@ -44,7 +44,7 @@ const DiscountProducts = () => {
                 <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>Men Full Sleeve</td>
                 <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>Tshirt</td>
                 <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>Veirdo </td>
-                <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>$232</td>
+                <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>₱232</td>
                 <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>10%</td>
                 <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>20</td>
                  

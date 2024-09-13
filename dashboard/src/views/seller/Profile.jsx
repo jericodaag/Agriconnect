@@ -154,7 +154,7 @@ const Profile = () => {
                     <span>{ userInfo.shopInfo?.shopName }</span> 
                 </div>
                 <div className='flex gap-2'>
-                    <span>Divission : </span>
+                    <span>Division : </span>
                     <span>{ userInfo.shopInfo?.division }</span> 
                 </div>
                 <div className='flex gap-2'>

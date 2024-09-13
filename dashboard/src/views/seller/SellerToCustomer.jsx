@@ -27,7 +27,7 @@ const SellerToCustomer = () => {
 
         <div className='flex justify-center items-start flex-col w-full'>
             <div className='flex justify-between items-center w-full'>
-                <h2 className='text-base font-semibold'>Kazi Ariyan</h2>
+                <h2 className='text-base font-semibold'>Jerico Daag</h2>
 
             </div> 
         </div> 
@@ -42,7 +42,7 @@ const SellerToCustomer = () => {
 
         <div className='flex justify-center items-start flex-col w-full'>
             <div className='flex justify-between items-center w-full'>
-                <h2 className='text-base font-semibold'>Jhon</h2>
+                <h2 className='text-base font-semibold'>Mark</h2>
 
             </div> 
         </div> 
@@ -57,7 +57,7 @@ const SellerToCustomer = () => {
 
         <div className='flex justify-center items-start flex-col w-full'>
             <div className='flex justify-between items-center w-full'>
-                <h2 className='text-base font-semibold'>Raju</h2>
+                <h2 className='text-base font-semibold'>Cristan</h2>
 
             </div> 
         </div> 
@@ -75,7 +75,7 @@ const SellerToCustomer = () => {
          <img className='w-[45px] h-[45px] border-green-500 border-2 max-w-[45px] p-[2px] rounded-full' src="http://localhost:3000/images/demo.jpg" alt="" />
          <div className='w-[10px] h-[10px] bg-green-500 rounded-full absolute right-0 bottom-0'></div>
         </div>
-        <h2 className='text-base text-white font-semibold'>Kazi</h2>
+        <h2 className='text-base text-white font-semibold'>Jerico</h2>
 
                 </div>
             }

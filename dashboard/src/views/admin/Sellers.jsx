@@ -45,15 +45,15 @@ const Sellers = () => {
                 <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>
                     <img className='w-[45px] h-[45px]' src={`http://localhost:3000/images/category/${d}.jpg`} alt="" />
                 </td>
-                <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>Kazi Ariyan </td>
+                <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>Jerico Daag </td>
                 <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>Easy Shop</td>
                 <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>
                     <span>Pending</span> </td>
                 <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>ariyan@gmail.com </td>
 
-                <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>Dhaka </td>
+                <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>Angeles </td>
 
-                <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>Paltan </td>
+                <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>Sto Domingo </td>
                  
                 <td scope='row' className='py-1 px-4 font-medium whitespace-nowrap'>
                     <div className='flex justify-start items-center gap-4'>

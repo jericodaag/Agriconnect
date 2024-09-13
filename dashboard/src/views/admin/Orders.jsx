@@ -41,7 +41,7 @@ const Orders = () => {
  <div className='text-[#d0d2d6] '>
 <div className=' flex justify-between items-start border-b border-slate-700'>
     <div className='py-3 w-[25%] font-medium whitespace-nowrap'>#34343</div>
-    <div className='py-3 w-[13%] font-medium'>$654</div>
+    <div className='py-3 w-[13%] font-medium'>₱654</div>
     <div className='py-3 w-[18%] font-medium'>Pending</div>
     <div className='py-3 w-[18%] font-medium'>Pending</div>
     <div className='py-3 w-[18%] font-medium'>
@@ -73,7 +73,7 @@ const Orders = () => {
     <div className='text-[#d0d2d6] '>
 <div className=' flex justify-between items-start border-b border-slate-700'>
     <div className='py-3 w-[25%] font-medium whitespace-nowrap'>#34343</div>
-    <div className='py-3 w-[13%] font-medium'>$654</div>
+    <div className='py-3 w-[13%] font-medium'>₱654</div>
     <div className='py-3 w-[18%] font-medium'>Pending</div>
     <div className='py-3 w-[18%] font-medium'>Pending</div>
     <div className='py-3 w-[18%] font-medium'>
@@ -107,7 +107,7 @@ const Orders = () => {
     <div className='text-[#d0d2d6] '>
 <div className=' flex justify-between items-start border-b border-slate-700'>
     <div className='py-3 w-[25%] font-medium whitespace-nowrap'>#34343</div>
-    <div className='py-3 w-[13%] font-medium'>$654</div>
+    <div className='py-3 w-[13%] font-medium'>₱654</div>
     <div className='py-3 w-[18%] font-medium'>Pending</div>
     <div className='py-3 w-[18%] font-medium'>Pending</div>
     <div className='py-3 w-[18%] font-medium'>
@@ -141,7 +141,7 @@ const Orders = () => {
     <div className='text-[#d0d2d6] '>
 <div className=' flex justify-between items-start border-b border-slate-700'>
     <div className='py-3 w-[25%] font-medium whitespace-nowrap'>#34343</div>
-    <div className='py-3 w-[13%] font-medium'>$654</div>
+    <div className='py-3 w-[13%] font-medium'>₱654</div>
     <div className='py-3 w-[18%] font-medium'>Pending</div>
     <div className='py-3 w-[18%] font-medium'>Pending</div>
     <div className='py-3 w-[18%] font-medium'>

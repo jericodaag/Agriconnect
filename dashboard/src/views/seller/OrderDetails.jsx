@@ -32,7 +32,7 @@ const OrderDetails = () => {
                 <h2>Payment Status: </h2>
                 <span className='text-base'>Paid</span>
              </div>  
-             <span>Price : $232</span> 
+             <span>Price : ₱232</span> 
 
             <div className='mt-4 flex flex-col gap-4 bg-[#8288ed] rounded-md'>
                 <div className='text-[#d0d2d6]'>

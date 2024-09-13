@@ -27,7 +27,7 @@ const ChatSeller = () => {
 
         <div className='flex justify-center items-start flex-col w-full'>
             <div className='flex justify-between items-center w-full'>
-                <h2 className='text-base font-semibold'>Kazi Ariyan</h2>
+                <h2 className='text-base font-semibold'>Jerico Daag</h2>
 
             </div> 
         </div> 
@@ -42,7 +42,7 @@ const ChatSeller = () => {
 
         <div className='flex justify-center items-start flex-col w-full'>
             <div className='flex justify-between items-center w-full'>
-                <h2 className='text-base font-semibold'>Jhon</h2>
+                <h2 className='text-base font-semibold'>Mark</h2>
 
             </div> 
         </div> 
@@ -57,7 +57,7 @@ const ChatSeller = () => {
 
         <div className='flex justify-center items-start flex-col w-full'>
             <div className='flex justify-between items-center w-full'>
-                <h2 className='text-base font-semibold'>Raju</h2>
+                <h2 className='text-base font-semibold'>Cristan</h2>
 
             </div> 
         </div> 
