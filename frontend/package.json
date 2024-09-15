@@ -21,6 +21,7 @@
     "react-spinners": "^0.14.1",
     "socket.io-client": "^4.7.5",
     "stripe": "^16.11.0",
+    "swiper": "^11.1.14",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
