@@ -72,6 +72,35 @@ export const product_details = createAsyncThunk(
 )
 // End Method 
 
+export const customer_review = createAsyncThunk(
+    'review/customer_review',
+    async(info, { fulfillWithValue }) => {
+        try {
+            const {data} = await api.post('/home/customer/submit-review',info)
+            //  console.log(data)
+            return fulfillWithValue(data)
+        } catch (error) {
+            console.log(error.respone)
+        }
+    }
+)
+// End Method 
+
+
+export const get_reviews = createAsyncThunk(
+    'review/get_reviews',
+    async({productId, pageNumber}, { fulfillWithValue }) => {
+        try {
+            const {data} = await api.get(`/home/customer/get-reviews/${productId}?pageNo=${pageNumber}`)
+            //  console.log(data)
+            return fulfillWithValue(data)
+        } catch (error) {
+            console.log(error.respone)
+        }
+    }
+)
+// End Method 
+
 
 
 
@@ -91,9 +120,19 @@ export const homeReducer = createSlice({
         },
         product: {},
         relatedProducts: [],
-        moreProducts: []
+        moreProducts: [],
+        errorMessage : '',
+        successMessage: '',
+        totalReview: 0,
+        rating_review: [],
+        reviews : [] 
     },
     reducers : {
+
+        messageClear : (state,_) => {
+            state.errorMessage = ""
+            state.successMessage = ""
+        }
  
     },
     extraReducers: (builder) => {
@@ -123,7 +162,17 @@ export const homeReducer = createSlice({
             state.moreProducts = payload.moreProducts; 
         })
 
+        .addCase(customer_review.fulfilled, (state, { payload }) => {
+            state.successMessage = payload.message;
+        })
+
+        .addCase(get_reviews.fulfilled, (state, { payload }) => {
+            state.reviews = payload.reviews;
+            state.totalReview = payload.totalReview;
+            state.rating_review = payload.rating_review;
+        })
+
     }
 })
-
+export const {messageClear} = homeReducer.actions
 export default homeReducer.reducer
