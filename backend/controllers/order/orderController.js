@@ -4,6 +4,7 @@ const cardModel = require('../../models/cardModel')
 const moment = require("moment")
 const { responseReturn } = require('../../utilities/response') 
 const { mongo: {ObjectId}} = require('mongoose')
+const stripe = require('stripe')('sk_test_51Phb3kLs4PUYCdHCPpJ794IsxnhwDIo16hMNqRXV0PdupEoBpqQcyjTejSQvxzHItA9mOb3eQs4EMW21dyJA7MHU00FKo5wKjB')
 
 class orderController{
 
@@ -255,6 +256,82 @@ class orderController{
   }
   // End Method 
 
+  get_seller_orders = async (req,res) => {
+        const {sellerId} = req.params
+        let {page,searchValue,parPage} = req.query
+        page = parseInt(page)
+        parPage= parseInt(parPage)
+
+        const skipPage = parPage * (page - 1)
+
+        try {
+            if (searchValue) {
+                
+            } else {
+                const orders = await authOrderModel.find({
+                    sellerId,
+                }).skip(skipPage).limit(parPage).sort({ createdAt: -1})
+                const totalOrder = await authOrderModel.find({
+                    sellerId
+                }).countDocuments()
+                responseReturn(res,200, {orders,totalOrder})
+            }
+            
+        } catch (error) {
+         console.log('get seller Order error' + error.message)
+         responseReturn(res,500, {message: 'internal server error'})
+        }
+        
+  }
+  // End Method 
+
+  get_seller_order = async (req,res) => {
+    const { orderId } = req.params
+    
+    try {
+        const order = await authOrderModel.findById(orderId)
+        responseReturn(res, 200, { order })
+    } catch (error) {
+        console.log('get seller details error' + error.message)
+    }
+  }
+  // End Method 
+
+  seller_order_status_update = async(req,res) => {
+    const {orderId} = req.params
+    const { status } = req.body
+
+    try {
+        await authOrderModel.findByIdAndUpdate(orderId,{
+            delivery_status: status
+        })
+        responseReturn(res,200, {message: 'order status updated successfully'})
+    } catch (error) {
+        console.log('get seller Order error' + error.message)
+        responseReturn(res,500, {message: 'internal server error'})
+    }
+
+
+  }
+  // End Method 
+
+  create_payment = async (req, res) => {
+    const { price } = req.body
+    try {
+        const payment = await stripe.paymentIntents.create({
+            amount: price * 100, // Stripe works in the smallest currency unit (e.g., centavos for PHP)
+            currency: 'php',     // Change currency to PHP (Philippine Peso)
+            automatic_payment_methods: {
+                enabled: true
+            }
+        })
+        responseReturn(res, 200, { clientSecret: payment.client_secret })
+    } catch (error) {
+        console.log(error.message)
+    }
+}
+
+  // End Method 
 
 }
 

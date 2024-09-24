@@ -120,7 +120,7 @@ class cardController{
         card_products: p,
         price: calculatePrice,
         card_product_count,
-        shipping_fee: 20 * p.length,
+        shipping_fee: 40 * p.length,
         outOfStockProduct,
         buy_product_item
       })
