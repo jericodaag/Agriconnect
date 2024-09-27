@@ -1,5 +1,9 @@
 const authOrderModel = require('../../models/authOrder')
 const customerOrder = require('../../models/customerOrder')
+
+const myShopWallet = require('../../models/myShopWallet')
+const sellerWallet = require('../../models/sellerWallet')
+
 const cardModel = require('../../models/cardModel')
 const moment = require("moment")
 const { responseReturn } = require('../../utilities/response') 
@@ -75,7 +79,7 @@ class orderController{
                     products: storePor,
                     price:pri,
                     payment_status: 'unpaid',
-                    shippingInfo: 'Easy Main Warehouse',
+                    shippingInfo: 'Agriconnect Warehouse',
                     delivery_status: 'pending',
                     date: tempDate
                 }) 
@@ -319,8 +323,8 @@ class orderController{
     const { price } = req.body
     try {
         const payment = await stripe.paymentIntents.create({
-            amount: price * 100, // Stripe works in the smallest currency unit (e.g., centavos for PHP)
-            currency: 'php',     // Change currency to PHP (Philippine Peso)
+            amount: price * 100,
+            currency: 'usd',
             automatic_payment_methods: {
                 enabled: true
             }
@@ -329,9 +333,47 @@ class orderController{
     } catch (error) {
         console.log(error.message)
     }
-}
-
+  }
   // End Method 
+
+  order_confirm = async (req,res) => {
+    const {orderId} = req.params
+    try {
+        await customerOrder.findByIdAndUpdate(orderId, { payment_status: 'paid' })
+        await authOrderModel.updateMany({ orderId: new ObjectId(orderId)},{
+            payment_status: 'paid', delivery_status: 'pending'  
+        })
+        const cuOrder = await customerOrder.findById(orderId)
+
+        const auOrder = await authOrderModel.find({
+            orderId: new ObjectId(orderId)
+        })
+         
+        const time = moment(Date.now()).format('l')
+        const splitTime = time.split('/')
+
+        await myShopWallet.create({
+            amount: cuOrder.price,
+            month: splitTime[0],
+            year: splitTime[2]
+        })
+
+        for (let i = 0; i < auOrder.length; i++) {
+             await sellerWallet.create({
+                sellerId: auOrder[i].sellerId.toString(),
+                amount: auOrder[i].price,
+                month: splitTime[0],
+                year: splitTime[2]
+             }) 
+        }
+        responseReturn(res, 200, {message: 'success'}) 
+        
+    } catch (error) {
+        console.log(error.message)
+    }
+     
+  }
+   // End Method 
 
 }
 
