@@ -5,7 +5,7 @@ const sellerWallet = require('../../models/sellerWallet')
 const withdrowRequest = require('../../models/withdrowRequest') 
 
 const {v4: uuidv4} = require('uuid')
-const { responseReturn } = require('../../utiles/response')
+const { responseReturn } = require('../../utilities/response')
 const { mongo: {ObjectId}} = require('mongoose')
 const stripe = require('stripe')('sk_test_51Oml5cGAwoXiNtjJZbPFBKav0pyrR8GSwzUaLHLhInsyeCa4HI8kKf2IcNeUXc8jc8XVzBJyqjKnDLX9MlRjohrL003UDGPZgQ')
 
@@ -198,7 +198,7 @@ class paymentController{
             await withdrowRequest.findByIdAndUpdate(paymentId, {status: 'success'})
             responseReturn(res, 200, {payment, message: 'Request Confirm Success'})
 
-        } catch (error) { 
+        } catch (error) {   
             responseReturn(res, 500,{ message: 'Internal Server Error'})
         }
     }
