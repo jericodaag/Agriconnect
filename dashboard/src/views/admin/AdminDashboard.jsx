@@ -95,7 +95,7 @@ const AdminDashboard = () => {
                 <div className='flex justify-between items-center p-5 bg-[#fae8e8] rounded-md gap-3'>
                     <div className='flex flex-col justify-start items-start text-[#5c5a5a]'>
                         <h2 className='text-3xl font-bold'>${totalSale}</h2>
-                        <span className='text-md font-medium'>Total Salse</span>
+                        <span className='text-md font-medium'>Total Sales</span>
                     </div>
 
                     <div className='w-[40px] h-[47px] rounded-full bg-[#fa0305] flex justify-center items-center text-xl'>
