@@ -19,7 +19,7 @@ root.render(
       toastOptions={{
         position : 'top-right',
         style : {
-          background : '283046',
+          background : '#283046',
           color : 'white'
         }
       }}

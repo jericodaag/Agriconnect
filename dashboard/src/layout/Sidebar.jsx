@@ -1,67 +1,73 @@
 import React, { useEffect, useState } from 'react';
-import { Link,useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getNav } from '../navigation/index';
 import { BiLogOutCircle } from "react-icons/bi";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from '../store/Reducers/authReducer';
-import logo from '../assets/logo.png'
+import logo from '../assets/logo.png';
 
-const Sidebar = ({showSidebar, setShowSidebar}) => {
+const Sidebar = ({ showSidebar, setShowSidebar }) => {
+  const dispatch = useDispatch();
+  const { role } = useSelector(state => state.auth);
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const [allNav, setAllNav] = useState([]);
 
-    const dispatch = useDispatch()
-    const { role } = useSelector(state => state.auth)
-    const navigate = useNavigate()
+  useEffect(() => {
+    const navs = getNav(role);
+    setAllNav(navs);
+  }, [role]);
 
-    const {pathname} = useLocation()
-    const [allNav,setAllNav] = useState([])
-    useEffect(() => {
-        const navs = getNav(role)
-        setAllNav(navs)
-    },[role])
-    // console.log(allNav)
+  return (
+    <>
+      <div
+        onClick={() => setShowSidebar(false)}
+        className={`fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden ${
+          showSidebar ? 'block' : 'hidden'
+        }`}
+      ></div>
 
-
-    return (
-        <div>
-            <div onClick={()=> setShowSidebar(false)} className={`fixed duration-200 ${!showSidebar ? 'invisible' : 'visible'} w-screen h-screen bg-[#8cbce780] top-0 left-0 z-10`} > 
-            </div>
-
-    <div className={`w-[260px] fixed bg-[#e6e7fb] z-50 top-0 h-screen shadow-[0_0_15px_0_rgb(34_41_47_/_5%)] transition-all ${showSidebar ? 'left-0' : '-left-[260px] lg:left-0'} `}>
-        <div className='h-[70px] flex justify-center items-center'>
-            <Link to='/' className='w-[180px] h-[50px]'>
-                <img className='w-full h-full' src={logo} alt="" />
-            </Link> 
+      <aside
+        className={`fixed top-0 left-0 z-50 w-64 h-screen transition-transform ${
+          showSidebar ? 'translate-x-0' : '-translate-x-full'
+        } lg:translate-x-0`}
+      >
+        <div className="h-full flex flex-col px-3 py-4 overflow-y-auto bg-gray-800">
+          <div className="flex justify-center items-center mb-6">
+            <Link to="/" className="flex items-center justify-center">
+              <img src={logo} className="h-12 w-auto" alt="Agriconnect Logo" />
+            </Link>
+          </div>
+          <ul className="space-y-2 font-medium flex-grow">
+            {allNav.map((item, index) => (
+              <li key={index}>
+                <Link
+                  to={item.path}
+                  className={`flex items-center p-2 rounded-lg ${
+                    pathname === item.path
+                      ? 'text-white bg-indigo-600'
+                      : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  {item.icon}
+                  <span className="ml-3">{item.title}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-auto">
+            <button
+              onClick={() => dispatch(logout({ navigate, role }))}
+              className="flex items-center p-2 text-gray-300 rounded-lg hover:bg-gray-700 w-full"
+            >
+              <BiLogOutCircle className="w-6 h-6" />
+              <span className="ml-3">Logout</span>
+            </button>
+          </div>
         </div>
-
-        <div className='px-[16px]'>
-            <ul>
-                {
-                    allNav.map((n,i) =><li key={i}>
-                       <Link to={n.path} className={`${pathname === n.path ? 'bg-blue-600 shadow-indigo-500/50 text-white duration-500' : 'text-[#030811] font-bold duration-200 ' } px-[12px] py-[9px] rounded-sm flex justify-start items-center gap-[12px] hover:pl-4 transition-all w-full mb-1 `} >
-                        <span>{n.icon}</span>
-                        <span>{n.title}</span>
-                        </Link>
-
-                    </li> )
-                }
-
-            <li>
-                <button onClick={() => dispatch(logout({navigate,role }))} className='text-[#030811] font-bold duration-200 px-[12px] py-[9px] rounded-sm flex justify-start items-center gap-[12px] hover:pl-4 transition-all w-full mb-1'>
-                <span><BiLogOutCircle /></span>
-                <span>Logout</span>
-                </button>
-            </li>
- 
-
-
-            </ul>
-
-        </div>
-        
-    </div>
-
-        </div>
-    );
+      </aside>
+    </>
+  );
 };
 
 export default Sidebar;

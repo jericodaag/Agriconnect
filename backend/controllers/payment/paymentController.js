@@ -55,7 +55,7 @@ class paymentController{
         }
         
     } catch (error) {
-        console.log('strpe connect account errror' + error.message)
+        console.log('stripe connect account errror' + error.message)
      }
     }
     // End Method 
