@@ -1,194 +1,172 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FaList } from 'react-icons/fa6';
+import { FaList, FaPaperPlane, FaSmile } from 'react-icons/fa';
 import { IoMdClose } from "react-icons/io";
 import { useDispatch, useSelector } from 'react-redux';
-import { get_admin_message, get_sellers, send_message_seller_admin ,messageClear, updateSellerMessage} from '../../store/Reducers/chatReducer'
+import { get_admin_message, get_sellers, send_message_seller_admin, messageClear, updateSellerMessage } from '../../store/Reducers/chatReducer';
 import { Link, useParams } from 'react-router-dom';
 import { FaRegFaceGrinHearts } from "react-icons/fa6";
 import toast from 'react-hot-toast';
-
-import {socket} from '../../utils/utils'
+import { socket } from '../../utils/utils';
+import EmojiPicker from 'emoji-picker-react';
 
 const ChatSeller = () => {
-    const scrollRef = useRef()
-    const [show, setShow] = useState(false) 
-    const { sellerId } = useParams()
-    const [text,setText] = useState('')
-    const [receverMessage,setReceverMessage] = useState('')
+    const scrollRef = useRef();
+    const [show, setShow] = useState(false);
+    const [showEmoji, setShowEmoji] = useState(false);
+    const { sellerId } = useParams();
+    const [text, setText] = useState('');
+    const [receverMessage, setReceverMessage] = useState('');
 
-    const {sellers,activeSeller,seller_admin_message,currentSeller,successMessage} = useSelector(state => state.chat)
-    const dispatch = useDispatch()
+    const { sellers, activeSeller, seller_admin_message, currentSeller, successMessage } = useSelector(state => state.chat);
+    const dispatch = useDispatch();
 
     useEffect(() => {
-        dispatch(get_sellers())
-    })
+        dispatch(get_sellers());
+    }, [dispatch]);
 
     const send = (e) => {
-        e.preventDefault() 
+        e.preventDefault();
+        if (text.trim()) {
             dispatch(send_message_seller_admin({
-                senderId: '', 
+                senderId: '',
                 receverId: sellerId,
                 message: text,
                 senderName: 'Admin Support'
-            }))
-            setText('') 
-    }
+            }));
+            setText('');
+        }
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            send(e);
+        }
+    };
+
+    const handleEmojiClick = (emojiObject) => {
+        setText(prevText => prevText + emojiObject.emoji);
+    };
 
     useEffect(() => {
         if (sellerId) {
-            dispatch(get_admin_message(sellerId))
+            dispatch(get_admin_message(sellerId));
         }
-    },[sellerId])
+    }, [sellerId, dispatch]);
 
     useEffect(() => {
         if (successMessage) {
-            socket.emit('send_message_admin_to_seller',seller_admin_message[seller_admin_message.length - 1])
-            dispatch(messageClear())
+            socket.emit('send_message_admin_to_seller', seller_admin_message[seller_admin_message.length - 1]);
+            dispatch(messageClear());
         }
-    },[successMessage])
+    }, [successMessage, seller_admin_message, dispatch]);
 
     useEffect(() => {
         socket.on('receved_seller_message', msg => {
-             setReceverMessage(msg)
-        })
-         
-    },[])
+            setReceverMessage(msg);
+        });
+    }, []);
 
     useEffect(() => {
         if (receverMessage) {
-            if (receverMessage.senderId === sellerId && receverMessage.
-                receverId === '') {
-                dispatch(updateSellerMessage(receverMessage))
+            if (receverMessage.senderId === sellerId && receverMessage.receverId === '') {
+                dispatch(updateSellerMessage(receverMessage));
             } else {
-                toast.success(receverMessage.senderName + " " + "Send A message")
-                dispatch(messageClear())
+                toast.success(receverMessage.senderName + " " + "Send A message");
+                dispatch(messageClear());
             }
         }
-
-    },[receverMessage])
+    }, [receverMessage, sellerId, dispatch]);
 
     useEffect(() => {
-        scrollRef.current?.scrollIntoView({ behavior: 'smooth'})
-    },[seller_admin_message])
-
+        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [seller_admin_message]);
 
     return (
-    <div className='px-2 lg:px-7 py-5'>
-        <div className='w-full bg-[#6a5fdf] px-4 py-4 rounded-md h-[calc(100vh-140px)]'>
-        <div className='flex w-full h-full relative'>
-    
-    <div className={`w-[280px] h-full absolute z-10 ${show ? '-left-[16px]' : '-left-[336px]'} md:left-0 md:relative transition-all `}>
-        <div className='w-full h-[calc(100vh-177px)] bg-[#9e97e9] md:bg-transparent overflow-y-auto'>
-        <div className='flex text-xl justify-between items-center p-4 md:p-0 md:px-3 md:pb-3 text-white'>
-        <h2>Sellers</h2>
-        <span onClick={() => setShow(!show)} className='block cursor-pointer md:hidden'><IoMdClose /> </span>
-       </div>
-
-        {
-            sellers.map((s,i) => <Link key={i} to={`/admin/dashboard/chat-sellers/${s._id}`} className={`h-[60px] flex justify-start gap-2 items-center text-white px-2 py-2 rounded-md cursor-pointer ${sellerId === s._id ? 'bg-[#8288ed]' : ''}  `}>
-            <div className='relative'>
-             <img className='w-[38px] h-[38px] border-white border-2 max-w-[38px] p-[2px] rounded-full' src={s.image} alt="" />
-             
-             { 
-                activeSeller.some(a => a.sellerId === s._id) && <div className='w-[10px] h-[10px] bg-green-500 rounded-full absolute right-0 bottom-0'></div>
-             } 
-            </div>
-    
-            <div className='flex justify-center items-start flex-col w-full'>
-                <div className='flex justify-between items-center w-full'>
-                    <h2 className='text-base font-semibold'>{s.name}</h2>
-    
-                </div> 
-            </div> 
-           </Link>
-           )
-        }
-       
-
- 
- 
-
-        </div> 
-    </div>
-
-    <div className='w-full md:w-[calc(100%-200px)] md:pl-4'>
-        <div className='flex justify-between items-center'>
-            {
-                sellerId && <div className='flex justify-start items-center gap-3'>
-           <div className='relative'>
-         <img className='w-[45px] h-[45px] border-green-500 border-2 max-w-[45px] p-[2px] rounded-full' src={currentSeller?.image}  alt="" />
-         <div className='w-[10px] h-[10px] bg-green-500 rounded-full absolute right-0 bottom-0'></div>
-        </div>
-                       <span className='text-white'>{currentSeller?.name}</span>
-                </div>
-
-            }
-
-            <div onClick={()=> setShow(!show)} className='w-[35px] flex md:hidden h-[35px] rounded-sm bg-blue-500 shadow-lg hover:shadow-blue-500/50 justify-center cursor-pointer items-center text-white'>
-                <span><FaList/> </span>
-            </div> 
-        </div>
-
-        <div className='py-4'>
-            <div className='bg-[#475569] h-[calc(100vh-290px)] rounded-md p-3 overflow-y-auto'>
-
-            {
-              sellerId ?  seller_admin_message.map((m, i) => {
-                    if (m.senderId === sellerId) {
-                        return(
-        <div ref={scrollRef} className='w-full flex justify-start items-center'>
-                        <div className='flex justify-start items-start gap-2 md:px-3 py-2 max-w-full lg:max-w-[85%]'>
-                            <div>
-                                <img className='w-[38px] h-[38px] border-2 border-white rounded-full max-w-[38px] p-[3px]' src="http://localhost:3001/images/demo.jpg" alt="" />
-                            </div>
-                            <div className='flex justify-center items-start flex-col w-full bg-blue-500 shadow-lg shadow-blue-500/50 text-white py-1 px-2 rounded-sm'>
-                            <span>{m.message} </span>
-                            </div> 
-                        </div> 
-                    </div>
-                        )
-                    } else {
-                        return(
-                            <div ref={scrollRef} className='w-full flex justify-end items-center'>
-                    <div className='flex justify-start items-start gap-2 md:px-3 py-2 max-w-full lg:max-w-[85%]'>
-                        
-                        <div className='flex justify-center items-start flex-col w-full bg-red-500 shadow-lg shadow-red-500/50 text-white py-1 px-2 rounded-sm'>
-                        <span>{m.message} </span>
-                        </div> 
-                        <div>
-                            <img className='w-[38px] h-[38px] border-2 border-white rounded-full max-w-[38px] p-[3px]' src="http://localhost:3001/images/admin.jpg" alt="" />
+        <div className='px-2 lg:px-7 py-5'>
+            <div className='w-full bg-[#f0f2f5] rounded-lg shadow-md h-[calc(100vh-140px)] overflow-hidden'>
+                <div className='flex w-full h-full'>
+                    <div className={`w-[280px] h-full ${show ? 'block' : 'hidden'} md:block bg-white border-r border-gray-300`}>
+                        <div className='p-4 border-b border-gray-300'>
+                            <h2 className='text-2xl font-semibold text-gray-800'>Sellers</h2>
                         </div>
-
-                    </div> 
+                        <div className='overflow-y-auto h-[calc(100%-60px)]'>
+                            {sellers.map((s, i) => (
+                                <Link key={i} to={`/admin/dashboard/chat-sellers/${s._id}`} className={`flex items-center p-3 hover:bg-gray-100 ${sellerId === s._id ? 'bg-gray-100' : ''}`}>
+                                    <div className='relative'>
+                                        <img className='w-12 h-12 rounded-full mr-3' src={s.image} alt="" />
+                                        {activeSeller.some(a => a.sellerId === s._id) && (
+                                            <div className='w-3 h-3 bg-green-500 rounded-full absolute right-0 bottom-0'></div>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <h3 className='font-semibold text-gray-800'>{s.name}</h3>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                    <div className='flex-1 flex flex-col'>
+                        {sellerId ? (
+                            <>
+                                <div className='p-4 border-b border-gray-300 flex justify-between items-center'>
+                                    <div className='flex items-center'>
+                                        <img className='w-10 h-10 rounded-full mr-3' src={currentSeller?.image} alt="" />
+                                        <h2 className='text-xl font-semibold text-gray-800'>{currentSeller?.name}</h2>
+                                    </div>
+                                    <button onClick={() => setShow(!show)} className='md:hidden bg-blue-500 text-white p-2 rounded-full'>
+                                        <FaList />
+                                    </button>
+                                </div>
+                                <div className='flex-1 overflow-y-auto p-4' ref={scrollRef}>
+                                    {seller_admin_message.map((m, i) => (
+                                        <div key={i} className={`flex ${m.senderId === sellerId ? 'justify-start' : 'justify-end'} mb-4`}>
+                                            <div className={`max-w-[70%] p-3 rounded-lg ${m.senderId === sellerId ? 'bg-white text-gray-800' : 'bg-blue-500 text-white'}`}>
+                                                {m.message}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className='p-4 border-t border-gray-300'>
+                                    <form onSubmit={send} className='flex items-center'>
+                                        <div className='relative flex-1'>
+                                            <input
+                                                value={text}
+                                                onChange={(e) => setText(e.target.value)}
+                                                onKeyPress={handleKeyPress}
+                                                className='w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-blue-500'
+                                                type="text"
+                                                placeholder='Type a message...'
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowEmoji(!showEmoji)}
+                                                className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700'
+                                            >
+                                                <FaSmile />
+                                            </button>
+                                            {showEmoji && (
+                                                <div className='absolute bottom-full right-0 mb-2'>
+                                                    <EmojiPicker onEmojiClick={handleEmojiClick} />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <button type="submit" className='ml-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2'>
+                                            <FaPaperPlane />
+                                        </button>
+                                    </form>
+                                </div>
+                            </>
+                        ) : (
+                            <div className='flex-1 flex items-center justify-center flex-col text-gray-500'>
+                                <FaRegFaceGrinHearts size={48} />
+                                <p className='mt-2 text-xl'>Select a seller to start chatting</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
-                        )
-                    }
-                }) : <div className='w-full h-full flex justify-center items-center flex-col gap-2 text-white'>
-                    <span><FaRegFaceGrinHearts /></span>
-                    <span>Select Seller </span>
-                </div>
-            }
-                
- 
-            </div> 
+            </div>
         </div>
-
-        <form onSubmit={send} className='flex gap-3'>
-            <input readOnly={sellerId ? false : true} value={text} onChange={(e) => setText(e.target.value)}  className='w-full flex justify-between px-2 border border-slate-700 items-center py-[5px] focus:border-blue-500 rounded-md outline-none bg-transparent text-[#d0d2d6]' type="text" placeholder='Input Your Message' />
-            <button disabled={sellerId ? false : true} className='shadow-lg bg-[#06b6d4] hover:shadow-cyan-500/50 text-semibold w-[75px] h-[35px] rounded-md text-white flex justify-center items-center'>Send</button>
-
-        </form>
-
-
-
-
-    </div>  
-
-        </div> 
-
-        </div>
-        
-    </div>
     );
 };
 

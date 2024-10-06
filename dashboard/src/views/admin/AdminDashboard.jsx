@@ -1,241 +1,188 @@
 import React, { useEffect } from 'react';
-import { MdCurrencyExchange,MdProductionQuantityLimits } from "react-icons/md";
-import { FaUsers } from "react-icons/fa";
-import { FaCartShopping } from "react-icons/fa6"; 
-import Chart from 'react-apexcharts'
+import { MdCurrencyExchange, MdProductionQuantityLimits } from "react-icons/md";
+import { FaUsers, FaCartShopping } from "react-icons/fa6"; 
+import Chart from 'react-apexcharts';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import seller from '../../assets/seller.png'
 import { get_admin_dashboard_data } from '../../store/Reducers/dashboardReducer';
 import moment from 'moment';
+import seller from '../../assets/seller.png';
+import admin from '../../assets/admin.jpg'; // Assume you have an admin avatar
 
 const AdminDashboard = () => {
-
-    const dispatch = useDispatch()
-    const {totalSale,totalOrder,totalProduct,totalSeller,recentOrder,recentMessage} = useSelector(state=> state.dashboard)
-    const {userInfo} = useSelector(state=> state.auth)
-
-
+    const dispatch = useDispatch();
+    const { totalSale, totalOrder, totalProduct, totalSeller, recentOrder, recentMessages } = useSelector(state => state.dashboard);
+    const { userInfo } = useSelector(state => state.auth);
 
     useEffect(() => {
-        dispatch(get_admin_dashboard_data())
-    }, [])
+        dispatch(get_admin_dashboard_data());
+    }, [dispatch]);
 
-    const state = {
-        series : [
-            {
-                name : "Orders",
-                data : [23,34,45,56,76,34,23,76,87,78,34,45]
+    const chartOptions = {
+        chart: {
+            type: 'bar',
+            toolbar: { show: false },
+            zoom: { enabled: false }
+        },
+        colors: ['#4F46E5', '#10B981', '#F59E0B'],
+        plotOptions: {
+            bar: {
+                horizontal: false,
+                columnWidth: '55%',
+                endingShape: 'rounded'
             },
-            {
-                name : "Revenue",
-                data : [67,39,45,56,90,56,23,56,87,78,67,78]
-            },
-            {
-                name : "Sellers",
-                data : [34,39,56,56,80,67,23,56,98,78,45,56]
-            },
-        ],
-        options : {
-            color : ['#181ee8','#181ee8'],
-            plotOptions: {
-                radius : 30
-            },
-            chart : {
-                background : 'transparent',
-                foreColor : '#d0d2d6'
-            },
-            dataLabels : {
-                enabled : false
-            },
-            strock : {
-                show : true,
-                curve : ['smooth','straight','stepline'],
-                lineCap : 'butt',
-                colors : '#f0f0f0',
-                width  : .5,
-                dashArray : 0
-            },
-            xaxis : {
-                categories : ['Jan','Feb','Mar','Apl','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-            },
-            legend : {
-                position : 'top'
-            },
-            responsive : [
-                {
-                    breakpoint : 565,
-                    yaxis : {
-                        categories : ['Jan','Feb','Mar','Apl','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-                    },
-                    options : {
-                        plotOptions: {
-                            bar : {
-                                horizontal : true
-                            }
-                        },
-                        chart : {
-                            height : "550px"
-                        }
-                    }
+        },
+        dataLabels: { enabled: false },
+        stroke: { show: true, width: 2, colors: ['transparent'] },
+        xaxis: {
+            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            labels: { style: { colors: '#64748B' } }
+        },
+        yaxis: { 
+            labels: { 
+                style: { colors: '#64748B' },
+                formatter: function (value) {
+                    return " " + value.toLocaleString('en-PH');
                 }
-            ]
-        }
-    }
+            },
+            title: { text: 'Amount (PHP)', style: { color: '#64748B' } }
+        },
+        fill: { opacity: 1 },
+        tooltip: { 
+            y: { 
+                formatter: function (val) { 
+                    return "₱" + val.toLocaleString('en-PH');
+                } 
+            } 
+        },
+        legend: { position: 'top' },
+        responsive: [{
+            breakpoint: 480,
+            options: {
+                chart: { height: 300 },
+                legend: { position: 'bottom' }
+            }
+        }]
+    };
 
+    const series = [
+        { name: "Orders", data: [23000,34000,45000,56000,76000,34000,23000,76000,87000,78000,34000,45000] },
+        { name: "Revenue", data: [67000,39000,45000,56000,90000,56000,23000,56000,87000,78000,67000,78000] },
+        { name: "Sellers", data: [34000,39000,56000,56000,80000,67000,23000,56000,98000,78000,45000,56000] },
+    ];
 
-
+    const getUserType = (senderId, senderName) => {
+        if (senderId === userInfo._id) return 'You';
+        return 'Seller';
+    };
+    
+    const getAvatar = (senderId) => {
+        if (senderId === userInfo._id) return admin;
+        return seller;
+    };
 
     return (
-        <div className='px-2 md:px-7 py-5'>
+        <div className='p-4 bg-gray-50'>
+            <h1 className='text-2xl font-bold text-gray-800 mb-6'>Admin Dashboard</h1>
 
-
-            <div className='w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-7'>
-                
-                <div className='flex justify-between items-center p-5 bg-[#fae8e8] rounded-md gap-3'>
-                    <div className='flex flex-col justify-start items-start text-[#5c5a5a]'>
-                        <h2 className='text-3xl font-bold'>${totalSale}</h2>
-                        <span className='text-md font-medium'>Total Sales</span>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6'>
+                {[
+                    { title: 'Total Sales', value: `₱${totalSale.toLocaleString('en-PH')}`, icon: <MdCurrencyExchange />, color: 'bg-blue-500' },
+                    { title: 'Products', value: totalProduct, icon: <MdProductionQuantityLimits />, color: 'bg-green-500' },
+                    { title: 'Sellers', value: totalSeller, icon: <FaUsers />, color: 'bg-yellow-500' },
+                    { title: 'Orders', value: totalOrder, icon: <FaCartShopping />, color: 'bg-purple-500' },
+                ].map((item, index) => (
+                    <div key={index} className='bg-white rounded-lg shadow-sm p-4 flex items-center'>
+                        <div className={`${item.color} text-white p-3 rounded-full mr-4`}>
+                            {React.cloneElement(item.icon, { size: 24 })}
+                        </div>
+                        <div>
+                            <p className='text-sm text-gray-500'>{item.title}</p>
+                            <h3 className='text-xl font-bold text-gray-800'>{item.value}</h3>
+                        </div>
                     </div>
-
-                    <div className='w-[40px] h-[47px] rounded-full bg-[#fa0305] flex justify-center items-center text-xl'>
-                    <MdCurrencyExchange className='text-[#fae8e8] shadow-lg' /> 
-                    </div> 
-                </div>
-
-
-                <div className='flex justify-between items-center p-5 bg-[#fde2ff] rounded-md gap-3'>
-                    <div className='flex flex-col justify-start items-start text-[#5c5a5a]'>
-                        <h2 className='text-3xl font-bold'>{totalProduct}</h2>
-                        <span className='text-md font-medium'>Products</span>
-                    </div>
-
-                    <div className='w-[40px] h-[47px] rounded-full bg-[#760077] flex justify-center items-center text-xl'>
-                    <MdProductionQuantityLimits  className='text-[#fae8e8] shadow-lg' /> 
-                    </div> 
-                </div>
-
-
-                <div className='flex justify-between items-center p-5 bg-[#e9feea] rounded-md gap-3'>
-                    <div className='flex flex-col justify-start items-start text-[#5c5a5a]'>
-                        <h2 className='text-3xl font-bold'>{totalSeller}</h2>
-                        <span className='text-md font-medium'>Sellers</span>
-                    </div>
-
-                    <div className='w-[40px] h-[47px] rounded-full bg-[#038000] flex justify-center items-center text-xl'>
-                    <FaUsers  className='text-[#fae8e8] shadow-lg' /> 
-                    </div> 
-                </div>
-
-
-                <div className='flex justify-between items-center p-5 bg-[#ecebff] rounded-md gap-3'>
-                    <div className='flex flex-col justify-start items-start text-[#5c5a5a]'>
-                        <h2 className='text-3xl font-bold'>{totalOrder}</h2>
-                        <span className='text-md font-medium'>Orders</span>
-                    </div>
-
-                    <div className='w-[40px] h-[47px] rounded-full bg-[#0200f8] flex justify-center items-center text-xl'>
-                    <FaCartShopping  className='text-[#fae8e8] shadow-lg' /> 
-                    </div> 
-                </div>
- 
+                ))}
             </div>
 
-        
-        
-        <div className='w-full flex flex-wrap mt-7'>
-            <div className='w-full lg:w-7/12 lg:pr-3'>
-                <div className='w-full bg-[#6a5fdf] p-4 rounded-md'>
-            <Chart options={state.options} series={state.series} type='bar' height={350} />
+            <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6'>
+                <div className='lg:col-span-2 bg-white rounded-lg shadow-sm p-4'>
+                    <h2 className='text-lg font-semibold text-gray-800 mb-4'>Performance Overview</h2>
+                    <Chart options={chartOptions} series={series} type='bar' height={350} />
+                </div>
+                <div className='bg-white rounded-lg shadow-sm p-4'>
+                    <div className='flex justify-between items-center mb-4'>
+                        <h2 className='text-lg font-semibold text-gray-800'>Recent Seller Messages</h2>
+                        <Link to="/admin/chats" className='text-sm text-blue-600 hover:underline'>View All</Link>
+                    </div>
+                    <div className='space-y-4'>
+                        {recentMessages && recentMessages.map((m, i) => (
+                            <div key={i} className='flex items-start space-x-3'>
+                                <img className='w-10 h-10 rounded-full' src={getAvatar(m.senderId)} alt="" />
+                                <div>
+                                    <p className='font-medium text-gray-800'>
+                                        <span className={`${m.senderId === userInfo._id ? 'text-red-600' : 'text-blue-600'}`}>
+                                            {getUserType(m.senderId, m.senderName)}
+                                        </span>
+                                        {m.senderId !== userInfo._id && (
+                                            <>
+                                                <span className="text-gray-500"> to </span>
+                                                <span className="text-green-600">You</span>
+                                            </>
+                                        )}
+                                    </p>
+                                    <p className='text-sm text-gray-600 truncate'>{m.message}</p>
+                                    <p className='text-xs text-gray-400'>{moment(m.createdAt).fromNow()}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
 
-        
-        <div className='w-full lg:w-5/12 lg:pl-4 mt-6 lg:mt-0'>
-            <div className='w-full bg-[#6a5fdf] p-4 rounded-md text-[#d0d2d6]'>
-                <div className='flex justify-between items-center'>
-                    <h2 className='font-semibold text-lg text-[#d0d2d6] pb-3'>Recent Seller Message</h2>
-                    <Link className='font-semibold text-sm text-[#d0d2d6]'>View All</Link>
+            <div className='bg-white rounded-lg shadow-sm p-4 overflow-x-auto'>
+                <div className='flex justify-between items-center mb-4'>
+                    <h2 className='text-lg font-semibold text-gray-800'>Recent Orders</h2>
+                    <Link to="/admin/orders" className='text-sm text-blue-600 hover:underline'>View All</Link>
                 </div>
-
-        <div className='flex flex-col gap-2 pt-6 text-[#d0d2d6]'>
-            <ol className='relative border-1 border-slate-600 ml-4'>
-               
-               {
-                recentMessage.map((m, i) => <li className='mb-3 ml-6'>
-                <div className='flex absolute -left-5 shadow-lg justify-center items-center w-10 h-10 p-[6px] bg-[#4c7fe2] rounded-full z-10'>
-                {
-                    m.senderId === userInfo._id ? <img className='w-full rounded-full h-full shadow-lg' src={userInfo.image} alt="" /> : <img className='w-full rounded-full h-full shadow-lg' src={seller} alt="" />
-                } 
-                </div>
-                <div className='p-3 bg-slate-800 rounded-lg border border-slate-600 shadow-sm'>
-                <div className='flex justify-between items-center mb-2'>
-            <Link className='text-md font-normal'>{m.senderName}</Link>
-            <time className='mb-1 text-sm font-normal sm:order-last sm:mb-0'> {moment(m.createdAt).startOf('hour').fromNow()}</time>
-                </div>
-                <div className='p-2 text-xs font-normal bg-slate-700 rounded-lg border border-slate-800'>
-                    {m.message}
-                </div>
-                </div>
-            </li>)
-               }
-               
-                
- 
-
-            </ol>
-
-        </div>
-
-
+                <table className='w-full text-sm text-left text-gray-500'>
+                    <thead className='text-xs text-gray-700 uppercase bg-gray-50'>
+                        <tr>
+                            <th className='px-6 py-3'>Order Id</th>
+                            <th className='px-6 py-3'>Price</th>
+                            <th className='px-6 py-3'>Payment Status</th>
+                            <th className='px-6 py-3'>Order Status</th>
+                            <th className='px-6 py-3'>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {recentOrder && recentOrder.map((d, i) => (
+                            <tr key={i} className='bg-white border-b hover:bg-gray-50'>
+                                <td className='px-6 py-4 font-medium text-gray-900'>#{d._id}</td>
+                                <td className='px-6 py-4'>₱{d.price.toLocaleString('en-PH')}</td>
+                                <td className='px-6 py-4'>
+                                    <span className={`px-2 py-1 rounded-full text-xs ${
+                                        d.payment_status === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                                    }`}>
+                                        {d.payment_status}
+                                    </span>
+                                </td>
+                                <td className='px-6 py-4'>
+                                    <span className={`px-2 py-1 rounded-full text-xs ${
+                                        d.delivery_status === 'Delivered' ? 'bg-green-100 text-green-800' :
+                                        d.delivery_status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
+                                        'bg-yellow-100 text-yellow-800'
+                                    }`}>
+                                        {d.delivery_status}
+                                    </span>
+                                </td>
+                                <td className='px-6 py-4'>
+                                    <Link to={`/admin/order/details/${d._id}`} className='text-blue-600 hover:underline'>View</Link>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
-        </div>
-        </div>
-
-
-        <div className='w-full p-4 bg-[#6a5fdf] rounded-md mt-6'>
-            <div className='flex justify-between items-center'>
-                <h2 className='font-semibold text-lg text-[#d0d2d6] pb-3 '>Recent Orders</h2>
-                <Link className='font-semibold text-sm text-[#d0d2d6]'>View All</Link>
-               </div>
-
-    <div className='relative overflow-x-auto'>
-    <table className='w-full text-sm text-left text-[#d0d2d6]'>
-        <thead className='text-sm text-[#d0d2d6] uppercase border-b border-slate-700'>
-        <tr>
-            <th scope='col' className='py-3 px-4'>Order Id</th>
-            <th scope='col' className='py-3 px-4'>Price</th>
-            <th scope='col' className='py-3 px-4'>Payment Status</th>
-            <th scope='col' className='py-3 px-4'>Order Status</th>
-            <th scope='col' className='py-3 px-4'>Active</th>
-        </tr>
-        </thead>
-
-        <tbody>
-            {
-                recentOrder.map((d, i) => <tr key={i}>
-                <td scope='row' className='py-3 px-4 font-medium whitespace-nowrap'>#{d._id}</td>
-                <td scope='row' className='py-3 px-4 font-medium whitespace-nowrap'>${d.price}</td>
-                <td scope='row' className='py-3 px-4 font-medium whitespace-nowrap'>{d.payment_status}</td>
-                <td scope='row' className='py-3 px-4 font-medium whitespace-nowrap'>{d.delivery_status}</td>
-                <td scope='row' className='py-3 px-4 font-medium whitespace-nowrap'>
-                    <Link to={`/admin/dashboard/order/details/${d._id}`}>View</Link> </td>
-            </tr> )
-            }
-
-            
-        </tbody>
-
-    </table>
-
-    </div>
-
-        </div>
-
-
-
-
-             
         </div>
     );
 };
