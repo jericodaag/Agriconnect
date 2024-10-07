@@ -24,6 +24,12 @@ const ChatSeller = () => {
         dispatch(get_sellers());
     }, [dispatch]);
 
+    useEffect(() => {
+        if (sellerId) {
+            dispatch(get_admin_message(sellerId));
+        }
+    }, [sellerId, dispatch]);
+
     const send = (e) => {
         e.preventDefault();
         if (text.trim()) {
@@ -47,12 +53,6 @@ const ChatSeller = () => {
     const handleEmojiClick = (emojiObject) => {
         setText(prevText => prevText + emojiObject.emoji);
     };
-
-    useEffect(() => {
-        if (sellerId) {
-            dispatch(get_admin_message(sellerId));
-        }
-    }, [sellerId, dispatch]);
 
     useEffect(() => {
         if (successMessage) {
@@ -92,15 +92,22 @@ const ChatSeller = () => {
                         </div>
                         <div className='overflow-y-auto h-[calc(100%-60px)]'>
                             {sellers.map((s, i) => (
-                                <Link key={i} to={`/admin/dashboard/chat-sellers/${s._id}`} className={`flex items-center p-3 hover:bg-gray-100 ${sellerId === s._id ? 'bg-gray-100' : ''}`}>
+                                <Link 
+                                    key={i} 
+                                    to={`/admin/dashboard/chat-sellers/${s._id}`} 
+                                    className={`flex items-center p-3 hover:bg-gray-100 ${sellerId === s._id ? 'bg-gray-100' : ''}`}
+                                >
                                     <div className='relative'>
-                                        <img className='w-12 h-12 rounded-full mr-3' src={s.image} alt="" />
+                                        <img className='w-12 h-12 rounded-full mr-3' src={s.image} alt={s.name} />
                                         {activeSeller.some(a => a.sellerId === s._id) && (
-                                            <div className='w-3 h-3 bg-green-500 rounded-full absolute right-0 bottom-0'></div>
+                                            <div className='w-3 h-3 bg-green-500 rounded-full absolute right-0 bottom-0 border-2 border-white'></div>
                                         )}
                                     </div>
                                     <div>
                                         <h3 className='font-semibold text-gray-800'>{s.name}</h3>
+                                        <p className='text-sm text-gray-500'>
+                                            {activeSeller.some(a => a.sellerId === s._id) ? 'Online' : 'Offline'}
+                                        </p>
                                     </div>
                                 </Link>
                             ))}

@@ -43,7 +43,7 @@ const AddProduct = () => {
             parPage: '',
             page: ""
         }))
-    }, [])
+    }, [dispatch])
 
     const categorySearch = (e) => {
         const value = e.target.value
@@ -72,13 +72,13 @@ const AddProduct = () => {
 
     const changeImage = (img, index) => {
         if (img) {
-            let tempUrl = imageShow
-            let tempImages = images
+            let tempUrl = [...imageShow]
+            let tempImages = [...images]
 
             tempImages[index] = img
             tempUrl[index] = { url: URL.createObjectURL(img) }
-            setImageShow([...tempUrl])
-            setImages([...tempImages])
+            setImageShow(tempUrl)
+            setImages(tempImages)
         }
     }
 
@@ -128,7 +128,7 @@ const AddProduct = () => {
             toast.error(errorMessage)
             dispatch(messageClear())
         }
-    }, [successMessage, errorMessage])
+    }, [successMessage, errorMessage, dispatch])
 
     useEffect(() => {
         setAllCategory(categorys)
