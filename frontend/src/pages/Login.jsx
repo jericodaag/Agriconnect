@@ -1,130 +1,132 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { FaFacebookF } from "react-icons/fa6";
-import { FaGoogle } from "react-icons/fa6"; 
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { customer_login,messageClear } from '../store/reducers/authReducer';
+import { customer_login, messageClear } from '../store/reducers/authReducer';
 import toast from 'react-hot-toast';
 import { FadeLoader } from 'react-spinners';
+import { FaEnvelope, FaLock, FaUserCircle } from 'react-icons/fa';
 
 const Login = () => {
+    const navigate = useNavigate();
+    const { loader, errorMessage, successMessage, userInfo } = useSelector(state => state.auth);
+    const dispatch = useDispatch();
 
-    const navigate = useNavigate()
-    const {loader,errorMessage,successMessage,userInfo } = useSelector(state => state.auth)
-    const dispatch = useDispatch()
-
-    const [state, setState] = useState({ 
+    const [state, setState] = useState({
         email: '',
         password: ''
-    })
+    });
 
     const inputHandle = (e) => {
         setState({
             ...state,
             [e.target.name]: e.target.value
-        })
-    }
- 
+        });
+    };
+
     const login = (e) => {
-        e.preventDefault()
-        dispatch(customer_login(state))
-    }
+        e.preventDefault();
+        dispatch(customer_login(state));
+    };
 
-    useEffect(() => { 
+    useEffect(() => {
         if (successMessage) {
-            toast.success(successMessage)
-            dispatch(messageClear())  
-        } 
-        if (errorMessage) {
-            toast.error(errorMessage)
-            dispatch(messageClear())  
-        } 
-        if (userInfo) {
-            navigate('/')
+            toast.success(successMessage);
+            dispatch(messageClear());
         }
-    },[successMessage,errorMessage])
-
+        if (errorMessage) {
+            toast.error(errorMessage);
+            dispatch(messageClear());
+        }
+        if (userInfo) {
+            navigate('/');
+        }
+    }, [successMessage, errorMessage, userInfo]);
 
     return (
-        <div>
-             {
-                loader && <div className='w-screen h-screen flex justify-center items-center fixed left-0 top-0 bg-[#38303033] z-[999]'>
-                    <FadeLoader/>
+        <div className="min-h-screen flex flex-col bg-gray-100">
+            {loader && (
+                <div className='w-screen h-screen flex justify-center items-center fixed left-0 top-0 bg-[#38303033] z-[999]'>
+                    <FadeLoader color="#059473" />
                 </div>
-            }
-            <Header/>
-    <div className='bg-slate-200 mt-4'>
-        <div className='w-full justify-center items-center p-10'>
-            <div className='grid grid-cols-2 w-[60%] mx-auto bg-white rounded-md'>
-                <div className='px-8 py-8'>
-            <h2 className='text-center w-full text-xl text-slate-600 font-bold'>Login </h2> 
-
-    <div>
-        <form onSubmit={login} className='text-slate-600'>
-    
-
-    <div className='flex flex-col gap-1 mb-2'>
-        <label htmlFor="email">Email</label>
-        <input onChange={inputHandle} value={state.email}  className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' type="email" name="email" id="email" placeholder='Email' required />
-    </div>
-
-
-    <div className='flex flex-col gap-1 mb-2'>
-        <label htmlFor="password">Password</label>
-        <input onChange={inputHandle} value={state.password}  className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' type="password" name="password" id="password" placeholder='Password' required />
-    </div>
-
-    <button className='px-8 w-full py-2 bg-[#059473] shadow-lg hover:shadow-green-500/40 text-white rounded-md'>Login</button>
- 
-        </form>
-    <div className='flex justify-center items-center py-2'>
-        <div className='h-[1px] bg-slate-300 w-[95%]'> </div>
-        <span className='px-3 text-slate-600'>Or</span>
-        <div className='h-[1px] bg-slate-300 w-[95%]'> </div>
-    </div>
-
-    <button className='px-8 w-full py-2 bg-indigo-500 shadow hover:shadow-indigo-500/50 text-white rounded-md flex justify-center items-center gap-2 mb-3'>
-        <span><FaFacebookF /> </span>
-        <span>Login With Facebook </span>
-    </button>
-
-    <button className='px-8 w-full py-2 bg-red-500 shadow hover:shadow-red-500/50 text-white rounded-md flex justify-center items-center gap-2 mb-3'>
-        <span><FaGoogle  /></span>
-        <span>Login With Google </span>
-    </button> 
-    </div>    
-
-    <div className='text-center text-slate-600 pt-1'>
-        <p>Don't Have An Account ? <Link className='text-blue-500' to='/register'> Register</Link> </p>
-    </div> 
-
-     <a target='_blank' href="http://localhost:3001/login">
-     <div className='px-8 w-full py-2 bg-[#02e3e0] shadow hover:shadow-red-500/50 text-white rounded-md flex justify-center items-center gap-2 mb-3'>
-            Login As a Seller
-     </div>
-     </a>
- 
-     <a target='_blank' href="http://localhost:3001/register">
-     <div className='px-8 w-full py-2 bg-[#ad2cc4] shadow hover:shadow-red-500/50 text-white rounded-md flex justify-center items-center gap-2 mb-3'>
-            Register As a Seller
-     </div>
-     </a>
-
-
-
-            </div> 
-
-        <div className='w-full h-full py-4 pr-4'>
-            <img src="http://localhost:3000/images/login.jpg" alt="" />
-         </div>    
-
-         </div>
-        </div>
-    </div>        
-            
-            <Footer/>
+            )}
+            <Header />
+            <div className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-2xl w-full bg-white p-10 rounded-xl shadow-lg">
+                    <div className="flex justify-center mb-8">
+                        <FaUserCircle className="text-[#059473] text-6xl" />
+                    </div>
+                    <h2 className="text-center text-3xl font-extrabold text-gray-900 mb-8">Welcome Back!</h2>
+                    <form className="space-y-6" onSubmit={login}>
+                        <div>
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <FaEnvelope className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    id="email"
+                                    name="email"
+                                    type="email"
+                                    autoComplete="email"
+                                    required
+                                    className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#059473] focus:border-[#059473] sm:text-sm"
+                                    placeholder="Enter your email"
+                                    value={state.email}
+                                    onChange={inputHandle}
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <FaLock className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type="password"
+                                    autoComplete="current-password"
+                                    required
+                                    className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#059473] focus:border-[#059473] sm:text-sm"
+                                    placeholder="Enter your password"
+                                    value={state.password}
+                                    onChange={inputHandle}
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <button type="submit" className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#059473] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#059473]">
+                                Sign in
+                            </button>
+                        </div>
+                    </form>
+                    <div className="mt-6 text-center">
+                        <p className="text-sm text-gray-600">
+                            Don't have an account?{' '}
+                            <Link to="/register" className="font-medium text-[#059473]">
+                                Register here
+                            </Link>
+                        </p>
+                    </div>
+                    <div className="mt-8 grid grid-cols-3 items-center">
+                        <hr className="border-gray-300" />
+                        <p className="text-center text-sm text-gray-500">Or</p>
+                        <hr className="border-gray-300" />
+                    </div>
+                    <div className="mt-6 grid grid-cols-2 gap-4">
+                        <a href="http://localhost:3001/login" target="_blank" rel="noopener noreferrer" className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500">
+                            Login as a Seller
+                        </a>
+                        <a href="http://localhost:3001/register" target="_blank" rel="noopener noreferrer" className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500">
+                            Register as a Seller
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <Footer />
         </div>
     );
 };
