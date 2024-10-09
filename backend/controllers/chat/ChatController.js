@@ -382,27 +382,46 @@ class ChatController {
 
     get_recent_messages = async (req, res) => {
         try {
-            const recentCustomerMessages = await sellerCustomerMessage
-                .find()
-                .sort({ createdAt: -1 })
-                .limit(5)
-                .populate('senderId', 'name')
-                .populate('receverId', 'name')
+            const { role, id } = req;  // Assuming role and id are available in the request
 
-            const recentAdminMessages = await adminSellerMessage
-                .find()
-                .sort({ createdAt: -1 })
-                .limit(5)
-                .populate('senderId', 'name')
-                .populate('receverId', 'name')
+            let recentMessages;
 
-            const allRecentMessages = [...recentCustomerMessages, ...recentAdminMessages]
-                .sort((a, b) => b.createdAt - a.createdAt)
-                .slice(0, 5)
+            if (role === 'admin') {
+                // For admin, only get messages between admin and sellers
+                recentMessages = await adminSellerMessage
+                    .find()
+                    .sort({ createdAt: -1 })
+                    .limit(5)
+                    .populate('senderId', 'name')
+                    .populate('receverId', 'name')
+            } else if (role === 'seller') {
+                // For seller, get both admin-seller messages and customer-seller messages
+                const adminMessages = await adminSellerMessage
+                    .find({ $or: [{ senderId: id }, { receverId: id }] })
+                    .sort({ createdAt: -1 })
+                    .limit(5)
+                    .populate('senderId', 'name')
+                    .populate('receverId', 'name')
 
-            const formattedMessages = allRecentMessages.map(msg => ({
+                const customerMessages = await sellerCustomerMessage
+                    .find({ $or: [{ senderId: id }, { receverId: id }] })
+                    .sort({ createdAt: -1 })
+                    .limit(5)
+                    .populate('senderId', 'name')
+                    .populate('receverId', 'name')
+
+                recentMessages = [...adminMessages, ...customerMessages]
+                    .sort((a, b) => b.createdAt - a.createdAt)
+                    .slice(0, 5)
+            } else {
+                return responseReturn(res, 403, { error: 'Unauthorized access' })
+            }
+
+            const formattedMessages = recentMessages.map(msg => ({
                 id: msg._id,
+                senderId: msg.senderId._id,
                 senderName: msg.senderId.name,
+                receiverId: msg.receverId._id,
                 receiverName: msg.receverId.name,
                 message: msg.message,
                 createdAt: msg.createdAt

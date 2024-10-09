@@ -1,43 +1,58 @@
-const {Schema, model} = require("mongoose");
+const { Schema, model } = require("mongoose");
 
 const sellerSchema = new Schema({
     name: {
         type: String,
-        required : true
+        required: true
     },
     email: {
         type: String,
-        required : true
+        required: true,
+        unique: true
     },
     password: {
         type: String,
-        required : true,
+        required: true,
         select: false
     },     
     role: {
         type: String,
-        default : 'seller'
+        default: 'seller'
     },
     status: {
         type: String,
-        default : 'pending'
+        default: 'pending'
     },
     payment: {
         type: String,
-        default : 'inactive'
+        default: 'inactive'
     },
     method: {
         type: String,
-        required : true
+        required: true
     },
     image: {
         type: String,
-        default : ''
+        default: ''
     },
     shopInfo: {
-        type: Object,
-        default : {}
+        shopName: {
+            type: String,
+            default: ''
+        },
+        division: {
+            type: String,
+            default: ''
+        },
+        district: {
+            type: String,
+            default: ''
+        },
+        sub_district: {
+            type: String,
+            default: ''
+        }
     },
-},{ timestamps: true })
+}, { timestamps: true });
 
-module.exports = model('sellers',sellerSchema)
+module.exports = model('sellers', sellerSchema);

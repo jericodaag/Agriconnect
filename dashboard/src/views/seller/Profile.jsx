@@ -1,14 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaCamera, FaUserCircle, FaCheckCircle, FaCreditCard, FaStore, FaMapMarkerAlt, FaPhone, FaEnvelope, FaLock } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
-import { profile_image_upload } from '../../store/Reducers/authReducer';
+import { profile_image_upload, profile_info_add, messageClear } from '../../store/Reducers/authReducer';
 import { create_stripe_connect_account } from '../../store/Reducers/sellerReducer';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
 
 const Profile = () => {
     const [activeTab, setActiveTab] = useState('profile');
     const dispatch = useDispatch();
-    const { userInfo } = useSelector(state => state.auth);
+    const { userInfo, successMessage, errorMessage } = useSelector(state => state.auth);
+
+    const [shopInfo, setShopInfo] = useState({
+        shopName: userInfo?.shopInfo?.shopName || '',
+        division: userInfo?.shopInfo?.division || '',
+        district: userInfo?.shopInfo?.district || '',
+        sub_district: userInfo?.shopInfo?.sub_district || ''
+    });
 
     const [passwordState, setPasswordState] = useState({
         email: '',
@@ -16,12 +23,46 @@ const Profile = () => {
         new_password: ''
     });
 
+    useEffect(() => {
+        if (successMessage) {
+            toast.success(successMessage);
+            dispatch(messageClear());
+        }
+        if (errorMessage) {
+            toast.error(errorMessage);
+            dispatch(messageClear());
+        }
+    }, [successMessage, errorMessage, dispatch]);
+
+    useEffect(() => {
+        if (userInfo?.shopInfo) {
+            setShopInfo({
+                shopName: userInfo.shopInfo.shopName || '',
+                division: userInfo.shopInfo.division || '',
+                district: userInfo.shopInfo.district || '',
+                sub_district: userInfo.shopInfo.sub_district || ''
+            });
+        }
+    }, [userInfo]);
+
     const add_image = (e) => {
         if (e.target.files.length > 0) {
             const formData = new FormData();
             formData.append('image', e.target.files[0]);
             dispatch(profile_image_upload(formData));
         }
+    };
+
+    const shopInfoInputHandle = (e) => {
+        setShopInfo({
+            ...shopInfo,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    const submitShopInfo = (e) => {
+        e.preventDefault();
+        dispatch(profile_info_add(shopInfo));
     };
 
     const passwordInputHandle = (e) => {
@@ -128,18 +169,70 @@ const Profile = () => {
                         {activeTab === 'shop' && (
                             <div className="space-y-6">
                                 <h3 className="text-2xl font-semibold text-gray-800 mb-4">Shop Information</h3>
-                                <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-                                    {userInfo?.shopInfo ? (
-                                        <>
-                                            <InfoItem icon={<FaStore size={20} />} label="Shop Name" value={userInfo.shopInfo.shopName} />
-                                            <InfoItem icon={<FaMapMarkerAlt size={20} />} label="Division" value={userInfo.shopInfo.division} />
-                                            <InfoItem icon={<FaMapMarkerAlt size={20} />} label="District" value={userInfo.shopInfo.district} />
-                                            <InfoItem icon={<FaMapMarkerAlt size={20} />} label="Sub District" value={userInfo.shopInfo.sub_district} />
-                                        </>
-                                    ) : (
-                                        <p className="text-gray-500 text-center py-4">No shop information available</p>
-                                    )}
-                                </div>
+                                {userInfo.shopInfo && Object.keys(userInfo.shopInfo).some(key => userInfo.shopInfo[key]) ? (
+                                    <div className="bg-gray-50 p-6 rounded-lg shadow-sm mb-6">
+                                        <InfoItem icon={<FaStore size={20} />} label="Shop Name" value={userInfo.shopInfo.shopName} />
+                                        <InfoItem icon={<FaMapMarkerAlt size={20} />} label="Division" value={userInfo.shopInfo.division} />
+                                        <InfoItem icon={<FaMapMarkerAlt size={20} />} label="District" value={userInfo.shopInfo.district} />
+                                        <InfoItem icon={<FaMapMarkerAlt size={20} />} label="Sub District" value={userInfo.shopInfo.sub_district} />
+                                    </div>
+                                ) : null}
+                                <form onSubmit={submitShopInfo} className="bg-gray-50 p-6 rounded-lg shadow-sm">
+                                    <div className="mb-4">
+                                        <label htmlFor="shopName" className="block text-sm font-medium text-gray-700 mb-1">Shop Name</label>
+                                        <input
+                                            type="text"
+                                            id="shopName"
+                                            name="shopName"
+                                            value={shopInfo.shopName}
+                                            onChange={shopInfoInputHandle}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="mb-4">
+                                        <label htmlFor="division" className="block text-sm font-medium text-gray-700 mb-1">Division</label>
+                                        <input
+                                            type="text"
+                                            id="division"
+                                            name="division"
+                                            value={shopInfo.division}
+                                            onChange={shopInfoInputHandle}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="mb-4">
+                                        <label htmlFor="district" className="block text-sm font-medium text-gray-700 mb-1">District</label>
+                                        <input
+                                            type="text"
+                                            id="district"
+                                            name="district"
+                                            value={shopInfo.district}
+                                            onChange={shopInfoInputHandle}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="mb-4">
+                                        <label htmlFor="sub_district" className="block text-sm font-medium text-gray-700 mb-1">Sub District</label>
+                                        <input
+                                            type="text"
+                                            id="sub_district"
+                                            name="sub_district"
+                                            value={shopInfo.sub_district}
+                                            onChange={shopInfoInputHandle}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                            required
+                                        />
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    >
+                                        Update Shop Information
+                                    </button>
+                                </form>
                             </div>
                         )}
 

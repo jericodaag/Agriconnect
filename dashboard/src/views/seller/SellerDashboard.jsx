@@ -6,8 +6,7 @@ import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { get_seller_dashboard_data } from '../../store/Reducers/dashboardReducer';
 import moment from 'moment';
-import customer from '../../assets/demo.jpg';
-import admin from '../../assets/admin.jpg'; // Assume you have an admin avatar
+import RecentMessages from '../../components/RecentMessages.jsx';
 
 const SellerDashboard = () => {
     const dispatch = useDispatch();
@@ -60,18 +59,6 @@ const SellerDashboard = () => {
         { name: "Sales", data: [34,39,56,56,80,67,23,56,98,78,45,56] },
     ];
 
-    const getUserType = (senderId, senderName) => {
-        if (senderId === '') return 'Admin';
-        if (senderId === userInfo._id) return 'You';
-        return 'Customer';
-    };
-    
-    const getAvatar = (senderId) => {
-        if (senderId === '') return admin;
-        if (senderId === userInfo._id) return userInfo.image;
-        return customer;
-    };
-
     return (
         <div className='p-4 bg-gray-50'>
             <h1 className='text-2xl font-bold text-gray-800 mb-6'>Seller Dashboard</h1>
@@ -100,34 +87,7 @@ const SellerDashboard = () => {
                     <h2 className='text-lg font-semibold text-gray-800 mb-4'>Sales Overview</h2>
                     <Chart options={chartOptions} series={series} type='bar' height={350} />
                 </div>
-                <div className='bg-white rounded-lg shadow-sm p-4'>
-                    <div className='flex justify-between items-center mb-4'>
-                        <h2 className='text-lg font-semibold text-gray-800'>Recent Messages</h2>
-                        <Link to="/dashboard/chat" className='text-sm text-blue-600 hover:underline'>View All</Link>
-                    </div>
-                    <div className='space-y-4'>
-                        {recentMessages.map((m, i) => (
-                            <div key={i} className='flex items-start space-x-3'>
-                                <img className='w-10 h-10 rounded-full' src={getAvatar(m.senderId)} alt="" />
-                                <div>
-                                    <p className='font-medium text-gray-800'>
-                                        <span className={`${m.senderId === '' ? 'text-red-600' : 'text-blue-600'}`}>
-                                            {getUserType(m.senderId, m.senderName)}
-                                        </span>
-                                        {m.senderId !== userInfo._id && (
-                                            <>
-                                                <span className="text-gray-500"> to </span>
-                                                <span className="text-green-600">You</span>
-                                            </>
-                                        )}
-                                    </p>
-                                    <p className='text-sm text-gray-600 truncate'>{m.message}</p>
-                                    <p className='text-xs text-gray-400'>{moment(m.createdAt).fromNow()}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                <RecentMessages messages={recentMessages} userInfo={userInfo} isAdmin={false} />
             </div>
 
             <div className='bg-white rounded-lg shadow-sm p-4 overflow-x-auto'>

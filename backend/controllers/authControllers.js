@@ -13,10 +13,8 @@ class authControllers{
         const {email,password} = req.body
         try {
             const admin = await adminModel.findOne({email}).select('+password')
-            // console.log(admin)
             if (admin) {
                 const match = await bcrpty.compare(password, admin.password)
-                // console.log(match)
                 if (match) {
                     const token = await createToken({
                         id : admin.id,
@@ -29,30 +27,20 @@ class authControllers{
                 } else {
                     responseReturn(res,404,{error: "Password Wrong"})
                 }
-
-
-
-                 
             } else {
                 responseReturn(res,404,{error: "Email not Found"})
             }
-            
         } catch (error) {
             responseReturn(res,500,{error: error.message})
         }
- 
     }
-    // End Method 
-
 
     seller_login = async(req,res) => {
         const {email,password} = req.body
         try {
             const seller = await sellerModel.findOne({email}).select('+password')
-            // console.log(admin)
             if (seller) {
                 const match = await bcrpty.compare(password, seller.password)
-                // console.log(match)
                 if (match) {
                     const token = await createToken({
                         id : seller.id,
@@ -65,19 +53,13 @@ class authControllers{
                 } else {
                     responseReturn(res,404,{error: "Password Wrong"})
                 }
- 
-                 
             } else {
                 responseReturn(res,404,{error: "Email not Found"})
             }
-            
         } catch (error) {
             responseReturn(res,500,{error: error.message})
         }
- 
     }
-    // End Method 
-
 
     seller_register = async(req, res) => {
          const {email,name,password} = req.body
@@ -108,13 +90,6 @@ class authControllers{
             responseReturn(res,500,{error: 'Internal Server Error'})
          }
     }
-    // End Method 
-
-
-
-
-
-
 
     getUser = async (req, res) => {
         const {id, role} = req;
@@ -127,13 +102,10 @@ class authControllers{
                 const seller = await sellerModel.findById(id)
                 responseReturn(res, 200, {userInfo : seller})
             }
-            
         } catch (error) {
             responseReturn(res,500,{error: 'Internal Server Error'})
         }
-
-
-    } // End getUser Method 
+    }
 
     profile_image_upload = async(req, res) => {
         const {id} = req
@@ -158,54 +130,58 @@ class authControllers{
                 } else {
                     responseReturn(res, 404,{ error : 'Image Upload Failed'})
                 }
-                
             } catch (error) {
                 responseReturn(res, 500,{ error : error.message })
             }
- 
-
         })
     }
 
-    // End Method 
-
     profile_info_add = async (req, res) => {
-       const { division,district,shopName,sub_district } = req.body;
-       const {id} = req;
+       const { shopName, division, district, sub_district } = req.body;
+       const { id } = req;
 
        try {
-        await sellerModel.findByIdAndUpdate(id, {
+        const updatedSeller = await sellerModel.findByIdAndUpdate(id, {
             shopInfo: {
                 shopName,
                 division,
                 district,
                 sub_district
             }
-        })
-        const userInfo = await sellerModel.findById(id)
-        responseReturn(res, 201,{ message : 'Profile info Add Successfully',userInfo})
-        
+        }, { new: true });
+
+        if (!updatedSeller) {
+            return responseReturn(res, 404, { error: 'Seller not found' });
+        }
+
+        const userInfo = {
+            id: updatedSeller.id,
+            name: updatedSeller.name,
+            email: updatedSeller.email,
+            role: updatedSeller.role,
+            status: updatedSeller.status,
+            payment: updatedSeller.payment,
+            image: updatedSeller.image,
+            shopInfo: updatedSeller.shopInfo
+        };
+
+        responseReturn(res, 200, { message: 'Profile info updated successfully', userInfo });
        } catch (error) {
-        responseReturn(res, 500,{ error : error.message })
+        responseReturn(res, 500, { error: error.message });
        }
-
-
     }
-// End Method 
 
- logout = async (req, res) => {
-    try {
-        res.cookie('accessToken',null,{
-            expires : new Date(Date.now()),
-            httpOnly: true
-        })
-        responseReturn(res, 200,{ message : 'logout Success' })
-    } catch (error) {
-        responseReturn(res, 500,{ error : error.message })
+    logout = async (req, res) => {
+        try {
+            res.cookie('accessToken',null,{
+                expires : new Date(Date.now()),
+                httpOnly: true
+            })
+            responseReturn(res, 200,{ message : 'logout Success' })
+        } catch (error) {
+            responseReturn(res, 500,{ error : error.message })
+        }
     }
- }
-// End Method 
-
 }
 
 module.exports = new authControllers()
