@@ -58,12 +58,12 @@ const Header = () => {
                         <ul className='flex justify-start items-center gap-8 font-semibold text-black'>
                             <li className='flex relative justify-center items-center gap-2 text-sm after:absolute after:h-[18px] after:w-[1px] after:bg-[#afafaf] after:-right-[16px]'>
                                 <span><MdEmail /></span>
-                                <span>support@gmail.com</span>
+                                <span>agriconnect@gmail.com</span>
                             </li>
 
                             <li className='flex relative justify-center items-center gap-2 text-sm '>
                                 <span><IoMdPhonePortrait  /></span>
-                                <span>+(123) 3243 343</span>
+                                <span>+(63) 927 041 6057</span>
                             </li> 
                         </ul>
 
@@ -243,7 +243,7 @@ const Header = () => {
         <span><FaPhoneAlt /></span>
         </div>
         <div className='flex justify-end flex-col gap-1'>
-            <h2 className='text-sm font-medium text-slate-700'>+134343455</h2>
+            <h2 className='text-sm font-medium text-slate-700'>+63 927-041-6057</h2>
             <span className='text-xs'>Support 24/7</span> 
         </div>
         </div>
@@ -251,7 +251,7 @@ const Header = () => {
         <ul className='flex flex-col justify-start items-start gap-3 text-[#1c1c1c]'>
             <li className='flex justify-start items-center gap-2 text-sm'>
              <span><MdEmail /></span>
-             <span>support@gmail.com</span>
+             <span>agriconnect@gmail.com</span>
             </li>
 
         </ul> 
@@ -334,7 +334,7 @@ const Header = () => {
                             <span><FaPhoneAlt className="text-[#059473]" /></span>
                         </div>
                         <div className='flex justify-end flex-col gap-1'>
-                            <h2 className='text-sm font-medium text-slate-700'>+1343-43233455</h2>
+                            <h2 className='text-sm font-medium text-slate-700'>+63 927-041-6057</h2>
                             <span className='text-xs'>Support 24/7</span> 
                         </div>
                     </div>
@@ -409,7 +409,7 @@ const Header = () => {
                     <span><FaPhoneAlt className="text-[#059473]" /></span>
                 </div>
                 <div className='flex justify-end flex-col gap-1'>
-                    <h2 className='text-sm font-medium text-slate-700'>+134343455</h2>
+                    <h2 className='text-sm font-medium text-slate-700'>+63 927-041-6057</h2>
                     <span className='text-xs'>Support 24/7</span> 
                 </div>
             </div>
@@ -417,7 +417,7 @@ const Header = () => {
             <ul className='flex flex-col justify-start items-start gap-3 text-[#1c1c1c]'>
                 <li className='flex justify-start items-center gap-2 text-sm'>
                     <span><MdEmail /></span>
-                    <span>support@gmail.com</span>
+                    <span>agriconnect@gmail.com</span>
                 </li>
             </ul> 
         </div> 

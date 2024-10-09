@@ -51,7 +51,7 @@ const AdminDashboard = () => {
         tooltip: { 
             y: { 
                 formatter: function (val) { 
-                    return "₱" + val.toLocaleString('en-PH');
+                    return " " + val.toLocaleString('en-PH');
                 } 
             } 
         },
@@ -142,7 +142,7 @@ const AdminDashboard = () => {
             <div className='bg-white rounded-lg shadow-sm p-4 overflow-x-auto'>
                 <div className='flex justify-between items-center mb-4'>
                     <h2 className='text-lg font-semibold text-gray-800'>Recent Orders</h2>
-                    <Link to="/admin/orders" className='text-sm text-blue-600 hover:underline'>View All</Link>
+                    <Link to="/admin/dashboard/orders" className='text-sm text-blue-600 hover:underline'>View All</Link>
                 </div>
                 <table className='w-full text-sm text-left text-gray-500'>
                     <thead className='text-xs text-gray-700 uppercase bg-gray-50'>
@@ -176,7 +176,7 @@ const AdminDashboard = () => {
                                     </span>
                                 </td>
                                 <td className='px-6 py-4'>
-                                    <Link to={`/admin/order/details/${d._id}`} className='text-blue-600 hover:underline'>View</Link>
+                                    <Link to={`/admin/dashboard/order/details/${d._id}`} className='text-blue-600 hover:underline'>View</Link>
                                 </td>
                             </tr>
                         ))}
