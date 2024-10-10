@@ -31,7 +31,7 @@ const Payments = () => {
     const Row = ({ index, style }) => (
         <div style={style} className='flex items-center text-sm text-gray-600 border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150 ease-in-out'>
             <div className='w-1/4 p-3'>{index + 1}</div>
-            <div className='w-1/4 p-3 font-medium'>${pendingWithdrows[index]?.amount}</div>
+            <div className='w-1/4 p-3 font-medium'>₱{pendingWithdrows[index]?.amount}</div>
             <div className='w-1/4 p-3'>
                 <span className='px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold'>{pendingWithdrows[index]?.status}</span>
             </div>
@@ -42,7 +42,7 @@ const Payments = () => {
     const Rows = ({ index, style }) => (
         <div style={style} className='flex items-center text-sm text-gray-600 border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150 ease-in-out'>
             <div className='w-1/4 p-3'>{index + 1}</div>
-            <div className='w-1/4 p-3 font-medium'>${successWithdrows[index]?.amount}</div>
+            <div className='w-1/4 p-3 font-medium'>₱{successWithdrows[index]?.amount}</div>
             <div className='w-1/4 p-3'>
                 <span className='px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold'>{successWithdrows[index]?.status}</span>
             </div>
@@ -84,7 +84,7 @@ const Payments = () => {
                             <div className='p-4'>
                                 <p className='text-sm text-gray-500 mb-1'>{item.title}</p>
                                 <div className='flex items-center justify-between'>
-                                    <h3 className='text-2xl font-bold text-gray-700'>${item.amount}</h3>
+                                    <h3 className='text-2xl font-bold text-gray-700'>₱{item.amount}</h3>
                                     {item.trend}
                                 </div>
                             </div>

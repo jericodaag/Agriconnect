@@ -64,7 +64,7 @@ const Register = () => {
         },
         imageSection: {
             flex: 1,
-            backgroundImage: 'url("https://source.unsplash.com/random/800x600?nature")',
+            backgroundImage: 'url("/images/grocery.jpg")',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display: isMobile ? 'none' : 'block',

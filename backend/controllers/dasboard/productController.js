@@ -2,6 +2,7 @@ const formidable = require("formidable")
 const { responseReturn } = require("../../utilities/response")
 const cloudinary = require('cloudinary').v2
 const productModel = require('../../models/productModel')
+const sellerModel = require('../../models/sellerModel') // Add this line
  
 class productController{
 
@@ -10,7 +11,7 @@ class productController{
         const form = formidable({ multiples: true })
 
         form.parse(req, async(err, field, files) => {
-            let {name, category,description, stock,price, discount,shopName,brand} = field;
+            let {name, category, description, stock, price, discount, brand} = field;
             let {images} = files;
             name = name.trim()
             const slug = name.split(' ').join('-')
@@ -23,6 +24,13 @@ class productController{
             })
 
             try {
+                // Fetch the seller's information
+                const seller = await sellerModel.findById(id)
+                if (!seller) {
+                    return responseReturn(res, 404, { error: 'Seller not found' })
+                }
+                const shopName = seller.shopInfo.shopName
+
                 let allImageUrl = [];
 
                 if (!Array.isArray(images)) {

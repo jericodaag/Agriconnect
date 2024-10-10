@@ -68,7 +68,7 @@ export const seller_register = createAsyncThunk(
     'auth/seller_register',
     async(info, { rejectWithValue, fulfillWithValue }) => {
         try {
-            const { data } = await api.post('/api/seller-register', info);
+            const { data } = await api.post('/seller-register', info, { withCredentials: true });
             localStorage.setItem('accessToken', data.token);
             return fulfillWithValue(data);
         } catch (error) {
@@ -140,6 +140,7 @@ export const authReducer = createSlice({
                 state.successMessage = payload.message;
                 state.token = payload.token;
                 state.role = returnRole(payload.token);
+                state.userInfo = payload.userInfo;
             })
             .addCase(seller_login.pending, (state) => {
                 state.loader = true;
@@ -153,6 +154,7 @@ export const authReducer = createSlice({
                 state.successMessage = payload.message;
                 state.token = payload.token;
                 state.role = returnRole(payload.token);
+                state.userInfo = payload.userInfo;
             })
             .addCase(seller_register.pending, (state) => {
                 state.loader = true;
@@ -166,6 +168,7 @@ export const authReducer = createSlice({
                 state.successMessage = payload.message;
                 state.token = payload.token;
                 state.role = returnRole(payload.token);
+                state.userInfo = payload.userInfo;
             })
             .addCase(get_user_info.fulfilled, (state, { payload }) => {
                 state.loader = false;

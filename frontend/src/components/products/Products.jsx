@@ -57,11 +57,12 @@ const Products = ({ title, products }) => {
                             <Link 
                                 key={j} 
                                 className='flex justify-start items-start hover:bg-gray-100 transition-colors duration-200 p-2 rounded'
-                                to={`/product/details/${pl.slug}`}  // Assuming you have a route like this for product details
+                                to={`/product/details/${pl.slug}`}
                             >
                                 <img className='w-[110px] h-[110px] object-cover rounded' src={pl.images[0]} alt={pl.name} />
                                 <div className='px-3 flex justify-start items-start gap-1 flex-col text-slate-600'>
                                     <h2 className='font-semibold hover:text-green-600 transition-colors duration-200'>{pl.name}</h2>
+                                    <span className='text-sm text-gray-500'>{pl.shopName}</span>
                                     <span className='text-lg font-bold text-green-600'>₱{pl.price}</span> 
                                 </div>  
                             </Link>

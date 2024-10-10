@@ -3,51 +3,52 @@ const {Schema, model} = require("mongoose");
 const productSchema = new Schema({
     sellerId: {
         type: Schema.ObjectId,
-        required : true
+        required: true,
+        ref: 'sellers' // Add this to enable population
     },
     name: {
         type: String,
-        required : true
+        required: true
     },
     slug: {
         type: String,
-        required : true
+        required: true
     },
     category: {
         type: String,
-        required : true
+        required: true
     },
     brand: {
         type: String,
-        required : true
+        required: true
     },
     price: {
         type: Number,
-        required : true
+        required: true
     },
     stock: {
         type: Number,
-        required : true
+        required: true
     },
     discount: {
         type: Number,
-        required : true
+        required: true
     },
     description: {
         type: String,
-        required : true
+        required: true
     },
     shopName: {
         type: String,
-        required : true
+        required: true
     },
     images: {
         type: Array,
-        required : true
+        required: true
     },
     rating: {
         type: Number,
-        default : 0
+        default: 0
     } 
      
 }, {timestamps: true})
@@ -64,7 +65,6 @@ productSchema.index({
         brand: 3,
         description: 2
     }
-
 })
 
-module.exports = model('products',productSchema)
+module.exports = model('products', productSchema)

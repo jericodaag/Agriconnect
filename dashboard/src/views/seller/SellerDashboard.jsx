@@ -93,7 +93,7 @@ const SellerDashboard = () => {
             <div className='bg-white rounded-lg shadow-sm p-4 overflow-x-auto'>
                 <div className='flex justify-between items-center mb-4'>
                     <h2 className='text-lg font-semibold text-gray-800'>Recent Orders</h2>
-                    <Link to="/dashboard/orders" className='text-sm text-blue-600 hover:underline'>View All</Link>
+                    <Link to="/seller/dashboard/orders" className='text-sm text-blue-600 hover:underline'>View All</Link>
                 </div>
                 <table className='w-full text-sm text-left text-gray-500'>
                     <thead className='text-xs text-gray-700 uppercase bg-gray-50'>

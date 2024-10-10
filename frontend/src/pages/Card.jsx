@@ -60,13 +60,13 @@ const Card = () => {
             <div className='absolute left-0 top-0 w-full h-full bg-[#2422228a]'>
                 <div className='w-[85%] md:w-[80%] sm:w-[90%] lg:w-[90%] h-full mx-auto'>
                     <div className='flex flex-col justify-center gap-1 items-center h-full w-full text-white'>
-                <h2 className='text-3xl font-bold'>Card Page </h2>
+                <h2 className='text-3xl font-bold'>Cart Page </h2>
                 <div className='flex justify-center items-center gap-2 text-2xl w-full'>
                         <Link to='/'>Home</Link>
                         <span className='pt-1'>
                         <IoIosArrowForward />
                         </span>
-                        <span>Card </span>
+                        <span>Cart </span>
                       </div>
                     </div> 
                 </div> 
@@ -187,7 +187,7 @@ const Card = () => {
                     <span>${shipping_fee} </span>
                 </div>
                 <div className='flex gap-2'>
-                <input className='w-full px-3 py-2 border border-slate-200 outline-0 focus:border-green-500 rounded-sm' type="text" placeholder='Input Vauchar Coupon' />
+                <input className='w-full px-3 py-2 border border-slate-200 outline-0 focus:border-green-500 rounded-sm' type="text" placeholder='Input Voucher Coupon' />
                 <button className='px-5 py-[1px] bg-[#059473] text-white rounded-sm uppercase text-sm'>Apply</button>
                 </div>
 

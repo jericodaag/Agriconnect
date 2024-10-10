@@ -11,7 +11,14 @@ const Register = () => {
     const navigate = useNavigate()
     const dispatch = useDispatch()
     const { loader, successMessage, errorMessage } = useSelector(state => state.auth)
-    const [state, setState] = useState({ name: "", email: "", password: "" })
+    const [state, setState] = useState({ 
+        name: "", 
+        email: "", 
+        password: "",
+        shopName: "",
+        division: "",
+        district: ""
+    })
 
     const inputHandle = (e) => {
         setState({ ...state, [e.target.name]: e.target.value })
@@ -49,6 +56,15 @@ const Register = () => {
                         </div>
                         <div>
                             <input onChange={inputHandle} value={state.password} className='w-full px-4 py-3 rounded-lg bg-gray-100 border border-gray-300 focus:border-green-500 focus:bg-white focus:outline-none' type="password" name='password' placeholder='Password' required />
+                        </div>
+                        <div>
+                            <input onChange={inputHandle} value={state.shopName} className='w-full px-4 py-3 rounded-lg bg-gray-100 border border-gray-300 focus:border-green-500 focus:bg-white focus:outline-none' type="text" name='shopName' placeholder='Shop Name' required />
+                        </div>
+                        <div>
+                            <input onChange={inputHandle} value={state.division} className='w-full px-4 py-3 rounded-lg bg-gray-100 border border-gray-300 focus:border-green-500 focus:bg-white focus:outline-none' type="text" name='division' placeholder='Division' required />
+                        </div>
+                        <div>
+                            <input onChange={inputHandle} value={state.district} className='w-full px-4 py-3 rounded-lg bg-gray-100 border border-gray-300 focus:border-green-500 focus:bg-white focus:outline-none' type="text" name='district' placeholder='District' required />
                         </div>
                         <div className='flex items-center'>
                             <input className='w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500' type="checkbox" name="terms" id="terms" required />

@@ -21,9 +21,9 @@ const Footer = () => {
                     <div className='flex flex-col gap-3'>
                         <img className='w-[190px] h-[70px]' src="http://localhost:3000/images/logo.png" alt="logo" />
                         <ul className='flex flex-col gap-2 text-slate-600'>
-                            <li>Address :  2504 Ivins Avenue, Egg Harbor Township, NJ 08234,</li>
-                            <li>Phone : 4343434344</li>
-                            <li>Email : support@easylearingbd.com</li>
+                            <li>Address : MacArthur Highway, Claro M. Recto, Angeles City , Pampanga , Philippines</li>
+                            <li>Phone : +63 927-041-6057</li>
+                            <li>Email : support@agriconnect.com</li>
                         </ul> 
                     </div> 
                 </div>

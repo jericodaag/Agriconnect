@@ -62,33 +62,49 @@ class authControllers{
     }
 
     seller_register = async(req, res) => {
-         const {email,name,password} = req.body
-         try {
+        const { email, name, password, shopName, division, district } = req.body
+        try {
             const getUser = await sellerModel.findOne({email})
             if (getUser) {
-                responseReturn(res,404,{error: 'Email Already Exit'})
-            }else{
+                responseReturn(res,404,{error: 'Email Already Exists'})
+            } else {
                 const seller = await sellerModel.create({
                     name,
                     email,
                     password: await bcrpty.hash(password, 10),
-                    method : 'menualy',
-                    shopInfo: {}
+                    method: 'manually',
+                    shopInfo: {
+                        shopName,
+                        division,
+                        district
+                    }
                 })
-               await sellerCustomerModel.create({
-                     myId: seller.id
-               })
-
-               const token = await createToken({ id : seller.id, role: seller.role })
-               res.cookie('accessToken',token, {
-                expires : new Date(Date.now() + 7*24*60*60*1000 )
-               })
-
-               responseReturn(res,201,{token,message: 'Register Success'})
+                await sellerCustomerModel.create({
+                    myId: seller.id
+                })
+    
+                const token = await createToken({ id: seller.id, role: seller.role })
+                res.cookie('accessToken', token, {
+                    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                })
+    
+                const userInfo = {
+                    id: seller.id,
+                    name: seller.name,
+                    email: seller.email,
+                    role: seller.role,
+                    status: seller.status,
+                    payment: seller.payment,
+                    image: seller.image,
+                    shopInfo: seller.shopInfo
+                }
+    
+                responseReturn(res, 201, { token, message: 'Register Success', userInfo })
             }
-         } catch (error) {
-            responseReturn(res,500,{error: 'Internal Server Error'})
-         }
+        } catch (error) {
+            console.error('Registration error:', error);
+            responseReturn(res, 500, { error: 'Internal Server Error' })
+        }
     }
 
     getUser = async (req, res) => {
