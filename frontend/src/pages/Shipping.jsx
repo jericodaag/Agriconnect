@@ -81,8 +81,53 @@ const Shipping = () => {
                         {
                             !res && <>
                                 <form onSubmit={save}>
-                                    {/* Shipping form fields remain unchanged */}
-                                    {/* ... */}
+                                <div className='flex md:flex-col md:gap-2 w-full gap-5 text-slate-600'>
+                                <div className='flex flex-col gap-1 mb-2 w-full'>
+                                    <label htmlFor="name"> Name </label>
+                                    <input onChange={inputHandle} value={state.name} type="text" className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' name="name" id="name" placeholder='Name' /> 
+                                </div>
+
+                                <div className='flex flex-col gap-1 mb-2 w-full'>
+                                    <label htmlFor="address"> Address </label>
+                                    <input onChange={inputHandle} value={state.address} type="text" className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' name="address" id="address" placeholder='Address' /> 
+                                </div> 
+                                </div>
+
+                                <div className='flex md:flex-col md:gap-2 w-full gap-5 text-slate-600'>
+                                <div className='flex flex-col gap-1 mb-2 w-full'>
+                                    <label htmlFor="phone"> Phone </label>
+                                    <input onChange={inputHandle} value={state.phone} type="text" className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' name="phone" id="phone" placeholder='Phone' /> 
+                                </div>
+
+                                <div className='flex flex-col gap-1 mb-2 w-full'>
+                                    <label htmlFor="post"> Post </label>
+                                    <input onChange={inputHandle} value={state.post} type="text" className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' name="post" id="post" placeholder='Post' /> 
+                                </div> 
+                                </div>
+
+                                <div className='flex md:flex-col md:gap-2 w-full gap-5 text-slate-600'>
+                                <div className='flex flex-col gap-1 mb-2 w-full'>
+                                    <label htmlFor="province"> Province </label>
+                                    <input onChange={inputHandle} value={state.province} type="text" className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' name="province" id="province" placeholder='Province' /> 
+                                </div>
+
+                                <div className='flex flex-col gap-1 mb-2 w-full'>
+                                    <label htmlFor="city"> City </label>
+                                    <input onChange={inputHandle} value={state.city} type="text" className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' name="city" id="city" placeholder='City' /> 
+                                </div> 
+                                </div>
+
+
+                                <div className='flex md:flex-col md:gap-2 w-full gap-5 text-slate-600'>
+                                <div className='flex flex-col gap-1 mb-2 w-full'>
+                                    <label htmlFor="area"> Area </label>
+                                    <input onChange={inputHandle} value={state.area} type="text" className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' name="area" id="area" placeholder='Area' /> 
+                                </div>
+
+                                <div className='flex flex-col gap-1 mt-7 mb-2 w-full'>
+                                <button className='px-3 py-[6px] rounded-sm hover:shadow-green-500/50 hover:shadow-lg bg-green-500 text-white'>Save Change </button>
+                                </div> 
+                                </div> 
                                 </form>
                             </>
                         }
