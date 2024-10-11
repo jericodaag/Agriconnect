@@ -99,11 +99,11 @@ class orderController {
     
     get_customer_dashboard_data = async(req, res) => {
         const { userId } = req.params 
-
+    
         try {
             const recentOrders = await customerOrder.find({
                 customerId: new ObjectId(userId) 
-            }).limit(5)
+            }).sort({ createdAt: -1 }).limit(5)  // Sort by createdAt in descending order
             const pendingOrder = await customerOrder.find({
                 customerId: new ObjectId(userId), delivery_status: 'pending'
              }).countDocuments()

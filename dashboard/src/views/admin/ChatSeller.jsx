@@ -72,7 +72,7 @@ const ChatSeller = () => {
             if (receverMessage.senderId === sellerId && receverMessage.receverId === '') {
                 dispatch(updateSellerMessage(receverMessage));
             } else {
-                toast.success(receverMessage.senderName + " " + "Send A message");
+                toast.success(receverMessage.senderName + " " + "Sent a message");
                 dispatch(messageClear());
             }
         }

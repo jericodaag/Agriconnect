@@ -73,7 +73,7 @@ const SellerToCustomer = () => {
             if (customerId === receverMessage.senderId && userInfo._id === receverMessage.receverId) {
                 dispatch(updateMessage(receverMessage));
             } else {
-                toast.success(receverMessage.senderName + " " + "Send A message");
+                toast.success(receverMessage.senderName + " " + "Sent a message");
                 dispatch(messageClear());
             }
         }
