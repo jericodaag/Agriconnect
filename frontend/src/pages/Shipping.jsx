@@ -164,8 +164,8 @@ const Shipping = () => {
 
                                     <div className='flex justify-between w-5/12 sm:w-full sm:mt-3'>
                                         <div className='pl-4 sm:pl-0'>
-                                            <h2 className='text-lg text-orange-500'>${pt.productInfo.price - Math.floor((pt.productInfo.price * pt.productInfo.discount) / 100)}</h2>
-                                            <p className='line-through'>${pt.productInfo.price}</p>
+                                            <h2 className='text-lg text-orange-500'>₱{pt.productInfo.price - Math.floor((pt.productInfo.price * pt.productInfo.discount) / 100)}</h2>
+                                            <p className='line-through'>₱{pt.productInfo.price}</p>
                                             <p>-{pt.productInfo.discount}%</p>
                                             <p className='text-sm text-gray-500'>Sold by: {pt.productInfo.shopName}</p>
                                         </div>
@@ -183,19 +183,19 @@ const Shipping = () => {
                         <h2 className='text-xl font-bold'>Order Summary</h2>
                         <div className='flex justify-between items-center'>
                             <span>Items Total ({items} items) </span>
-                            <span>${price}</span>
+                            <span>₱{price}</span>
                         </div>
                         <div className='flex justify-between items-center'>
                             <span>Delivery Fee </span>
-                            <span>${shipping_fee} </span>
+                            <span>₱{shipping_fee} </span>
                         </div>
                         <div className='flex justify-between items-center'>
                             <span>Total Payment </span>
-                            <span>${price + shipping_fee} </span>
+                            <span>₱{price + shipping_fee} </span>
                         </div>
                         <div className='flex justify-between items-center'>
                             <span>Total</span>
-                            <span className='text-lg text-[#059473]'>${price + shipping_fee} </span>
+                            <span className='text-lg text-[#059473]'>₱{price + shipping_fee} </span>
                         </div>
                         <button onClick={placeOrder} disabled={res ? false : true} className={`px-5 py-[6px] rounded-sm hover:shadow-red-500/50 hover:shadow-lg ${res ? 'bg-red-500' : 'bg-red-300'}  text-sm text-white uppercase`}>
                            Place Order 

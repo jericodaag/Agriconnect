@@ -36,7 +36,7 @@ const Orders = () => {
             <div className='flex justify-between items-center'>
                 <h2 className='text-xl font-semibold text-slate-600'>My Orders </h2>
                 <select className='outline-none px-3 py-1 border rounded-md text-slate-600' value={state} onChange={(e) => setState(e.target.value)} >
-                    <option value="all">--ordre status--</option>
+                    <option value="all">--order status--</option>
                     <option value="placed">Placed</option>
                     <option value="pending">Pending</option>
                     <option value="cancelled">Cancelled</option>
@@ -60,7 +60,7 @@ const Orders = () => {
         {
                 myOrders.map((o,i) => <tr className='bg-white border-b'>
                 <td scope='row' className='px-6 py-4 font-medium whitespace-nowrap'>#{o._id}</td>
-                <td scope='row' className='px-6 py-4 font-medium whitespace-nowrap'>${o.price}</td>
+                <td scope='row' className='px-6 py-4 font-medium whitespace-nowrap'>₱{o.price}</td>
                 <td scope='row' className='px-6 py-4 font-medium whitespace-nowrap'>{o.payment_status }</td>
                 <td scope='row' className='px-6 py-4 font-medium whitespace-nowrap'>{o.delivery_status}</td>
                 <td scope='row' className='px-6 py-4 font-medium whitespace-nowrap'>
