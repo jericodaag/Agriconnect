@@ -90,7 +90,7 @@ const OrderDetails = () => {
                       <p className="text-gray-800 font-semibold">₱{p.price - Math.floor((p.price * p.discount) / 100)}</p>
                       {p.discount > 0 && (
                         <p className="text-xs text-gray-500">
-                          <span className="line-through">${p.price}</span>
+                          <span className="line-through">₱{p.price}</span>
                           <span className="ml-1 text-green-600">-{p.discount}%</span>
                         </p>
                       )}
@@ -110,7 +110,7 @@ const OrderDetails = () => {
               <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-600">Total Price</span>
-                  <span className="text-xl font-semibold text-gray-800">${myOrder.price}</span>
+                  <span className="text-xl font-semibold text-gray-800">₱{myOrder.price}</span>
                 </div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-600">Payment Status</span>

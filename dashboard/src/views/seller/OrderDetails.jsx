@@ -99,7 +99,7 @@ const OrderDetails = () => {
                                     {order.payment_status}
                                 </span>
                             </p>
-                            <p><span className="font-semibold">Price:</span> ${order.price}</p>
+                            <p><span className="font-semibold">Price:</span> ₱{order.price}</p>
                         </div>
                     </div>
                 </div>

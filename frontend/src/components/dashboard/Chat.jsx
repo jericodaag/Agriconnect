@@ -24,15 +24,19 @@ const Chat = () => {
     const [showEmoji, setShowEmoji] = useState(false);
 
     useEffect(() => {
-        socket.emit('add_user', userInfo.id, userInfo);
+        if (userInfo && userInfo.id) {
+            socket.emit('add_user', userInfo.id, userInfo);
+        }
     }, [userInfo]);
 
     useEffect(() => {
-        dispatch(add_friend({
-            sellerId: sellerId || "",
-            userId: userInfo.id
-        }));
-    }, [sellerId, dispatch, userInfo.id]);
+        if (sellerId && userInfo && userInfo.id) {
+            dispatch(add_friend({
+                sellerId: sellerId || "",
+                userId: userInfo.id
+            }));
+        }
+    }, [sellerId, dispatch, userInfo]);
 
     useEffect(() => {
         socket.on('seller_message', msg => {
@@ -41,6 +45,11 @@ const Chat = () => {
         socket.on('activeSeller', (sellers) => {
             setActiveSeller(sellers);
         });
+
+        return () => {
+            socket.off('seller_message');
+            socket.off('activeSeller');
+        };
     }, []);
 
     useEffect(() => {
@@ -52,14 +61,14 @@ const Chat = () => {
 
     useEffect(() => {
         if (receverMessage) {
-            if (sellerId === receverMessage.senderId && userInfo.id === receverMessage.receverId) {
+            if (sellerId === receverMessage.senderId && userInfo && userInfo.id === receverMessage.receverId) {
                 dispatch(updateMessage(receverMessage));
             } else {
                 toast.success(receverMessage.senderName + " " + "Send A message");
                 dispatch(messageClear());
             }
         }
-    }, [receverMessage, sellerId, userInfo.id, dispatch]);
+    }, [receverMessage, sellerId, userInfo, dispatch]);
     
     useEffect(() => {
         scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -67,7 +76,7 @@ const Chat = () => {
 
     const send = (e) => {
         e.preventDefault();
-        if (text.trim()) {
+        if (text.trim() && userInfo && userInfo.id) {
             dispatch(send_message({
                 userId: userInfo.id,
                 text: text.trim(),
@@ -89,6 +98,10 @@ const Chat = () => {
         setText(prevText => prevText + emojiObject.emoji);
     };
 
+    if (!userInfo) {
+        return <div>Loading...</div>; // Or redirect to login
+    }
+
     return (
         <div className="flex flex-col h-screen bg-gray-100">
             {showSellerList ? (
@@ -98,7 +111,7 @@ const Chat = () => {
                         <h1 className="text-xl font-bold text-gray-800">Messages</h1>
                     </div>
                     <div className="flex-1 overflow-y-auto">
-                        {my_friends.map((f, i) => (
+                        {my_friends && my_friends.map((f, i) => (
                             <Link 
                                 to={`/dashboard/chat/${f.fdId}`} 
                                 key={i} 
@@ -149,10 +162,10 @@ const Chat = () => {
 
                     {/* Messages */}
                     <div className="flex-1 overflow-y-auto p-4">
-                        {fb_messages.map((m, i) => (
+                        {fb_messages && fb_messages.map((m, i) => (
                             <div ref={scrollRef} key={i} className={`flex mb-4 ${currentFd?.fdId !== m.receverId ? 'justify-start' : 'justify-end'}`}>
                                 {currentFd?.fdId !== m.receverId && (
-                                    <img src={currentFd.image} alt="" className="w-8 h-8 rounded-full mr-2 self-end" />
+                                    <img src={currentFd?.image} alt="" className="w-8 h-8 rounded-full mr-2 self-end" />
                                 )}
                                 <div className={`max-w-[70%] px-4 py-2 rounded-3xl ${currentFd?.fdId !== m.receverId ? 'bg-white text-gray-800' : 'bg-blue-500 text-white'}`}>
                                     <span>{m.message}</span>

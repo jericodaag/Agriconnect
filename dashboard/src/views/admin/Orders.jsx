@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { LuArrowDownSquare, LuArrowUpSquare, LuSearch, LuEye } from "react-icons/lu";
+import React, { useEffect, useState, useCallback } from 'react';
+import { LuArrowDownSquare, LuArrowUpSquare, LuSearch, LuEye, LuRefreshCw } from "react-icons/lu";
 import { Link } from 'react-router-dom';
 import Pagination from '../Pagination';
 import { useDispatch, useSelector } from 'react-redux';
@@ -11,17 +11,28 @@ const Orders = () => {
     const [searchValue, setSearchValue] = useState('');
     const [parPage, setParPage] = useState(5);
     const [expandedOrder, setExpandedOrder] = useState(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     const { myOrders, totalOrder } = useSelector(state => state.order);
 
-    useEffect(() => {
+    const fetchOrders = useCallback(() => {
         const obj = {
             parPage: parseInt(parPage),
             page: parseInt(currentPage),
             searchValue
         };
         dispatch(get_admin_orders(obj));
-    }, [searchValue, currentPage, parPage, dispatch]);
+    }, [dispatch, parPage, currentPage, searchValue]);
+
+    useEffect(() => {
+        fetchOrders();
+    }, [fetchOrders]);
+
+    const refreshOrders = () => {
+        setIsRefreshing(true);
+        fetchOrders();
+        setTimeout(() => setIsRefreshing(false), 500);
+    };
 
     const toggleOrderExpansion = (orderId) => {
         setExpandedOrder(expandedOrder === orderId ? null : orderId);
@@ -51,7 +62,16 @@ const Orders = () => {
     return (
         <div className='p-6 min-h-screen'>
             <div className='bg-white rounded-xl shadow-lg p-6'>
-                <h2 className='text-3xl font-bold text-[#438206] mb-6'>Orders Management</h2>
+                <div className='flex justify-between items-center mb-6'>
+                    <h2 className='text-3xl font-bold text-[#438206]'>Orders Management</h2>
+                    <button 
+                        onClick={refreshOrders} 
+                        className={`text-[#438206] hover:text-[#61BD12] transition duration-300 ease-in-out ${isRefreshing ? 'animate-spin' : ''}`}
+                        disabled={isRefreshing}
+                    >
+                        <LuRefreshCw size={24} />
+                    </button>
+                </div>
                 <div className='flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0'>
                     <div className='w-full md:w-auto'>
                         <select 

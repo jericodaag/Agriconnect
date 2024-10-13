@@ -9,7 +9,6 @@ const { mongo: {ObjectId}} = require('mongoose')
 const stripe = require('stripe')('sk_test_51Phb3kLs4PUYCdHCPpJ794IsxnhwDIo16hMNqRXV0PdupEoBpqQcyjTejSQvxzHItA9mOb3eQs4EMW21dyJA7MHU00FKo5wKjB')
 
 class orderController {
-
     paymentCheck = async (id) => {
         try {
             const order = await customerOrder.findById(id)
@@ -59,26 +58,30 @@ class orderController {
                 delivery_status: 'pending',
                 date: tempDate
             })
+
             for (let i = 0; i < products.length; i++) {
                 const pro = products[i].products
-                const pri = products[i].price
+                let sellerTotal = 0
                 const sellerId = products[i].sellerId
                 let storePor = []
+
                 for (let j = 0; j < pro.length; j++) {
                     const tempPro = pro[j].productInfo
                     tempPro.quantity = pro[j].quantity
-                    storePor.push(tempPro)                    
+                    sellerTotal += tempPro.price * tempPro.quantity // Calculate the correct total for the seller
+                    storePor.push(tempPro)
                 }
 
                 authorOrderData.push({
-                    orderId: order.id, sellerId,
+                    orderId: order.id,
+                    sellerId,
                     products: storePor,
-                    price: pri,
+                    price: sellerTotal, // Use the calculated total price for the seller
                     payment_status: 'unpaid',
                     shippingInfo: 'Agriconnect Warehouse',
                     delivery_status: 'pending',
                     date: tempDate
-                }) 
+                })
             }
 
             await authOrderModel.insertMany(authorOrderData)
@@ -167,9 +170,9 @@ class orderController {
         let {page, searchValue, parPage} = req.query
         page = parseInt(page)
         parPage = parseInt(parPage)
-
+    
         const skipPage = parPage * (page - 1)
-
+    
         try {
             if (searchValue) {
                 // Implement search logic here
@@ -182,21 +185,13 @@ class orderController {
                             foreignField: 'orderId',
                             as: 'suborder'
                         }
-                    }
-                ]).skip(skipPage).limit(parPage).sort({ createdAt: -1})
-
-                const totalOrder = await customerOrder.aggregate([
-                    {
-                        $lookup: {
-                            from: 'authororders',
-                            localField: "_id",
-                            foreignField: 'orderId',
-                            as: 'suborder'
-                        }
-                    }
-                ])
-
-                responseReturn(res, 200, { orders, totalOrder: totalOrder.length })
+                    },
+                    { $sort: { createdAt: -1 } }  // Sort by createdAt in descending order
+                ]).skip(skipPage).limit(parPage)
+    
+                const totalOrder = await customerOrder.countDocuments()
+    
+                responseReturn(res, 200, { orders, totalOrder })
             }
         } catch (error) {
             console.log(error.message)

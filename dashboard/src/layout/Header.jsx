@@ -26,15 +26,19 @@ const Header = ({ showSidebar, setShowSidebar }) => {
         </div>
         <div className='flex items-center'>
           <div className='flex items-center gap-3'>
-            <div className='text-right hidden sm:block'>
-              <h2 className='text-sm font-semibold text-gray-700'>{userInfo.name}</h2>
-              <span className='text-xs text-gray-500'>{userInfo.role}</span>
-            </div>
-            <img
-              className='w-10 h-10 rounded-full border-2 border-green-200'
-              src={userInfo.role === 'admin' ? "http://localhost:3001/images/admin.jpg" : userInfo.image}
-              alt={userInfo.name}
-            />
+            {userInfo && (
+              <>
+                <div className='text-right hidden sm:block'>
+                  <h2 className='text-sm font-semibold text-gray-700'>{userInfo.name}</h2>
+                  <span className='text-xs text-gray-500'>{userInfo.role}</span>
+                </div>
+                <img
+                  className='w-10 h-10 rounded-full border-2 border-green-200'
+                  src={userInfo.role === 'admin' ? "http://localhost:3001/images/admin.jpg" : userInfo.image}
+                  alt={userInfo.name}
+                />
+              </>
+            )}
           </div>
         </div>
       </div>
