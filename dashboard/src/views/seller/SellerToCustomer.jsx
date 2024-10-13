@@ -9,7 +9,7 @@ import { socket } from '../../utils/utils';
 import EmojiPicker from 'emoji-picker-react';
 
 const SellerToCustomer = () => {
-    const scrollRef = useRef();
+    const messageContainerRef = useRef(null);
     const [show, setShow] = useState(false);
     const [showEmoji, setShowEmoji] = useState(false);
     const sellerId = 65;
@@ -80,8 +80,14 @@ const SellerToCustomer = () => {
     }, [receverMessage]);
 
     useEffect(() => {
-        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+        scrollToBottom();
     }, [messages]);
+
+    const scrollToBottom = () => {
+        if (messageContainerRef.current) {
+            messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+        }
+    };
 
     return (
         <div className='px-2 lg:px-7 py-5'>
@@ -110,7 +116,7 @@ const SellerToCustomer = () => {
                                     <img className='w-10 h-10 rounded-full mr-3' src="http://localhost:3001/images/demo.jpg" alt="" />
                                     <h2 className='text-xl font-semibold text-gray-800'>{currentCustomer.name}</h2>
                                 </div>
-                                <div className='flex-1 overflow-y-auto p-4' ref={scrollRef}>
+                                <div className='flex-1 overflow-y-auto p-4' ref={messageContainerRef}>
                                     {messages.map((m, i) => (
                                         <div key={i} className={`flex ${m.senderId === customerId ? 'justify-start' : 'justify-end'} mb-4`}>
                                             <div className={`max-w-[70%] p-3 rounded-lg ${m.senderId === customerId ? 'bg-white text-gray-800' : 'bg-blue-500 text-white'}`}>

@@ -24,15 +24,19 @@ const Chat = () => {
     const [showEmoji, setShowEmoji] = useState(false);
 
     useEffect(() => {
-        socket.emit('add_user', userInfo.id, userInfo);
+        if (userInfo && userInfo.id) {
+            socket.emit('add_user', userInfo.id, userInfo);
+        }
     }, [userInfo]);
 
     useEffect(() => {
-        dispatch(add_friend({
-            sellerId: sellerId || "",
-            userId: userInfo.id
-        }));
-    }, [sellerId, dispatch, userInfo.id]);
+        if (sellerId && userInfo && userInfo.id) {
+            dispatch(add_friend({
+                sellerId: sellerId || "",
+                userId: userInfo.id
+            }));
+        }
+    }, [sellerId, dispatch, userInfo]);
 
     useEffect(() => {
         socket.on('seller_message', msg => {
@@ -41,10 +45,15 @@ const Chat = () => {
         socket.on('activeSeller', (sellers) => {
             setActiveSeller(sellers);
         });
+
+        return () => {
+            socket.off('seller_message');
+            socket.off('activeSeller');
+        };
     }, []);
 
     useEffect(() => {
-        if (successMessage) {
+        if (successMessage && fb_messages && fb_messages.length > 0) {
             socket.emit('send_customer_message', fb_messages[fb_messages.length - 1]);
             dispatch(messageClear());
         }
@@ -52,14 +61,14 @@ const Chat = () => {
 
     useEffect(() => {
         if (receverMessage) {
-            if (sellerId === receverMessage.senderId && userInfo.id === receverMessage.receverId) {
+            if (sellerId === receverMessage.senderId && userInfo && userInfo.id === receverMessage.receverId) {
                 dispatch(updateMessage(receverMessage));
             } else {
                 toast.success(receverMessage.senderName + " " + "Send A message");
                 dispatch(messageClear());
             }
         }
-    }, [receverMessage, sellerId, userInfo.id, dispatch]);
+    }, [receverMessage, sellerId, userInfo, dispatch]);
     
     useEffect(() => {
         scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -67,7 +76,7 @@ const Chat = () => {
 
     const send = (e) => {
         e.preventDefault();
-        if (text.trim()) {
+        if (text.trim() && userInfo && userInfo.id) {
             dispatch(send_message({
                 userId: userInfo.id,
                 text: text.trim(),
@@ -98,27 +107,31 @@ const Chat = () => {
                         <h1 className="text-xl font-bold text-gray-800">Messages</h1>
                     </div>
                     <div className="flex-1 overflow-y-auto">
-                        {my_friends.map((f, i) => (
-                            <Link 
-                                to={`/dashboard/chat/${f.fdId}`} 
-                                key={i} 
-                                className="flex items-center p-3 hover:bg-gray-100 border-b"
-                                onClick={() => setShowSellerList(false)}
-                            >
-                                <div className="relative">
-                                    <img src={f.image} alt="" className="w-12 h-12 rounded-full" />
-                                    {activeSeller.some(c => c.sellerId === f.fdId) && (
-                                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                                    )}
-                                </div>
-                                <div className="ml-3">
-                                    <span className="font-medium text-gray-800">{f.name}</span>
-                                    <div className="text-sm text-gray-500">
-                                        {activeSeller.some(c => c.sellerId === f.fdId) ? 'Active Now' : 'Offline'}
+                        {my_friends && my_friends.length > 0 ? (
+                            my_friends.map((f, i) => (
+                                <Link 
+                                    to={`/dashboard/chat/${f.fdId}`} 
+                                    key={i} 
+                                    className="flex items-center p-3 hover:bg-gray-100 border-b"
+                                    onClick={() => setShowSellerList(false)}
+                                >
+                                    <div className="relative">
+                                        <img src={f.image} alt="" className="w-12 h-12 rounded-full" />
+                                        {activeSeller.some(c => c.sellerId === f.fdId) && (
+                                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                                        )}
                                     </div>
-                                </div>
-                            </Link>
-                        ))}
+                                    <div className="ml-3">
+                                        <span className="font-medium text-gray-800">{f.name}</span>
+                                        <div className="text-sm text-gray-500">
+                                            {activeSeller.some(c => c.sellerId === f.fdId) ? 'Active Now' : 'Offline'}
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))
+                        ) : (
+                            <p className="text-center text-gray-500 mt-4">No friends to display</p>
+                        )}
                     </div>
                 </div>
             ) : (
@@ -149,16 +162,20 @@ const Chat = () => {
 
                     {/* Messages */}
                     <div className="flex-1 overflow-y-auto p-4">
-                        {fb_messages.map((m, i) => (
-                            <div ref={scrollRef} key={i} className={`flex mb-4 ${currentFd?.fdId !== m.receverId ? 'justify-start' : 'justify-end'}`}>
-                                {currentFd?.fdId !== m.receverId && (
-                                    <img src={currentFd.image} alt="" className="w-8 h-8 rounded-full mr-2 self-end" />
-                                )}
-                                <div className={`max-w-[70%] px-4 py-2 rounded-3xl ${currentFd?.fdId !== m.receverId ? 'bg-white text-gray-800' : 'bg-blue-500 text-white'}`}>
-                                    <span>{m.message}</span>
+                        {fb_messages && fb_messages.length > 0 ? (
+                            fb_messages.map((m, i) => (
+                                <div ref={scrollRef} key={i} className={`flex mb-4 ${currentFd?.fdId !== m.receverId ? 'justify-start' : 'justify-end'}`}>
+                                    {currentFd?.fdId !== m.receverId && (
+                                        <img src={currentFd.image} alt="" className="w-8 h-8 rounded-full mr-2 self-end" />
+                                    )}
+                                    <div className={`max-w-[70%] px-4 py-2 rounded-3xl ${currentFd?.fdId !== m.receverId ? 'bg-white text-gray-800' : 'bg-blue-500 text-white'}`}>
+                                        <span>{m.message}</span>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))
+                        ) : (
+                            <p className="text-center text-gray-500 mt-4">No messages to display</p>
+                        )}
                     </div>
 
                     {/* Input Area */}
