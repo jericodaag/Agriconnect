@@ -84,7 +84,7 @@ const Payments = () => {
                             <div className='p-4'>
                                 <p className='text-sm text-gray-500 mb-1'>{item.title}</p>
                                 <div className='flex items-center justify-between'>
-                                    <h3 className='text-2xl font-bold text-gray-700'>₱{item.amount}</h3>
+                                    <h3 className='text-2xl font-bold text-gray-700'>₱{item.amount.toLocaleString('en-PH')}</h3>
                                     {item.trend}
                                 </div>
                             </div>

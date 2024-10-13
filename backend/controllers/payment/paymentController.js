@@ -164,7 +164,7 @@ class paymentController{
                 sellerId,
                 amount: parseInt(amount)
             })
-            responseReturn(res, 200,{ withdrowal, message: 'Withdrowal Request Send'})
+            responseReturn(res, 200,{ withdrowal, message: 'Withdrawal Request Sent'})
         } catch (error) {
             responseReturn(res, 500,{ message: 'Internal Server Error'})
         }
@@ -191,7 +191,7 @@ class paymentController{
 
             await stripe.transfers.create({
                 amount: payment.amount * 100,
-                currency: 'usd',
+                currency: 'php', // Changed from 'usd' to 'php'
                 destination: stripeId
             })
              

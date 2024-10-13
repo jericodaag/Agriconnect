@@ -70,7 +70,7 @@ const Orders = () => {
                                 {myOrders.map((order, index) => (
                                     <tr key={index} className="bg-white border-b hover:bg-gray-50">
                                         <td className="px-6 py-4 font-medium text-gray-900">#{order._id}</td>
-                                        <td className="px-6 py-4">${order.price}</td>
+                                        <td className="px-6 py-4">₱{order.price}</td>
                                         <td className="px-6 py-4">
                                             <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.payment_status)}`}>
                                                 {order.payment_status}
