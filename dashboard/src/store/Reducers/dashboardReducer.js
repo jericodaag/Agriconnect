@@ -37,6 +37,14 @@ export const dashboardReducer = createSlice({
     totalSeller: 0,
     recentOrder: [],
     recentMessages: [],
+    chartData: [],
+    productStatusCounts: {
+      pending: 0,
+      processing: 0,
+      warehouse: 0,
+      placed: 0,
+      cancelled: 0
+    },
     errorMessage: "",
     loading: false
   },
@@ -58,6 +66,8 @@ export const dashboardReducer = createSlice({
         state.totalSeller = payload.totalSeller
         state.recentOrder = payload.recentOrders
         state.recentMessages = payload.recentMessages
+        state.chartData = payload.chartData
+        state.productStatusCounts = payload.productStatusCounts
       })
       .addCase(get_admin_dashboard_data.rejected, (state, { payload }) => {
         state.loading = false
@@ -74,6 +84,8 @@ export const dashboardReducer = createSlice({
         state.totalPendingOrder = payload.totalPendingOrder
         state.recentOrder = payload.recentOrders
         state.recentMessages = payload.recentMessages
+        state.chartData = payload.chartData
+        state.productStatusCounts = payload.productStatusCounts
       })
       .addCase(get_seller_dashboard_data.rejected, (state, { payload }) => {
         state.loading = false

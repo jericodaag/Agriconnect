@@ -15,12 +15,12 @@ class orderController {
             const order = await customerOrder.findById(id)
             if (order.payment_status === 'unpaid') {
                 await customerOrder.findByIdAndUpdate(id, {
-                    delivery_status: 'cancelled'
+                    delivery_status: 'pending'
                 })
                 await authOrderModel.updateMany({
                     orderId: id
                 },{
-                    delivery_status: 'cancelled'
+                    delivery_status: 'pending'
                 })
             }
             return true
@@ -56,7 +56,7 @@ class orderController {
                 products: customerOrderProduct,
                 price: price + shipping_fee,
                 payment_status: 'unpaid',
-                delivery_status: 'pending',  // Changed from 'pending' to 'pending'
+                delivery_status: 'pending',
                 date: tempDate
             })
             for (let i = 0; i < products.length; i++) {
@@ -76,7 +76,7 @@ class orderController {
                     price: pri,
                     payment_status: 'unpaid',
                     shippingInfo: 'Agriconnect Warehouse',
-                    delivery_status: 'pending',  // Changed from 'pending' to 'pending'
+                    delivery_status: 'pending',
                     date: tempDate
                 }) 
             }
@@ -103,7 +103,7 @@ class orderController {
         try {
             const recentOrders = await customerOrder.find({
                 customerId: new ObjectId(userId) 
-            }).sort({ createdAt: -1 }).limit(5)  // Sort by createdAt in descending order
+            }).sort({ createdAt: -1 }).limit(5)
             const pendingOrder = await customerOrder.find({
                 customerId: new ObjectId(userId), delivery_status: 'pending'
              }).countDocuments()
@@ -317,11 +317,11 @@ class orderController {
         try {
             await customerOrder.findByIdAndUpdate(orderId, { 
                 payment_status: 'paid',
-                delivery_status: 'pending'  // Ensure delivery status remains 'pending' after payment
+                delivery_status: 'pending'
             })
             await authOrderModel.updateMany({ orderId: new ObjectId(orderId)}, {
                 payment_status: 'paid',
-                delivery_status: 'pending'  // Ensure delivery status remains 'pending' after payment
+                delivery_status: 'pending'
             })
             const cuOrder = await customerOrder.findById(orderId)
 
@@ -351,23 +351,20 @@ class orderController {
             console.log(error.message)
             responseReturn(res, 500, {message: 'Error confirming order'}) 
         }
+    }
 
-        //end method
+    get_latest_customer_orders = async (req, res) => {
+        try {
+            const latestOrders = await customerOrder.find()
+                .sort({ createdAt: -1 })
+                .limit(5)
+                .populate('customerId', 'name email')
 
-        get_latest_customer_orders = async (req, res) => {
-            try {
-                const latestOrders = await customerOrder.find()
-                    .sort({ createdAt: -1 })
-                    .limit(5)
-                    .populate('customerId', 'name email')
-    
-                responseReturn(res, 200, { orders: latestOrders })
-            } catch (error) {
-                console.log(error.message)
-                responseReturn(res, 500, { error: 'Internal server error' })
-            }
+            responseReturn(res, 200, { orders: latestOrders })
+        } catch (error) {
+            console.log(error.message)
+            responseReturn(res, 500, { error: 'Internal server error' })
         }
-    
     }
 }
 
