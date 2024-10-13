@@ -1,156 +1,189 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
-import { admin_order_status_update, get_admin_order,messageClear} from '../../store/Reducers/OrderReducer';
+import { admin_order_status_update, get_admin_order, messageClear } from '../../store/Reducers/OrderReducer';
 import toast from 'react-hot-toast';
 
 const OrderDetails = () => {
-
-    const { orderId } = useParams() 
-    const dispatch = useDispatch() 
-    const [status, setStatus] = useState('')
-    const { order,errorMessage,successMessage } = useSelector(state => state.order)
-     
-    useEffect(() => {
-        setStatus(order?.delivery_status)
-    },[order])
+    const { orderId } = useParams();
+    const dispatch = useDispatch();
+    const [status, setStatus] = useState('');
+    const { order, errorMessage, successMessage } = useSelector(state => state.order);
+    const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
-        dispatch(get_admin_order(orderId))
-    },[orderId])
+        dispatch(get_admin_order(orderId));
+        setTimeout(() => setIsLoaded(true), 300);
+    }, [orderId, dispatch]);
 
-   
+    useEffect(() => {
+        setStatus(order?.delivery_status);
+    }, [order]);
 
     const status_update = (e) => {
-        dispatch(admin_order_status_update({orderId, info: {status: e.target.value} }))
-        setStatus(e.target.value)
-    }
+        dispatch(admin_order_status_update({ orderId, info: { status: e.target.value } }));
+        setStatus(e.target.value);
+    };
 
-    useEffect(() => { 
+    useEffect(() => {
         if (successMessage) {
-            toast.success(successMessage)
-            dispatch(messageClear())  
-        } 
+            toast.success(successMessage);
+            dispatch(messageClear());
+        }
         if (errorMessage) {
-            toast.error(errorMessage)
-            dispatch(messageClear())  
-        } 
-    },[successMessage,errorMessage])
+            toast.error(errorMessage);
+            dispatch(messageClear());
+        }
+    }, [successMessage, errorMessage, dispatch]);
+
+    const StatusBadge = ({ status }) => {
+        const color = status === 'paid' || status === 'delivered' 
+            ? 'bg-green-100 text-green-800' 
+            : 'bg-yellow-100 text-yellow-800';
+        return (
+            <span className={`${color} text-xs font-medium px-2 py-1 rounded-full`}>
+                {status}
+            </span>
+        );
+    };
+
+    const Icon = ({ name }) => {
+        const icons = {
+            order: (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd" />
+                </svg>
+            ),
+            calendar: (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+            ),
+            summary: (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                    <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+                </svg>
+            ),
+            shipping: (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+                    <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z" />
+                </svg>
+            ),
+            contact: (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                </svg>
+            ),
+        };
+        return icons[name] || null;
+    };
 
     return (
-        <div className='px-2 lg:px-7 pt-5'>
-        <div className='w-full p-4 bg-[#6a5fdf] rounded-md'>
-            <div className='flex justify-between items-center p-4'>
-                <h2 className='text-xl text-[#d0d2d6]'>Order Details</h2>
-                <select onChange={status_update} value={status} name="" id="" className='px-4 py-2 focus:border-indigo-500 outline-none bg-[#475569] border border-slate-700 rounded-md text-[#d0d2d6]'>
-                <option value="pending">pending</option>
-                <option value="processing">processing</option>
-                <option value="warehouse">warehouse</option>
-                <option value="placed">placed</option>
-                <option value="cancelled">cancelled</option>
-                </select> 
-            </div>
-
-        <div className='p-4'>
-            <div className='flex gap-2 text-lg text-[#d0d2d6]'>
-                <h2>#{order._id}</h2>
-                <span>{order.date}</span> 
-            </div>
-            
-            <div className='flex flex-wrap'>
-                <div className='w-[30%]'>
-                    <div className='pr-3 text-[#d0d2d6] text-lg'>
-                        <div className='flex flex-col gap-1'>
-                            <h2 className='pb-2 font-semibold'>Deliver To : {order.shippingInfo?.name} </h2>
-                            <p><span className='text-sm'>
-                                {order.shippingInfo?.address}
-                                {order.shippingInfo?.province}
-                                {order.shippingInfo?.city}
-                                {order.shippingInfo?.area}</span></p> 
+        <div className={`bg-gray-50 min-h-screen p-4 sm:p-6 md:p-8 transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+            <div className="max-w-7xl mx-auto bg-white shadow-sm rounded-lg overflow-hidden">
+                <div className="p-6 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                            <Icon name="order" />
+                            <h1 className="text-2xl font-semibold text-gray-800">Order #{order._id}</h1>
                         </div>
-            <div className='flex justify-start items-center gap-3'>
-                <h2>Payment Status: </h2>
-                <span className='text-base'>{order.payment_status}</span>
-             </div>  
-             <span>Price : ${order.price}</span> 
-
-            <div className='mt-4 flex flex-col gap-4 bg-[#8288ed] rounded-md'>
-                <div className='text-[#d0d2d6]'>
-    {
-        order.products && order.products.map((p, i) =>  <div key={i} className='flex gap-3 text-md'>
-        <img className='w-[50px] h-[50px]' src={p.images[0]} alt="" />
-
-        <div>
-            <h2>{p.name} </h2>
-            <p>
-                <span>Brand : </span>
-                <span>{p.brand}</span>
-                <span className='text-lg'>Quantity : {p.quantity} </span>
-            </p>
-        </div> 
-    </div> )
-    }    
-                    
-                   
-                </div>
-                </div>  
-
- 
-
-
+                        <select
+                            onChange={status_update}
+                            value={status}
+                            className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                            <option value="pending">Pending</option>
+                            <option value="processing">Processing</option>
+                            <option value="warehouse">Warehouse</option>
+                            <option value="placed">Placed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
                     </div>
-                </div> 
-
-    <div className='w-[70%]'>
-        <div className='pl-3'>
-            <div className='mt-4 flex flex-col bg-[#8288ed] rounded-md p-4'>
-               
-
-            {
-                order?.suborder?.map((o,i) => <div key={i + 20} className='text-[#d0d2d6] mt-2'>
-                <div className='flex justify-start items-center gap-3'>
-                    <h2>Seller {i + 1}   Order : </h2>
-                    <span>{o.delivery_status}</span> 
+                    <div className="flex items-center space-x-2 mt-2 text-gray-500">
+                        <Icon name="calendar" />
+                        <p className="text-sm">{order.date}</p>
+                    </div>
                 </div>
-
-                {
-                    o.products?.map((p,i) =>  <div className='flex gap-3 text-md mt-2'>
-                    <img className='w-[50px] h-[50px]' src={p.images[0]} alt="" />
-
-                    <div>
-                        <h2>{p.name} </h2>
-                        <p>
-                            <span>Brand : </span>
-                            <span>{p.brand}</span>
-                            <span className='text-lg'>Quantity : {p.quantity} </span>
-                        </p>
-                    </div> 
-                </div> )
-                }
-               
-
-            </div>)
-            }   
-
- 
-
-
+                
+                <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-6 md:col-span-2">
+                        <div>
+                            <h2 className="text-lg font-semibold text-gray-800 mb-3">Order Items</h2>
+                            <div className="space-y-4">
+                                {order.products?.map((p, i) => (
+                                    <div key={i} className="flex items-center gap-4 pb-4 border-b border-gray-100 last:border-b-0">
+                                        <img className="w-16 h-16 object-cover rounded" src={p.images[0]} alt={p.name} />
+                                        <div className="flex-grow">
+                                            <h3 className="text-gray-800">{p.name}</h3>
+                                            <p className="text-sm text-gray-500">Quantity: {p.quantity}</p>
+                                            <p className="text-sm text-gray-500">Seller: {p.shopName}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-gray-800 font-semibold">₱{p.price - Math.floor((p.price * p.discount) / 100)}</p>
+                                            {p.discount > 0 && (
+                                                <p className="text-xs text-gray-500">
+                                                    <span className="line-through">₱{p.price}</span>
+                                                    <span className="ml-1 text-green-600">-{p.discount}%</span>
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="space-y-6">
+                        <div>
+                            <div className="flex items-center space-x-2 mb-3">
+                                <Icon name="summary" />
+                                <h2 className="text-lg font-semibold text-gray-800">Order Summary</h2>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-gray-600">Total Price</span>
+                                    <span className="text-xl font-semibold text-gray-800">₱{order.price}</span>
+                                </div>
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-gray-600">Payment Status</span>
+                                    <StatusBadge status={order.payment_status} />
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-gray-600">Delivery Status</span>
+                                    <StatusBadge status={order.delivery_status} />
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div className="flex items-center space-x-2 mb-3">
+                                <Icon name="shipping" />
+                                <h2 className="text-lg font-semibold text-gray-800">Shipping Information</h2>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <p className="text-gray-600">{order.shippingInfo?.name}</p>
+                                <p className="text-gray-600">{order.shippingInfo?.address}</p>
+                                <p className="text-gray-600">{order.shippingInfo?.city}, {order.shippingInfo?.province}</p>
+                                <p className="text-gray-600">{order.shippingInfo?.area}</p>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div className="flex items-center space-x-2 mb-3">
+                                <Icon name="contact" />
+                                <h2 className="text-lg font-semibold text-gray-800">Contact</h2>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <p className="text-gray-600">{order.shippingInfo?.email}</p>
+                                <p className="text-gray-600">{order.shippingInfo?.phone}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-        </div>
-        </div>            
-
-
-
-
-
-
-
-            </div>
-
-
-        </div>   
-        </div> 
         </div>
     );
 };

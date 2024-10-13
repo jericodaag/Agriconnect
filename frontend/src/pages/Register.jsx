@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { customer_register } from '../store/reducers/authReducer';
+import { useNavigate } from 'react-router-dom';
+import toast, { Toaster } from 'react-hot-toast';
 
 const Register = () => {
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const { loader, errorMessage, successMessage, userInfo } = useSelector(state => state.auth);
+
     const [state, setState] = useState({
         name: '',
         email: '',
@@ -21,6 +29,19 @@ const Register = () => {
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
+    useEffect(() => {
+        if (successMessage) {
+            toast.success(successMessage);
+            setState({ name: '', email: '', password: '' });
+        }
+        if (errorMessage) {
+            toast.error(errorMessage);
+        }
+        if (userInfo) {
+            navigate('/');
+        }
+    }, [successMessage, errorMessage, userInfo, navigate]);
+
     const inputHandle = (e) => {
         setState({
             ...state,
@@ -31,10 +52,9 @@ const Register = () => {
     const register = (e) => {
         e.preventDefault();
         if (termsAccepted) {
-            console.log('Registration data:', state);
-            // Here you would handle the registration logic
+            dispatch(customer_register(state));
         } else {
-            console.log('Please accept the terms and conditions');
+            toast.error('Please accept the terms and conditions');
         }
     };
 
@@ -152,10 +172,16 @@ const Register = () => {
             textDecoration: 'none',
             fontWeight: '500',
         },
+        message: {
+            textAlign: 'center',
+            marginTop: '1rem',
+            fontSize: '0.875rem',
+        },
     };
 
     return (
         <div style={styles.container}>
+            <Toaster position="top-center" reverseOrder={false} />
             <div style={styles.content}>
                 <div style={styles.card}>
                     {!isMobile && <div style={styles.imageSection} />}
@@ -224,12 +250,14 @@ const Register = () => {
                             </div>
                             <button
                                 type="submit"
-                                style={{...styles.button, opacity: termsAccepted ? 1 : 0.5}}
-                                disabled={!termsAccepted}
+                                style={{...styles.button, opacity: termsAccepted && !loader ? 1 : 0.5}}
+                                disabled={!termsAccepted || loader}
                             >
-                                Register
+                                {loader ? 'Registering...' : 'Register'}
                             </button>
-                            </form>
+                        </form>
+                        {errorMessage && <p style={{...styles.message, color: 'red'}}>{errorMessage}</p>}
+                        {successMessage && <p style={{...styles.message, color: 'green'}}>{successMessage}</p>}
                         <p style={styles.loginLink}>
                             Already have an account? <a href="/login" style={styles.loginLinkText}>Sign in</a>
                         </p>

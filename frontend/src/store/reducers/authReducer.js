@@ -4,17 +4,17 @@ import { jwtDecode } from "jwt-decode";
 
 export const customer_register = createAsyncThunk(
     'auth/customer_register',
-    async(info, { rejectWithValue,fulfillWithValue }) => {
+    async(info, { rejectWithValue, fulfillWithValue }) => {
         try {
-            const {data} = await api.post('/customer/customer-register',info)
-            localStorage.setItem('customerToken',data.token)
-           // console.log(data)
-            return fulfillWithValue(data)
+            const { data } = await api.post('/customer/customer-register', info);
+            localStorage.setItem('customerToken', data.token);
+            return fulfillWithValue(data);
         } catch (error) {
-            return rejectWithValue(error.response.data)
+            return rejectWithValue(error.response.data);
         }
     }
-)
+);
+
 // End Method 
 
 export const customer_login = createAsyncThunk(
