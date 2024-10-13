@@ -92,7 +92,7 @@ const Orders = () => {
                                 <React.Fragment key={order._id}>
                                     <tr className='bg-white border-b hover:bg-gray-50 transition duration-150 ease-in-out'>
                                         <td className='px-6 py-4 font-medium text-gray-900'>#{order._id}</td>
-                                        <td className='px-6 py-4'>${order.price.toFixed(2)}</td>
+                                        <td className='px-6 py-4'>₱{order.price.toFixed(2)}</td>
                                         <td className='px-6 py-4'>
                                             <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.payment_status)}`}>
                                                 {order.payment_status}
@@ -125,7 +125,7 @@ const Orders = () => {
                                                     {order.suborder.map((suborder) => (
                                                         <div key={suborder._id} className='bg-white rounded-lg shadow-sm p-4 transition duration-300 ease-in-out hover:shadow-md'>
                                                             <p><span className='font-medium text-[#438206]'>ID:</span> #{suborder._id}</p>
-                                                            <p><span className='font-medium text-[#438206]'>Price:</span> ${suborder.price.toFixed(2)}</p>
+                                                            <p><span className='font-medium text-[#438206]'>Price:</span> ₱{suborder.price.toFixed(2)}</p>
                                                             <p><span className='font-medium text-[#438206]'>Payment:</span> 
                                                                 <span className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(suborder.payment_status)}`}>
                                                                     {suborder.payment_status}
