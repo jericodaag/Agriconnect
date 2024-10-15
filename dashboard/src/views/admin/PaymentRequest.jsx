@@ -56,7 +56,7 @@ const PaymentRequest = () => {
                             {pendingWithdrows.map((withdraw, index) => (
                                 <TableRow key={withdraw._id}>
                                     <TableCell>{index + 1}</TableCell>
-                                    <TableCell>${withdraw.amount}</TableCell>
+                                    <TableCell>₱{withdraw.amount}</TableCell>
                                     <TableCell>
                                         <Badge variant="secondary">
                                             {withdraw.status}

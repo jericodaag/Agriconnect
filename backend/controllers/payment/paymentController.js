@@ -191,7 +191,7 @@ class paymentController{
 
             await stripe.transfers.create({
                 amount: payment.amount * 100,
-                currency: 'php', // Changed from 'usd' to 'php'
+                currency: 'usd',
                 destination: stripeId
             })
              
