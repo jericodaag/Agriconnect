@@ -4,7 +4,7 @@ const productSchema = new Schema({
     sellerId: {
         type: Schema.ObjectId,
         required: true,
-        ref: 'sellers' // Add this to enable population
+        ref: 'sellers'
     },
     name: {
         type: String,
@@ -49,8 +49,12 @@ const productSchema = new Schema({
     rating: {
         type: Number,
         default: 0
-    } 
-     
+    },
+    unit: {
+        type: String,
+        required: true,
+        enum: ['kg', 'g', 'pc', 'pack']
+    }
 }, {timestamps: true})
 
 productSchema.index({

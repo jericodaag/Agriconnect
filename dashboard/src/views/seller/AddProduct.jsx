@@ -20,7 +20,8 @@ const AddProduct = () => {
         discount: '',
         price: "",
         brand: "",
-        stock: ""
+        stock: "",
+        unit: "kg"
     })
 
     const inputHandle = (e) => {
@@ -101,6 +102,7 @@ const AddProduct = () => {
         formData.append('brand', state.brand)
         formData.append('shopName', 'EasyShop')
         formData.append('category', category)
+        formData.append('unit', state.unit)
 
         for (let i = 0; i < images.length; i++) {
             formData.append('images', images[i])
@@ -118,7 +120,8 @@ const AddProduct = () => {
                 discount: '',
                 price: "",
                 brand: "",
-                stock: ""
+                stock: "",
+                unit: "kg"
             })
             setImageShow([])
             setImages([])
@@ -230,7 +233,7 @@ const AddProduct = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
                             <label htmlFor="price" className="block text-sm font-medium text-[#438206]">Price</label>
                             <input
@@ -256,6 +259,22 @@ const AddProduct = () => {
                                 id='discount'
                                 placeholder='Discount percentage'
                             />
+                        </div>
+                        <div>
+                            <label htmlFor="unit" className="block text-sm font-medium text-[#438206]">Unit</label>
+                            <select
+                                className="mt-1 block w-full px-3 py-2 bg-white border border-[#61BD12] rounded-md text-sm shadow-sm placeholder-gray-400
+                                        focus:outline-none focus:border-[#438206] focus:ring-1 focus:ring-[#438206]"
+                                onChange={inputHandle}
+                                value={state.unit}
+                                name='unit'
+                                id='unit'
+                            >
+                                <option value="kg">Kilogram (kg)</option>
+                                <option value="g">Gram (g)</option>
+                                <option value="pc">Piece (pc)</option>
+                                <option value="pack">Pack</option>
+                            </select>
                         </div>
                     </div>
 

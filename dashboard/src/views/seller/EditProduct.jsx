@@ -21,7 +21,8 @@ const EditProduct = () => {
         discount: '',
         price: "",
         brand: "",
-        stock: ""
+        stock: "",
+        unit: ""
     });
 
     const [cateShow, setCateShow] = useState(false);
@@ -42,7 +43,8 @@ const EditProduct = () => {
             discount: product.discount,
             price: product.price,
             brand: product.brand,
-            stock: product.stock
+            stock: product.stock,
+            unit: product.unit
         });
         setCategory(product.category);
         setImageShow(product.images);
@@ -102,7 +104,8 @@ const EditProduct = () => {
             price: state.price,
             brand: state.brand,
             stock: state.stock,
-            productId: productId
+            productId: productId,
+            unit: state.unit
         }));
     };
 
@@ -202,7 +205,7 @@ const EditProduct = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
                             <label htmlFor="price" className="block text-sm font-medium text-[#438206]">Price</label>
                             <input
@@ -229,6 +232,22 @@ const EditProduct = () => {
                                 placeholder='Discount percentage'
                             />
                         </div>
+                        <div>
+                            <label htmlFor="unit" className="block text-sm font-medium text-[#438206]">Unit</label>
+                            <select
+                                className="mt-1 block w-full px-3 py-2 bg-white border border-[#61BD12] rounded-md text-sm shadow-sm placeholder-gray-400
+                                           focus:outline-none focus:border-[#438206] focus:ring-1 focus:ring-[#438206]"
+                                onChange={inputHandle}
+                                value={state.unit}
+                                name='unit'
+                                id='unit'
+                            >
+                                <option value="kg">Kilogram (kg)</option>
+                                <option value="g">Gram (g)</option>
+                                <option value="pc">Piece (pc)</option>
+                                <option value="pack">Pack</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div>
@@ -242,44 +261,44 @@ const EditProduct = () => {
                             id='description'
                             rows="4"
                             placeholder='Product description'
-                        ></textarea>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-[#438206] mb-2">Product Images</label>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {imageShow && imageShow.length > 0 && imageShow.map((img, i) => (
-                                <div key={i} className="relative group">
-                                    <img src={img} alt="" className="w-full h-32 object-cover rounded-lg" />
-                                    <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                        <label htmlFor={`file-${i}`} className="text-white cursor-pointer">
-                                            <IoMdImages className="h-8 w-8" />
-                                        </label>
-                                    </div>
-                                    <input
-                                        onChange={(e) => changeImage(img, e.target.files)}
-                                        type="file"
-                                        id={`file-${i}`}
-                                        className="hidden"
-                                    />
+                            ></textarea>
+                            </div>
+        
+                            <div>
+                                <label className="block text-sm font-medium text-[#438206] mb-2">Product Images</label>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    {imageShow && imageShow.length > 0 && imageShow.map((img, i) => (
+                                        <div key={i} className="relative group">
+                                            <img src={img} alt="" className="w-full h-32 object-cover rounded-lg" />
+                                            <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                                <label htmlFor={`file-${i}`} className="text-white cursor-pointer">
+                                                    <IoMdImages className="h-8 w-8" />
+                                                </label>
+                                            </div>
+                                            <input
+                                                onChange={(e) => changeImage(img, e.target.files)}
+                                                type="file"
+                                                id={`file-${i}`}
+                                                className="hidden"
+                                            />
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+        
+                            <div>
+                                <button
+                                    disabled={loader}
+                                    type="submit"
+                                    className="w-full bg-[#438206] text-white py-2 px-4 rounded-md hover:bg-[#61BD12] transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#61BD12]"
+                                >
+                                    {loader ? <PropagateLoader color='#fff' cssOverride={overrideStyle} /> : 'Save Changes'}
+                                </button>
+                            </div>
+                        </form>
                     </div>
-
-                    <div>
-                        <button
-                            disabled={loader}
-                            type="submit"
-                            className="w-full bg-[#438206] text-white py-2 px-4 rounded-md hover:bg-[#61BD12] transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#61BD12]"
-                        >
-                            {loader ? <PropagateLoader color='#fff' cssOverride={overrideStyle} /> : 'Save Changes'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
-};
-
-export default EditProduct;
+                </div>
+            );
+        };
+        
+        export default EditProduct;

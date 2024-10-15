@@ -46,6 +46,7 @@ const Products = () => {
                                     <th scope='col' className='py-3 px-4'>Price</th>
                                     <th scope='col' className='py-3 px-4'>Discount</th>
                                     <th scope='col' className='py-3 px-4'>Stock</th>
+                                    <th scope='col' className='py-3 px-4'>Unit</th>
                                     <th scope='col' className='py-3 px-4'>Action</th> 
                                 </tr>
                             </thead>
@@ -69,6 +70,7 @@ const Products = () => {
                                             )}
                                         </td>
                                         <td className='py-2 px-4 font-medium whitespace-nowrap'>{d.stock}</td>
+                                        <td className='py-2 px-4 font-medium whitespace-nowrap'>{d.unit}</td>
                                         <td className='py-2 px-4 font-medium whitespace-nowrap'>
                                             <div className='flex justify-start items-center gap-2'>
                                                 <Link to={`/seller/dashboard/edit-product/${d._id}`} className='p-1 bg-[#61BD12] text-white rounded hover:bg-[#438206] transition-colors duration-200'>

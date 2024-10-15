@@ -162,113 +162,119 @@ const Details = () => {
                 </div>
             </section>
 
-            <section>
-                <div className='w-[85%] md:w-[80%] sm:w-[90%] lg:w-[90%] h-full mx-auto pb-16'>
-                    <div className='grid grid-cols-2 md-lg:grid-cols-1 gap-8'>
-                        <div>
-                            <div className='p-5 border'>
-                                <img className='h-[400px] w-full' src={image ? image : product.images?.[0]} alt="" />
-                            </div>
-                            <div className='py-3'>
-                                {product.images && (
-                                    <Carousel
-                                        autoPlay={true}
-                                        infinite={true}
-                                        responsive={responsive}
-                                        transitionDuration={500}
-                                    >
-                                        {product.images.map((img, i) => (
-                                            <div key={i} onClick={() => setImage(img)}>
-                                                <img className='h-[120px] cursor-pointer' src={img} alt="" />
-                                            </div>
-                                        ))}
-                                    </Carousel>
-                                )}
-                            </div>
-                        </div>
+            <section className="bg-gray-50 py-12">
+    <div className='w-[85%] md:w-[80%] sm:w-[90%] lg:w-[90%] mx-auto'>
+        <div className='grid grid-cols-2 md-lg:grid-cols-1 gap-8'>
+            <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className='relative pb-[100%] mb-4 overflow-hidden rounded-lg'>
+                    <img 
+                        className='absolute top-0 left-0 w-full h-full object-contain' 
+                        src={image ? image : product.images?.[0]} 
+                        alt={product.name} 
+                    />
+                </div>
+                <div className='py-3'>
+                    {product.images && (
+                        <Carousel
+                            autoPlay={true}
+                            infinite={true}
+                            responsive={responsive}
+                            transitionDuration={500}
+                            className="pb-4"
+                        >
+                            {product.images.map((img, i) => (
+                                <div key={i} onClick={() => setImage(img)} className="px-2">
+                                    <img className='h-24 w-full object-cover cursor-pointer rounded-md transition-all duration-300 hover:opacity-75' src={img} alt="" />
+                                </div>
+                            ))}
+                        </Carousel>
+                    )}
+                </div>
+            </div>
 
-                        <div className='flex flex-col gap-5'>
-                            <div className='text-3xl text-slate-600 font-bold'>
-                                <h3>{product.name}</h3>
+            <div className='flex flex-col gap-6 bg-white p-6 rounded-lg shadow-md'>
+                <h1 className='text-3xl font-bold text-gray-800'>{product.name}</h1>
+                <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2'>
+                    <div className='bg-red-100 px-3 py-1 rounded-full'>
+                        <p className='text-sm sm:text-base text-red-600 font-semibold'>Sold by: <span className='font-bold'>{product.shopName}</span></p>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                        <Rating ratings={product.rating} />
+                        <span className='text-green-600 font-medium'>(23 reviews)</span>
+                    </div>
+                </div>
+                <div className='text-2xl font-bold flex items-center gap-3'>
+                    {product.discount !== 0 ? (
+                        <>
+                            <span className='text-red-600'>₱{product.price - Math.floor((product.price * product.discount) / 100)}/{product.unit}</span>
+                            <span className='line-through text-gray-400 text-xl'>₱{product.price}/{product.unit}</span>
+                            <span className='bg-red-100 text-red-800 text-sm font-semibold px-2.5 py-0.5 rounded'>-{product.discount}%</span>
+                        </>
+                    ) : (
+                        <span className='text-gray-800'>Price: ₱{product.price}/{product.unit}</span>
+                    )}
+                </div>
+                <div className='bg-gray-50 p-4 rounded-md'>
+                    <h3 className='text-xl font-semibold text-gray-800 mb-2'>Product Description</h3>
+                    <p className='text-gray-600'>{product.description}</p>
+                </div>
+                <div className='bg-gray-50 p-4 rounded-md'>
+                    <h4 className='text-lg font-semibold text-gray-800 mb-2'>Product Details:</h4>
+                    <ul className='grid grid-cols-2 gap-2 text-gray-600'>
+                        <li>Price: ₱{product.price} per {product.unit}</li>
+                        <li>Unit of Sale: {product.unit}</li>
+                        <li>Brand: {product.brand}</li>
+                        <li>Category: {product.category}</li>
+                        <li>Stock: {product.stock} {product.unit}s available</li>
+                    </ul>
+                </div>
+                <div className='flex items-center gap-4'>
+                    {product.stock ? (
+                        <>
+                            <div className='flex items-center border border-gray-300 rounded-md'>
+                                <button onClick={dec} className='px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-l-md transition-colors duration-300'>-</button>
+                                <span className='px-4 py-2 font-medium'>{quantity}</span>
+                                <button onClick={inc} className='px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-r-md transition-colors duration-300'>+</button>
                             </div>
-                            <div className='text-xl text-gray-500'>
-                                <h4>Sold by: {product.shopName}</h4>
-                            </div>
-                            <div className='flex justify-start items-center gap-4'>
-                                <div className='flex text-xl'>
-                                    <Rating ratings={product.rating} />
-                                </div>
-                                <span className='text-green-500'>(23 reviews)</span>
-                            </div>
-                            <div className='text-2xl text-red-500 font-bold flex gap-3'>
-                                {product.discount !== 0 ? (
-                                    <>
-                                        <h2 className='line-through'>₱{product.price}</h2>
-                                        <h2>₱{product.price - Math.floor((product.price * product.discount) / 100)} (-{product.discount}%)</h2>
-                                    </>
-                                ) : (
-                                    <h2>Price: ₱{product.price}</h2>
-                                )}
-                            </div>
-                            <div className='text-slate-600'>
-                                <p>{product.description}</p>
-                            </div>
-                            <div className='flex gap-3 pb-10 border-b'>
-                                {product.stock ? (
-                                    <>
-                                        <div className='flex bg-slate-200 h-[50px] justify-center items-center text-xl'>
-                                            <div onClick={dec} className='px-6 cursor-pointer'>-</div>
-                                            <div className='px-6'>{quantity}</div>
-                                            <div onClick={inc} className='px-6 cursor-pointer'>+</div>
-                                        </div>
-                                        <div>
-                                            <button onClick={add_card} className='px-8 py-3 h-[50px] cursor-pointer hover:shadow-lg hover:shadow-green-500/40 bg-[#059473] text-white'>Add To Cart</button>
-                                        </div>
-                                    </>
-                                ) : ''}
-                                <div>
-                                    <div onClick={add_wishlist} className='h-[50px] w-[50px] flex justify-center items-center cursor-pointer hover:shadow-lg hover:shadow-cyan-500/40 bg-cyan-500 text-white'>
-                                        <FaHeart />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className='flex py-5 gap-5'>
-                                <div className='w-[150px] text-black font-bold text-xl flex flex-col gap-5'>
-                                    <span>Availability</span>
-                                    <span>Share On</span>
-                                </div>
-                                <div className='flex flex-col gap-5'>
-                                    <span className={`text-${product.stock ? 'green' : 'red'}-500`}>
-                                        {product.stock ? `In Stock(${product.stock})` : 'Out Of Stock'}
-                                    </span>
-                                    <ul className='flex justify-start items-center gap-3'>
-                                        <li>
-                                            <a className='w-[38px] h-[38px] hover:bg-[#059473] hover:text-white flex justify-center items-center bg-indigo-500 rounded-full text-white' href="#"><FaFacebookF /></a>
-                                        </li>
-                                        <li>
-                                            <a className='w-[38px] h-[38px] hover:bg-[#059473] hover:text-white flex justify-center items-center bg-cyan-500 rounded-full text-white' href="#"><FaTwitter /></a>
-                                        </li>
-                                        <li>
-                                            <a className='w-[38px] h-[38px] hover:bg-[#059473] hover:text-white flex justify-center items-center bg-purple-500 rounded-full text-white' href="#"><FaLinkedin /></a>
-                                        </li>
-                                        <li>
-                                            <a className='w-[38px] h-[38px] hover:bg-[#059473] hover:text-white flex justify-center items-center bg-blue-500 rounded-full text-white' href="#"><FaGithub /></a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div className='flex gap-3'>
-                                {product.stock ? (
-                                    <button onClick={buynow} className='px-8 py-3 h-[50px] cursor-pointer hover:shadow-lg hover:shadow-green-500/40 bg-[#247462] text-white'>Buy Now</button>
-                                ) : ''}
-                                <Link to={`/dashboard/chat/${product.sellerId}`} className='px-8 py-3 h-[50px] cursor-pointer hover:shadow-lg hover:shadow-red-500/40 bg-red-500 text-white'>
-                                    Chat Seller
-                                </Link>
-                            </div>
+                            <button onClick={add_card} className='flex-grow py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-md transition-colors duration-300'>Add To Cart</button>
+                        </>
+                    ) : (
+                        <p className='text-red-600 font-semibold'>Out of Stock</p>
+                    )}
+                    <button onClick={add_wishlist} className='p-2 bg-gray-100 hover:bg-gray-200 text-red-500 rounded-md transition-colors duration-300'>
+                        <FaHeart size={24} />
+                    </button>
+                </div>
+                <div className='flex justify-between items-center py-4 border-t border-gray-200'>
+                    <div>
+                        <span className='font-semibold text-gray-700'>Availability: </span>
+                        <span className={`font-medium ${product.stock ? 'text-green-600' : 'text-red-600'}`}>
+                            {product.stock ? `In Stock (${product.stock})` : 'Out Of Stock'}
+                        </span>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                        <span className='font-semibold text-gray-700'>Share:</span>
+                        <div className='flex gap-2'>
+                            {[FaFacebookF, FaTwitter, FaLinkedin, FaGithub].map((Icon, index) => (
+                                <a key={index} href="#" className='w-8 h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-full text-gray-700 transition-colors duration-300'>
+                                    <Icon />
+                                </a>
+                            ))}
                         </div>
                     </div>
                 </div>
-            </section>
+                <div className='flex gap-3'>
+                    {product.stock ? (
+                        <button onClick={buynow} className='flex-grow py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition-colors duration-300'>Buy Now</button>
+                    ) : ''}
+                    <Link to={`/dashboard/chat/${product.sellerId}`} className='py-2 px-4 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-md transition-colors duration-300'>
+                        Chat Seller
+                    </Link>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
             <section>
                 <div className='w-[85%] md:w-[80%] sm:w-[90%] lg:w-[90%] h-full mx-auto pb-16'>

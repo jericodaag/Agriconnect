@@ -62,9 +62,9 @@ const FeatureProducts = ({products}) => {
             </div>
             </div>
 
-        <div className='w-full grid grid-cols-4 md-lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-6'>
-    {
-        products.map((p,i) => <div key={i} className='border group transition-all duration-500 hover:shadow-md hover:-mt-3'>
+            <div className='w-full grid grid-cols-4 md-lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-6'>
+            {
+                products.map((p,i) => <div key={i} className='border group transition-all duration-500 hover:shadow-md hover:-mt-3'>
             <div className='relative overflow-hidden'>
             
         {
@@ -86,13 +86,13 @@ const FeatureProducts = ({products}) => {
         </ul>    
             </div>
 
-        <div className='py-3 text-slate-600 px-2'>
-            <h2 className='font-bold'>{p.name} </h2>
-            <div className='flex justify-start items-center gap-3'>
-                <span className='text-md font-semibold'>₱{p.price}</span>
-                <div className='flex'>
-                    <Rating ratings={p.rating} />
-                </div>
+            <div className='py-3 text-slate-600 px-2'>
+                        <h2 className='font-bold'>{p.name}</h2>
+                        <div className='flex justify-start items-center gap-3'>
+                            <span className='text-md font-semibold'>₱{p.price}/{p.unit}</span>
+                            <div className='flex'>
+                                <Rating ratings={p.rating} />
+                            </div>
 
             </div>
         </div>    

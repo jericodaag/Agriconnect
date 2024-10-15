@@ -6,13 +6,13 @@ const sellerModel = require('../../models/sellerModel') // Add this line
  
 class productController{
 
-    add_product = async(req,res) => {
+    add_product = async(req, res) => {
         const {id} = req;
         const form = formidable({ multiples: true })
 
-        form.parse(req, async(err, field, files) => {
-            let {name, category, description, stock, price, discount, brand} = field;
-            let {images} = files;
+        form.parse(req, async(err, fields, files) => {
+            let {name, category, description, stock, price, discount, brand, unit} = fields;
+            const {images} = files;  // Change this line
             name = name.trim()
             const slug = name.split(' ').join('-')
 
@@ -33,13 +33,14 @@ class productController{
 
                 let allImageUrl = [];
 
-                if (!Array.isArray(images)) {
-                    images = [images]; 
-                } 
+                if (images) {  // Add this check
+                    // Ensure images is always an array
+                    const imageArray = Array.isArray(images) ? images : [images];
 
-                for (let i = 0; i < images.length; i++) {
-                    const result = await cloudinary.uploader.upload(images[i].filepath, {folder: 'products'});
-                    allImageUrl.push(result.url);
+                    for (let i = 0; i < imageArray.length; i++) {
+                        const result = await cloudinary.uploader.upload(imageArray[i].filepath, {folder: 'products'});
+                        allImageUrl.push(result.url);
+                    }
                 }
 
                 await productModel.create({
@@ -53,16 +54,15 @@ class productController{
                     price: parseInt(price),
                     discount: parseInt(discount),
                     images: allImageUrl,
-                    brand: brand.trim()  
+                    brand: brand.trim(),
+                    unit: unit.trim()
                 })
-                responseReturn(res, 201,{ message : 'Product Added Successfully'})
+                responseReturn(res, 201, { message : 'Product Added Successfully' })
                 
             } catch (error) {
-                responseReturn(res, 500,{ error : error.message})
+                responseReturn(res, 500, { error : error.message })
             }
- 
         })
-         
     }
 
     /// end method 
@@ -111,22 +111,20 @@ class productController{
     // End Method 
 
     product_update = async (req, res) => {
-        let {name, description, stock,price, discount,brand,productId} = req.body;
+        let {name, description, stock, price, discount, brand, productId, unit} = req.body;
         name = name.trim()
         const slug = name.split(' ').join('-')
 
         try {
             await productModel.findByIdAndUpdate(productId, {
-                name, description, stock,price, discount,brand,productId, slug
+                name, description, stock, price, discount, brand, productId, slug, unit
             })
             const product = await productModel.findById(productId)
             responseReturn(res, 200,{product, message : 'Product Updated Successfully'})
         } catch (error) {
             responseReturn(res, 500,{ error : error.message })
         }
-
-
-    } 
+    }
 
   // End Method 
 
