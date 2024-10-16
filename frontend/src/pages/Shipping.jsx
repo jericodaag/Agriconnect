@@ -6,6 +6,35 @@ import { IoIosArrowForward } from "react-icons/io";
 import { useDispatch, useSelector } from 'react-redux';
 import { place_order } from '../store/reducers/orderReducer';
 
+const shippingFees = {
+    'Mabalacat City': {
+        default: 40,
+        barangays: {
+            'Dau': 30,
+            'Mabiga': 30,
+            'Poblacion': 30,
+            'Tabun': 50,
+            'Mawaque': 50
+        }
+    },
+    'Angeles City': {
+        default: 60,
+        barangays: {
+            'Balibago': 50,
+            'Malabanias': 50,
+            'Santo Domingo': 70,
+            'Sapangbato': 80
+        }
+    }
+};
+
+const calculateShippingFee = (city, barangay) => {
+    if (!shippingFees[city]) {
+        return 40; // Default shipping fee if city is not found
+    }
+    return shippingFees[city].barangays[barangay] || shippingFees[city].default;
+};
+
 const Shipping = () => {
     const { state: { products, price, items } } = useLocation();
     const dispatch = useDispatch();
@@ -22,8 +51,24 @@ const Shipping = () => {
         post: '',
         province: '',
         city: '',
-        area: ''
+        barangay: ''
     });
+    const [shippingFee, setShippingFee] = useState(40); // Default shipping fee
+
+    const cities = ['Angeles City', 'Mabalacat City'];
+    const barangays = {
+        'Angeles City': [
+            'Agapito Del Rosario', 'Anunas', 'Balibago', 'Capaya', 'Claro M. Recto',
+            'Cutcut', 'Lourdes Sur', 'Lourdes Sur East', 'Malabanias', 'Mining',
+            'Ninoy Aquino', 'Pandan', 'Pulung Cacutud', 'Pulung Maragul', 'Salapungan',
+            'Santa Teresita', 'Santo Cristo', 'Santo Domingo', 'Santo Rosario', 'Sapangbato'
+        ],
+        'Mabalacat City': [
+            'Atlu Bola', 'Bical', 'Bundagul', 'Camachiles', 'Dau', 'Dolores', 'Dapdap',
+            'Mabiga', 'Marcos Village', 'Mawaque', 'Paralayunan', 'Poblacion', 'San Francisco',
+            'Santa Ines', 'Sapang Biabas', 'Tabun'
+        ]
+    };
 
     useEffect(() => {
         const savedAddress = JSON.parse(localStorage.getItem('lastUsedAddress'));
@@ -32,11 +77,26 @@ const Shipping = () => {
         }
     }, []);
 
+    useEffect(() => {
+        if (state.city && state.barangay) {
+            const fee = calculateShippingFee(state.city, state.barangay);
+            setShippingFee(fee);
+        }
+    }, [state.city, state.barangay]);
+
     const inputHandle = (e) => {
-        setState({
-            ...state,
-            [e.target.name]: e.target.value
-        });
+        const { name, value } = e.target;
+        setState(prevState => ({
+            ...prevState,
+            [name]: value
+        }));
+
+        if (name === 'city') {
+            setState(prevState => ({
+                ...prevState,
+                barangay: ''
+            }));
+        }
     };
 
     const save = (e) => {
@@ -44,12 +104,14 @@ const Shipping = () => {
         if (useLastAddress && lastUsedAddress) {
             setRes(true);
             setState(lastUsedAddress);
+            setShippingFee(calculateShippingFee(lastUsedAddress.city, lastUsedAddress.barangay));
         } else {
-            const { name, address, phone, post, province, city, area } = state;
-            if (name && address && phone && post && province && city && area) {
+            const { name, address, phone, post, province, city, barangay } = state;
+            if (name && address && phone && post && province && city && barangay) {
                 setRes(true);
                 localStorage.setItem('lastUsedAddress', JSON.stringify(state));
                 setLastUsedAddress(state);
+                setShippingFee(calculateShippingFee(city, barangay));
             }
         }
     };
@@ -59,7 +121,7 @@ const Shipping = () => {
         dispatch(place_order({
             price,
             products,
-            shipping_fee: 40, // Updated to 40 pesos
+            shipping_fee: shippingFee,
             items,
             shippingInfo,
             userId: userInfo.id,
@@ -106,6 +168,7 @@ const Shipping = () => {
                                                                 setUseLastAddress(!useLastAddress);
                                                                 if (!useLastAddress) {
                                                                     setState(lastUsedAddress);
+                                                                    setShippingFee(calculateShippingFee(lastUsedAddress.city, lastUsedAddress.barangay));
                                                                 } else {
                                                                     setState({
                                                                         name: '',
@@ -114,8 +177,9 @@ const Shipping = () => {
                                                                         post: '',
                                                                         province: '',
                                                                         city: '',
-                                                                        area: ''
+                                                                        barangay: ''
                                                                     });
+                                                                    setShippingFee(40);
                                                                 }
                                                             }}
                                                             className='mr-2'
@@ -128,37 +192,62 @@ const Shipping = () => {
                                                 <div className='flex md:flex-col md:gap-2 w-full gap-5 text-slate-600'>
                                                     <div className='flex flex-col gap-1 mb-2 w-full'>
                                                         <label htmlFor="name">Name</label>
-                                                        <input onChange={inputHandle} value={state.name} type="text" className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' name="name" id="name" placeholder='Name' />
+                                                        <input onChange={inputHandle} value={state.name} type="text" className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' name="name" id="name" placeholder='Name' required />
                                                     </div>
                                                     <div className='flex flex-col gap-1 mb-2 w-full'>
                                                         <label htmlFor="address">Address</label>
-                                                        <input onChange={inputHandle} value={state.address} type="text" className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' name="address" id="address" placeholder='Address' />
+                                                        <input onChange={inputHandle} value={state.address} type="text" className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' name="address" id="address" placeholder='Address' required />
                                                     </div>
                                                 </div>
                                                 <div className='flex md:flex-col md:gap-2 w-full gap-5 text-slate-600'>
                                                     <div className='flex flex-col gap-1 mb-2 w-full'>
                                                         <label htmlFor="phone">Phone</label>
-                                                        <input onChange={inputHandle} value={state.phone} type="text" className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' name="phone" id="phone" placeholder='Phone' />
+                                                        <input onChange={inputHandle} value={state.phone} type="text" className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' name="phone" id="phone" placeholder='Phone' required />
                                                     </div>
                                                     <div className='flex flex-col gap-1 mb-2 w-full'>
                                                         <label htmlFor="post">Post</label>
-                                                        <input onChange={inputHandle} value={state.post} type="text" className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' name="post" id="post" placeholder='Post' />
+                                                        <input onChange={inputHandle} value={state.post} type="text" className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' name="post" id="post" placeholder='Post' required />
                                                     </div>
                                                 </div>
                                                 <div className='flex md:flex-col md:gap-2 w-full gap-5 text-slate-600'>
                                                     <div className='flex flex-col gap-1 mb-2 w-full'>
                                                         <label htmlFor="province">Province</label>
-                                                        <input onChange={inputHandle} value={state.province} type="text" className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' name="province" id="province" placeholder='Province' />
+                                                        <input onChange={inputHandle} value={state.province} type="text" className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' name="province" id="province" placeholder='Province' required />
                                                     </div>
                                                     <div className='flex flex-col gap-1 mb-2 w-full'>
                                                         <label htmlFor="city">City</label>
-                                                        <input onChange={inputHandle} value={state.city} type="text" className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' name="city" id="city" placeholder='City' />
+                                                        <select
+                                                            onChange={inputHandle}
+                                                            value={state.city}
+                                                            className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md'
+                                                            name="city"
+                                                            id="city"
+                                                            required
+                                                        >
+                                                            <option value="">Select City</option>
+                                                            {cities.map((city, index) => (
+                                                                <option key={index} value={city}>{city}</option>
+                                                            ))}
+                                                        </select>
                                                     </div>
                                                 </div>
                                                 <div className='flex md:flex-col md:gap-2 w-full gap-5 text-slate-600'>
                                                     <div className='flex flex-col gap-1 mb-2 w-full'>
-                                                        <label htmlFor="area">Area</label>
-                                                        <input onChange={inputHandle} value={state.area} type="text" className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md' name="area" id="area" placeholder='Area' />
+                                                        <label htmlFor="barangay">Barangay</label>
+                                                        <select
+                                                            onChange={inputHandle}
+                                                            value={state.barangay}
+                                                            className='w-full px-3 py-2 border border-slate-200 outline-none focus:border-green-500 rounded-md'
+                                                            name="barangay"
+                                                            id="barangay"
+                                                            disabled={!state.city}
+                                                            required
+                                                        >
+                                                            <option value="">Select Barangay</option>
+                                                            {state.city && barangays[state.city].map((barangay, index) => (
+                                                                <option key={index} value={barangay}>{barangay}</option>
+                                                            ))}
+                                                        </select>
                                                     </div>
                                                     <div className='flex flex-col gap-1 mt-7 mb-2 w-full'>
                                                         <button type="submit" className='px-3 py-[6px] rounded-sm hover:shadow-green-500/50 hover:shadow-lg bg-green-500 text-white'>Save</button>
@@ -172,14 +261,13 @@ const Shipping = () => {
                                             <h2 className='text-slate-600 font-semibold pb-2'>Deliver To {state.name}</h2>
                                             <p>
                                                 <span className='bg-blue-200 text-blue-800 text-sm font-medium mr-2 px-2 py-1 rounded'>Home</span>
-                                                <span>{state.phone} {state.address} {state.province} {state.city} {state.area}</span>
+                                                <span>{state.phone} {state.address} {state.province} {state.city} {state.barangay}</span>
                                                 <span onClick={() => setRes(false)} className='text-indigo-500 cursor-pointer'> Change</span>
                                             </p>
                                             <p className='text-slate-600 text-sm'>Email To agriconnect@gmail.com</p>
                                         </div>
                                     )}
                                 </div>
-
                                 {products.map((p, i) => (
                                     <div key={i} className='flex bg-white p-4 flex-col gap-2'>
                                         <div className='flex justify-start items-center'>
@@ -189,7 +277,7 @@ const Shipping = () => {
                                             <div key={i} className='w-full flex flex-wrap'>
                                                 <div className='flex sm:w-full gap-2 w-7/12'>
                                                     <div className='flex gap-2 justify-start items-center'>
-                                                        <img className='w-[80px] h-[80px]' src={pt.productInfo.images[0]} alt="" />
+                                                    <img className='w-[80px] h-[80px]' src={pt.productInfo.images[0]} alt="" />
                                                         <div className='pr-4 text-slate-600'>
                                                             <h2 className='text-md font-semibold'>{pt.productInfo.name}</h2>
                                                             <span className='text-sm'>Brand: {pt.productInfo.brand}</span>
@@ -201,7 +289,6 @@ const Shipping = () => {
                                                         <h2 className='text-lg text-orange-500'>₱{pt.productInfo.price - Math.floor((pt.productInfo.price * pt.productInfo.discount) / 100)}</h2>
                                                         <p className='line-through'>₱{pt.productInfo.price}</p>
                                                         <p>-{pt.productInfo.discount}%</p>
-                                                        <p className='text-sm text-gray-500'>Sold by: {pt.productInfo.shopName}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -212,36 +299,35 @@ const Shipping = () => {
                         </div>
 
                         <div className='w-[33%] md-lg:w-full'>
-                        <div className='pl-3 md-lg:pl-0 md-lg:mt-5'>
-                            <div className='bg-white p-3 text-slate-600 flex flex-col gap-3'>
-                                <h2 className='text-xl font-bold'>Order Summary</h2>
-                                <div className='flex justify-between items-center'>
-                                    <span>Items Total ({items} items)</span>
-                                    <span>₱{price.toLocaleString('en-PH')}</span>
+                            <div className='pl-3 md-lg:pl-0 md-lg:mt-5'>
+                                <div className='bg-white p-3 text-slate-600 flex flex-col gap-3'>
+                                    <h2 className='text-xl font-bold'>Order Summary</h2>
+                                    <div className='flex justify-between items-center'>
+                                        <span>Items Total ({items} items)</span>
+                                        <span>₱{price.toLocaleString('en-PH')}</span>
+                                    </div>
+                                    <div className='flex justify-between items-center'>
+                                        <span>Delivery Fee</span>
+                                        <span>₱{shippingFee.toLocaleString('en-PH')}</span>
+                                    </div>
+                                    <div className='flex justify-between items-center'>
+                                        <span>Total Payment</span>
+                                        <span>₱{(price + shippingFee).toLocaleString('en-PH')}</span>
+                                    </div>
+                                    <div className='flex justify-between items-center'>
+                                        <span>Total</span>
+                                        <span className='text-lg text-[#059473]'>₱{(price + shippingFee).toLocaleString('en-PH')}</span>
+                                    </div>
+                                    <button
+                                        onClick={placeOrder}
+                                        disabled={!res}
+                                        className={`px-5 py-[6px] rounded-sm hover:shadow-red-500/50 hover:shadow-lg ${res ? 'bg-red-500' : 'bg-red-300'} text-sm text-white uppercase`}
+                                    >
+                                        Place Order
+                                    </button>
                                 </div>
-                                <div className='flex justify-between items-center'>
-                                    <span>Delivery Fee</span>
-                                    <span>₱40</span>
-                                </div>
-                                <div className='flex justify-between items-center'>
-                                    <span>Total Payment</span>
-                                    <span>₱{(price + 40).toLocaleString('en-PH')}</span>
-                                </div>
-                                <div className='flex justify-between items-center'>
-                                    <span>Total</span>
-                                    <span className='text-lg text-[#059473]'>₱{(price + 40).toLocaleString('en-PH')}</span>
-                                </div>
-                                <button
-                                    onClick={placeOrder}
-                                    disabled={!res}
-                                    className={`px-5 py-[6px] rounded-sm hover:shadow-red-500/50 hover:shadow-lg ${res ? 'bg-red-500' : 'bg-red-300'} text-sm text-white uppercase`}
-                                >
-                                    Place Order
-                                </button>
                             </div>
                         </div>
-                    </div>
-
                     </div>
                 </div>
             </section>
