@@ -19,7 +19,9 @@ const Orders = () => {
         const obj = {
             parPage: parseInt(parPage),
             page: parseInt(currentPage),
-            searchValue
+            searchValue,
+            sortBy: 'createdAt',
+            sortOrder: 'desc'
         };
         dispatch(get_admin_orders(obj));
     }, [dispatch, parPage, currentPage, searchValue]);
@@ -30,6 +32,7 @@ const Orders = () => {
 
     const refreshOrders = () => {
         setIsRefreshing(true);
+        setCurrentPage(1);
         fetchOrders();
         setTimeout(() => setIsRefreshing(false), 500);
     };
@@ -59,8 +62,20 @@ const Orders = () => {
         }
     };
 
+    const formatDate = (dateString) => {
+        const options = { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric', 
+            hour: 'numeric', 
+            minute: 'numeric', 
+            hour12: true 
+        };
+        return new Intl.DateTimeFormat('en-US', options).format(new Date(dateString));
+    };
+
     return (
-        <div className='p-6 min-h-screen'>
+        <div className='p-6 min-h-screen bg-[#F7F7FC]'>
             <div className='bg-white rounded-xl shadow-lg p-6'>
                 <div className='flex justify-between items-center mb-6'>
                     <h2 className='text-3xl font-bold text-[#438206]'>Orders Management</h2>
@@ -75,17 +90,23 @@ const Orders = () => {
                 <div className='flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0'>
                     <div className='w-full md:w-auto'>
                         <select 
-                            onChange={(e) => setParPage(parseInt(e.target.value))} 
+                            onChange={(e) => {
+                                setParPage(parseInt(e.target.value));
+                                setCurrentPage(1);
+                            }} 
                             className='w-full md:w-auto px-4 py-2 border border-[#61BD12] rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#438206] transition duration-300 ease-in-out'
                         >
                             <option value="5">5 per page</option>
                             <option value="10">10 per page</option>
-                            <option value="20">20 per page</option> 
+                            <option value="20">20 per page</option>
                         </select>
                     </div>
                     <div className='relative w-full md:w-64'>
                         <input 
-                            onChange={e => setSearchValue(e.target.value)} 
+                            onChange={(e) => {
+                                setSearchValue(e.target.value);
+                                setCurrentPage(1);
+                            }} 
                             value={searchValue} 
                             className='w-full pl-10 pr-4 py-2 border border-[#61BD12] rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#438206] transition duration-300 ease-in-out' 
                             type="text" 
@@ -97,12 +118,13 @@ const Orders = () => {
 
                 <div className='overflow-x-auto'>
                     <table className='w-full text-sm text-left text-gray-500'>
-                        <thead className='text-xs text-[#438206] uppercase bg-gray-50'>
+                        <thead className='text-xs text-[#438206] uppercase bg-[#F7F7FC] border-b border-[#61BD12]'>
                             <tr>
                                 <th className='px-6 py-3'>Order ID</th>
                                 <th className='px-6 py-3'>Price</th>
                                 <th className='px-6 py-3'>Payment Status</th>
                                 <th className='px-6 py-3'>Order Status</th>
+                                <th className='px-6 py-3'>Date</th>
                                 <th className='px-6 py-3'>Action</th>
                                 <th className='px-6 py-3'></th>
                             </tr>
@@ -123,6 +145,7 @@ const Orders = () => {
                                                 {order.delivery_status}
                                             </span>
                                         </td>
+                                        <td className='px-6 py-4'>{formatDate(order.createdAt)}</td>
                                         <td className='px-6 py-4'>
                                             <Link to={`/admin/dashboard/order/details/${order._id}`} className='text-[#438206] hover:text-[#61BD12] transition duration-300 ease-in-out flex items-center'>
                                                 <LuEye className="mr-1" /> View
@@ -139,7 +162,7 @@ const Orders = () => {
                                     </tr>
                                     {expandedOrder === order._id && order.suborder && (
                                         <tr>
-                                            <td colSpan="6" className='px-6 py-4 bg-gray-50'>
+                                            <td colSpan="7" className='px-6 py-4 bg-gray-50'>
                                                 <div className='pl-4 space-y-4'>
                                                     <h4 className='font-semibold text-[#438206] mb-2'>Suborders:</h4>
                                                     {order.suborder.map((suborder) => (
