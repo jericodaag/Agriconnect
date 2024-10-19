@@ -1,9 +1,39 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { LuArrowDownSquare, LuArrowUpSquare, LuSearch, LuEye, LuRefreshCw } from "react-icons/lu";
+import { LuArrowDownSquare, LuArrowUpSquare, LuEye, LuRefreshCw } from "react-icons/lu";
+import { FaSearch, FaChevronDown } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import Pagination from '../Pagination';
 import { useDispatch, useSelector } from 'react-redux';
 import { get_admin_orders } from '../../store/Reducers/OrderReducer';
+
+// Integrated Search component
+const Search = ({ setParPage, setSearchValue, searchValue }) => {
+    return (
+        <div className='flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-md shadow-sm'>
+            <div className='relative w-full sm:w-48'>
+                <select 
+                    onChange={(e) => setParPage(parseInt(e.target.value))} 
+                    className='w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-700 appearance-none cursor-pointer focus:outline-none focus:ring focus:ring-indigo-300 transition duration-200 ease-in-out'
+                >
+                    <option value="5">5 per page</option>
+                    <option value="10">10 per page</option>
+                    <option value="20">20 per page</option>
+                </select>
+                <FaChevronDown className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none' />
+            </div>
+            <div className='relative w-full sm:w-64'>
+                <input 
+                    onChange={(e) => setSearchValue(e.target.value)} 
+                    value={searchValue} 
+                    className='w-full px-4 py-2 pl-10 bg-gray-100 border border-gray-300 rounded-md text-gray-700 placeholder-gray-400 focus:outline-none focus:ring focus:ring-indigo-300 transition duration-200 ease-in-out' 
+                    type="text" 
+                    placeholder='Search orders' 
+                />
+                <FaSearch className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500' />
+            </div>
+        </div>
+    );
+};
 
 const Orders = () => {
     const dispatch = useDispatch();
@@ -87,36 +117,13 @@ const Orders = () => {
                         <LuRefreshCw size={24} />
                     </button>
                 </div>
-                <div className='flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0'>
-                    <div className='w-full md:w-auto'>
-                        <select 
-                            onChange={(e) => {
-                                setParPage(parseInt(e.target.value));
-                                setCurrentPage(1);
-                            }} 
-                            className='w-full md:w-auto px-4 py-2 border border-[#61BD12] rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#438206] transition duration-300 ease-in-out'
-                        >
-                            <option value="5">5 per page</option>
-                            <option value="10">10 per page</option>
-                            <option value="20">20 per page</option>
-                        </select>
-                    </div>
-                    <div className='relative w-full md:w-64'>
-                        <input 
-                            onChange={(e) => {
-                                setSearchValue(e.target.value);
-                                setCurrentPage(1);
-                            }} 
-                            value={searchValue} 
-                            className='w-full pl-10 pr-4 py-2 border border-[#61BD12] rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#438206] transition duration-300 ease-in-out' 
-                            type="text" 
-                            placeholder='Search orders' 
-                        />
-                        <LuSearch className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400' />
-                    </div>
-                </div>
+                <Search 
+                    setParPage={setParPage}
+                    setSearchValue={setSearchValue}
+                    searchValue={searchValue}
+                />
 
-                <div className='overflow-x-auto'>
+                <div className='overflow-x-auto mt-6'>
                     <table className='w-full text-sm text-left text-gray-500'>
                         <thead className='text-xs text-[#438206] uppercase bg-[#F7F7FC] border-b border-[#61BD12]'>
                             <tr>

@@ -167,14 +167,15 @@ class orderController {
         let {page, searchValue, parPage} = req.query
         page = parseInt(page)
         parPage = parseInt(parPage)
-
+    
         const skipPage = parPage * (page - 1)
-
+    
         try {
             if (searchValue) {
                 // Implement search logic here
             } else {
-                const orders = await customerOrder.aggregate([
+                // Fetch all orders, sorted by creation date
+                const allOrders = await customerOrder.aggregate([
                     {
                         $lookup: {
                             from: 'authororders',
@@ -183,20 +184,15 @@ class orderController {
                             as: 'suborder'
                         }
                     }
-                ]).skip(skipPage).limit(parPage).sort({ createdAt: -1})
-
-                const totalOrder = await customerOrder.aggregate([
-                    {
-                        $lookup: {
-                            from: 'authororders',
-                            localField: "_id",
-                            foreignField: 'orderId',
-                            as: 'suborder'
-                        }
-                    }
-                ])
-
-                responseReturn(res, 200, { orders, totalOrder: totalOrder.length })
+                ]).sort({ createdAt: -1 })
+    
+                // Get the total count of orders
+                const totalOrder = allOrders.length
+    
+                // Slice the orders array to get the required page
+                const orders = allOrders.slice(skipPage, skipPage + parPage)
+    
+                responseReturn(res, 200, { orders, totalOrder })
             }
         } catch (error) {
             console.log(error.message)
