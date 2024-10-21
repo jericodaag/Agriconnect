@@ -21,7 +21,9 @@ const AddProduct = () => {
         price: "",
         brand: "",
         stock: "",
-        unit: "kg"
+        unit: "kg",
+        harvestDate: "",
+        bestBefore: ""
     })
 
     const inputHandle = (e) => {
@@ -103,6 +105,8 @@ const AddProduct = () => {
         formData.append('shopName', 'EasyShop')
         formData.append('category', category)
         formData.append('unit', state.unit)
+        formData.append('harvestDate', state.harvestDate)
+        formData.append('bestBefore', state.bestBefore)
 
         for (let i = 0; i < images.length; i++) {
             formData.append('images', images[i])
@@ -121,7 +125,9 @@ const AddProduct = () => {
                 price: "",
                 brand: "",
                 stock: "",
-                unit: "kg"
+                unit: "kg",
+                harvestDate: "",
+                bestBefore: ""
             })
             setImageShow([])
             setImages([])
@@ -152,7 +158,7 @@ const AddProduct = () => {
                             <label htmlFor="name" className="block text-sm font-medium text-[#438206]">Product Name</label>
                             <input
                                 className="mt-1 block w-full px-3 py-2 bg-white border border-[#61BD12] rounded-md text-sm shadow-sm placeholder-gray-400
-                                        focus:outline-none focus:border-[#438206] focus:ring-1 focus:ring-[#438206]"
+                                           focus:outline-none focus:border-[#438206] focus:ring-1 focus:ring-[#438206]"
                                 onChange={inputHandle}
                                 value={state.name}
                                 type="text"
@@ -278,6 +284,33 @@ const AddProduct = () => {
                         </div>
                     </div>
 
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label htmlFor="harvestDate" className="block text-sm font-medium text-[#438206]">Harvest Date</label>
+                            <input
+                                className="mt-1 block w-full px-3 py-2 bg-white border border-[#61BD12] rounded-md text-sm shadow-sm placeholder-gray-400
+                                        focus:outline-none focus:border-[#438206] focus:ring-1 focus:ring-[#438206]"
+                                onChange={inputHandle}
+                                value={state.harvestDate}
+                                type="date"
+                                name='harvestDate'
+                                id='harvestDate'
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="bestBefore" className="block text-sm font-medium text-[#438206]">Best Before Date</label>
+                            <input
+                                className="mt-1 block w-full px-3 py-2 bg-white border border-[#61BD12] rounded-md text-sm shadow-sm placeholder-gray-400
+                                        focus:outline-none focus:border-[#438206] focus:ring-1 focus:ring-[#438206]"
+                                onChange={inputHandle}
+                                value={state.bestBefore}
+                                type="date"
+                                name='bestBefore'
+                                id='bestBefore'
+                            />
+                        </div>
+                    </div>
+
                     <div>
                         <label htmlFor="description" className="block text-sm font-medium text-[#438206]">Description</label>
                         <textarea
@@ -297,41 +330,41 @@ const AddProduct = () => {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {imageShow.map((img, i) => (
                                 <div key={i} className="relative group">
-                                    <img src={img.url} alt="" className="w-full h-32 object-cover rounded-lg" />
-                                    <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                        <label htmlFor={`file-${i}`} className="text-white cursor-pointer mr-2">
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                            </svg>
-                                        </label>
-                                        <button onClick={() => removeImage(i)} className="text-white">
-                                            <IoMdCloseCircle className="h-6 w-6" />
-                                        </button>
-                                    </div>
-                                    <input onChange={(e) => changeImage(e.target.files[0], i)} type="file" id={`file-${i}`} className="hidden" />
+                                <img src={img.url} alt="" className="w-full h-32 object-cover rounded-lg" />
+                                <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <label htmlFor={`file-${i}`} className="text-white cursor-pointer mr-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                        </svg>
+                                    </label>
+                                    <button onClick={() => removeImage(i)} className="text-white">
+                                        <IoMdCloseCircle className="h-6 w-6" />
+                                    </button>
                                 </div>
-                            ))}
-                            <label className="flex flex-col items-center justify-center h-32 border-2 border-[#61BD12] border-dashed rounded-lg cursor-pointer hover:bg-[#F7F7FC] transition-colors duration-300">
-                                <IoMdImages className="h-8 w-8 text-[#438206]" />
-                                <span className="mt-2 text-sm text-[#438206]">Add Image</span>
-                                <input type="file" onChange={imageHandle} multiple className="hidden" />
-                            </label>
-                        </div>
+                                <input onChange={(e) => changeImage(e.target.files[0], i)} type="file" id={`file-${i}`} className="hidden" />
+                            </div>
+                        ))}
+                        <label className="flex flex-col items-center justify-center h-32 border-2 border-[#61BD12] border-dashed rounded-lg cursor-pointer hover:bg-[#F7F7FC] transition-colors duration-300">
+                            <IoMdImages className="h-8 w-8 text-[#438206]" />
+                            <span className="mt-2 text-sm text-[#438206]">Add Image</span>
+                            <input type="file" onChange={imageHandle} multiple className="hidden" />
+                        </label>
                     </div>
+                </div>
 
-                    <div>
-                        <button
-                            disabled={loader}
-                            type="submit"
-                            className="w-full bg-[#438206] text-white py-2 px-4 rounded-md hover:bg-[#61BD12] transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#61BD12]"
-                        >
-                            {loader ? <PropagateLoader color='#fff' cssOverride={overrideStyle} /> : 'Add Product'}
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <div>
+                    <button
+                        disabled={loader}
+                        type="submit"
+                        className="w-full bg-[#438206] text-white py-2 px-4 rounded-md hover:bg-[#61BD12] transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#61BD12]"
+                    >
+                        {loader ? <PropagateLoader color='#fff' cssOverride={overrideStyle} /> : 'Add Product'}
+                    </button>
+                </div>
+            </form>
         </div>
-    );
+    </div>
+);
 };
 
 export default AddProduct;

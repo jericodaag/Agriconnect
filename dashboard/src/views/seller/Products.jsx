@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import Search from '../components/Search';
 import { Link } from 'react-router-dom';
 import Pagination from '../Pagination'; 
-import { FaEdit, FaEye, FaTrash } from 'react-icons/fa'; 
+import { FaEdit, FaEye, FaTrash, FaChartLine } from 'react-icons/fa'; 
 import { LuImageMinus } from "react-icons/lu";
 import { useDispatch, useSelector } from 'react-redux';
-import { get_products } from '../../store/Reducers/productReducer';
+import { get_products, delete_product } from '../../store/Reducers/productReducer';
 
 const Products = () => {
     const dispatch = useDispatch()
@@ -23,6 +23,12 @@ const Products = () => {
         }
         dispatch(get_products(obj))
     }, [searchValue, currentPage, parPage, dispatch])
+
+    const handleDelete = (productId) => {
+        if(window.confirm('Are you sure you want to delete this product?')) {
+            dispatch(delete_product(productId));
+        }
+    }
 
     return (
         <div className='bg-white min-h-screen p-6'>
@@ -79,10 +85,10 @@ const Products = () => {
                                                 <Link to={`/seller/dashboard/add-banner/${d._id}`} className='p-1 bg-[#F98821] text-white rounded hover:bg-[#e67d1e] transition-colors duration-200'>
                                                     <LuImageMinus size={16} />
                                                 </Link>
-                                                <button className='p-1 bg-[#438206] text-white rounded hover:bg-[#61BD12] transition-colors duration-200'>
-                                                    <FaEye size={16} />
-                                                </button>
-                                                <button className='p-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors duration-200'>
+                                                <Link to={`/seller/dashboard/inventory-history/${d._id}`} className='p-1 bg-[#438206] text-white rounded hover:bg-[#61BD12] transition-colors duration-200'>
+                                                    <FaChartLine size={16} />
+                                                </Link>
+                                                <button onClick={() => handleDelete(d._id)} className='p-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors duration-200'>
                                                     <FaTrash size={16} />
                                                 </button>
                                             </div>

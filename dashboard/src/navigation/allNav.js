@@ -11,6 +11,7 @@ import { BsCartCheck } from "react-icons/bs";
 import { IoChatbubbles } from "react-icons/io5";
 import { BsFillChatQuoteFill } from "react-icons/bs";
 import { CgProfile } from "react-icons/cg";
+import { FaChartBar } from "react-icons/fa";
 
 export const allNav = [
     {
@@ -90,7 +91,13 @@ export const allNav = [
         role : 'seller',
         path: '/seller/dashboard/products'
     },
-    
+    {
+        id: 12,
+        title: 'Product Analytics',
+        icon: <FaChartBar />, // You'll need to import this from react-icons
+        role: 'seller',
+        path: '/seller/dashboard/product-analytics'
+    },
     {
         id : 13,
         title : 'Orders',
@@ -125,8 +132,8 @@ export const allNav = [
         icon : <CgProfile />,
         role : 'seller',
         path: '/seller/dashboard/profile'
-    }
-
+    },
+    
 
 
 ]

@@ -7,6 +7,9 @@ import Carousel from 'react-multi-carousel';
 import 'react-multi-carousel/lib/styles.css';
 import Rating from '../components/Rating';
 import { FaHeart, FaFacebookF, FaTwitter, FaLinkedin, FaGithub } from "react-icons/fa";
+import { FiCalendar } from "react-icons/fi";
+import { BsHourglassSplit } from "react-icons/bs";
+import { MdOutlineWatchLater } from "react-icons/md";
 import Reviews from '../components/Reviews';
 import { Pagination } from 'swiper/modules';
 import 'swiper/css';
@@ -130,6 +133,26 @@ const Details = () => {
         });
     };
 
+    const calculateDaysSinceHarvest = (harvestDate) => {
+        const harvest = new Date(harvestDate);
+        const today = new Date();
+        const diffTime = Math.abs(today - harvest);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+        return diffDays;
+    };
+
+    const getFreshnessStatus = (daysSinceHarvest) => {
+        if (daysSinceHarvest <= 3) {
+            return { status: 'Very Fresh', color: 'text-green-600' };
+        } else if (daysSinceHarvest <= 7) {
+            return { status: 'Fresh', color: 'text-blue-600' };
+        } else if (daysSinceHarvest <= 14) {
+            return { status: 'Still Good', color: 'text-yellow-600' };
+        } else {
+            return { status: 'May be Perishing', color: 'text-red-600' };
+        }
+    };
+
     return (
         <div>
             <Header />
@@ -163,118 +186,161 @@ const Details = () => {
             </section>
 
             <section className="bg-gray-50 py-12">
-    <div className='w-[85%] md:w-[80%] sm:w-[90%] lg:w-[90%] mx-auto'>
-        <div className='grid grid-cols-2 md-lg:grid-cols-1 gap-8'>
-            <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className='relative pb-[100%] mb-4 overflow-hidden rounded-lg'>
-                    <img 
-                        className='absolute top-0 left-0 w-full h-full object-contain' 
-                        src={image ? image : product.images?.[0]} 
-                        alt={product.name} 
-                    />
-                </div>
-                <div className='py-3'>
-                    {product.images && (
-                        <Carousel
-                            autoPlay={true}
-                            infinite={true}
-                            responsive={responsive}
-                            transitionDuration={500}
-                            className="pb-4"
-                        >
-                            {product.images.map((img, i) => (
-                                <div key={i} onClick={() => setImage(img)} className="px-2">
-                                    <img className='h-24 w-full object-cover cursor-pointer rounded-md transition-all duration-300 hover:opacity-75' src={img} alt="" />
-                                </div>
-                            ))}
-                        </Carousel>
-                    )}
-                </div>
-            </div>
-
-            <div className='flex flex-col gap-6 bg-white p-6 rounded-lg shadow-md'>
-                <h1 className='text-3xl font-bold text-gray-800'>{product.name}</h1>
-                <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2'>
-                    <div className='bg-red-100 px-3 py-1 rounded-full'>
-                        <p className='text-sm sm:text-base text-red-600 font-semibold'>Sold by: <span className='font-bold'>{product.shopName}</span></p>
-                    </div>
-                    <div className='flex items-center gap-2'>
-                        <Rating ratings={product.rating} />
-                        <span className='text-green-600 font-medium'>(23 reviews)</span>
-                    </div>
-                </div>
-                <div className='text-2xl font-bold flex items-center gap-3'>
-                    {product.discount !== 0 ? (
-                        <>
-                            <span className='text-red-600'>₱{product.price - Math.floor((product.price * product.discount) / 100)}/{product.unit}</span>
-                            <span className='line-through text-gray-400 text-xl'>₱{product.price}/{product.unit}</span>
-                            <span className='bg-red-100 text-red-800 text-sm font-semibold px-2.5 py-0.5 rounded'>-{product.discount}%</span>
-                        </>
-                    ) : (
-                        <span className='text-gray-800'>Price: ₱{product.price}/{product.unit}</span>
-                    )}
-                </div>
-                <div className='bg-gray-50 p-4 rounded-md'>
-                    <h3 className='text-xl font-semibold text-gray-800 mb-2'>Product Description</h3>
-                    <p className='text-gray-600'>{product.description}</p>
-                </div>
-                <div className='bg-gray-50 p-4 rounded-md'>
-                    <h4 className='text-lg font-semibold text-gray-800 mb-2'>Product Details:</h4>
-                    <ul className='grid grid-cols-2 gap-2 text-gray-600'>
-                        <li>Price: ₱{product.price} per {product.unit}</li>
-                        <li>Unit of Sale: {product.unit}</li>
-                        <li>Brand: {product.brand}</li>
-                        <li>Category: {product.category}</li>
-                        <li>Stock: {product.stock} {product.unit}s available</li>
-                    </ul>
-                </div>
-                <div className='flex items-center gap-4'>
-                    {product.stock ? (
-                        <>
-                            <div className='flex items-center border border-gray-300 rounded-md'>
-                                <button onClick={dec} className='px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-l-md transition-colors duration-300'>-</button>
-                                <span className='px-4 py-2 font-medium'>{quantity}</span>
-                                <button onClick={inc} className='px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-r-md transition-colors duration-300'>+</button>
+                <div className='w-[85%] md:w-[80%] sm:w-[90%] lg:w-[90%] mx-auto'>
+                    <div className='grid grid-cols-2 md-lg:grid-cols-1 gap-8'>
+                        <div className="bg-white p-6 rounded-lg shadow-md">
+                            <div className='relative pb-[100%] mb-4 overflow-hidden rounded-lg'>
+                                <img 
+                                    className='absolute top-0 left-0 w-full h-full object-contain' 
+                                    src={image ? image : product.images?.[0]} 
+                                    alt={product.name} 
+                                />
                             </div>
-                            <button onClick={add_card} className='flex-grow py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-md transition-colors duration-300'>Add To Cart</button>
-                        </>
-                    ) : (
-                        <p className='text-red-600 font-semibold'>Out of Stock</p>
-                    )}
-                    <button onClick={add_wishlist} className='p-2 bg-gray-100 hover:bg-gray-200 text-red-500 rounded-md transition-colors duration-300'>
-                        <FaHeart size={24} />
-                    </button>
-                </div>
-                <div className='flex justify-between items-center py-4 border-t border-gray-200'>
-                    <div>
-                        <span className='font-semibold text-gray-700'>Availability: </span>
-                        <span className={`font-medium ${product.stock ? 'text-green-600' : 'text-red-600'}`}>
-                            {product.stock ? `In Stock (${product.stock})` : 'Out Of Stock'}
-                        </span>
-                    </div>
-                    <div className='flex items-center gap-2'>
-                        <span className='font-semibold text-gray-700'>Share:</span>
-                        <div className='flex gap-2'>
-                            {[FaFacebookF, FaTwitter, FaLinkedin, FaGithub].map((Icon, index) => (
-                                <a key={index} href="#" className='w-8 h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-full text-gray-700 transition-colors duration-300'>
-                                    <Icon />
-                                </a>
-                            ))}
+                            <div className='py-3'>
+                                {product.images && (
+                                    <Carousel
+                                        autoPlay={true}
+                                        infinite={true}
+                                        responsive={responsive}
+                                        transitionDuration={500}
+                                        className="pb-4"
+                                    >
+                                        {product.images.map((img, i) => (
+                                            <div key={i} onClick={() => setImage(img)} className="px-2">
+                                                <img className='h-24 w-full object-cover cursor-pointer rounded-md transition-all duration-300 hover:opacity-75' src={img} alt="" />
+                                            </div>
+                                        ))}
+                                    </Carousel>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className='flex flex-col gap-6 bg-white p-6 rounded-lg shadow-md'>
+                            <h1 className='text-3xl font-bold text-gray-800'>{product.name}</h1>
+                            <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2'>
+                                <div className='bg-red-100 px-3 py-1 rounded-full'>
+                                    <p className='text-sm sm:text-base text-red-600 font-semibold'>Sold by: <span className='font-bold'>{product.shopName}</span></p>
+                                </div>
+                                <div className='flex items-center gap-2'>
+                                    <Rating ratings={product.rating} />
+                                    <span className='text-green-600 font-medium'>(23 reviews)</span>
+                                </div>
+                            </div>
+                            <div className='text-2xl font-bold flex items-center gap-3'>
+                                {product.discount !== 0 ? (
+                                    <>
+                                        <span className='text-red-600'>₱{product.price - Math.floor((product.price * product.discount) / 100)}/{product.unit}</span>
+                                        <span className='line-through text-gray-400 text-xl'>₱{product.price}/{product.unit}</span>
+                                        <span className='bg-red-100 text-red-800 text-sm font-semibold px-2.5 py-0.5 rounded'>-{product.discount}%</span>
+                                    </>
+                                ) : (
+                                    <span className='text-gray-800'>Price: ₱{product.price}/{product.unit}</span>
+                                )}
+                            </div>
+                            <div className='bg-gray-50 p-4 rounded-md'>
+                                <h3 className='text-xl font-semibold text-gray-800 mb-2'>Product Description</h3>
+                                <p className='text-gray-600'>{product.description}</p>
+                            </div>
+                            
+                            {/* New highlighted section for harvest and freshness information */}
+                            <div className='bg-green-50 p-4 rounded-md border-l-4 border-green-500'>
+                                <h4 className='text-lg font-semibold text-green-800 mb-3'>Freshness Information:</h4>
+                                <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                                    {product.harvestDate && (
+                                        <div className='flex items-center gap-2'>
+                                            <FiCalendar className="text-green-600 text-xl" />
+                                            <div>
+                                                <p className='text-sm text-gray-600'>Harvest Date:</p>
+                                                <p className='font-semibold'>{new Date(product.harvestDate).toLocaleDateString()}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {product.harvestDate && (
+                                        <div className='flex items-center gap-2'>
+                                            <BsHourglassSplit className="text-green-600 text-xl" />
+                                            <div>
+                                                <p className='text-sm text-gray-600'>Days Since Harvest:</p>
+                                                <p className='font-semibold'>{calculateDaysSinceHarvest(product.harvestDate)} days</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {product.bestBefore && (
+                                        <div className='flex items-center gap-2'>
+                                            <MdOutlineWatchLater className="text-green-600 text-xl" />
+                                            <div>
+                                                <p className='text-sm text-gray-600'>Best Before:</p>
+                                                <p className='font-semibold'>{new Date(product.bestBefore).toLocaleDateString()}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                {product.harvestDate && (
+                                    <div className='mt-3'>
+                                        <p className='text-sm text-gray-600'>Freshness Status:</p>
+                                        <p className={`font-semibold ${getFreshnessStatus(calculateDaysSinceHarvest(product.harvestDate)).color}`}>
+                                            {getFreshnessStatus(calculateDaysSinceHarvest(product.harvestDate)).status}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className='bg-gray-50 p-4 rounded-md'>
+                                <h4 className='text-lg font-semibold text-gray-800 mb-2'>Product Details:</h4>
+                                <ul className='grid grid-cols-2 gap-2 text-gray-600'>
+                                    <li>Price: ₱{product.price} per {product.unit}</li>
+                                    <li>Unit of Sale: {product.unit}</li>
+                                    <li>Brand: {product.brand}</li>
+                                    <li>Category: {product.category}</li>
+                                    <li>Stock: {product.stock} {product.unit}s available</li>
+                                </ul>
+                            </div>
+                            <div className='flex items-center gap-4'>
+                                {product.stock ? (
+                                    <>
+                                        <div className='flex items-center border border-gray-300 rounded-md'>
+                                            <button onClick={dec} className='px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-l-md transition-colors duration-300'>-</button>
+                                            <span className='px-4 py-2 font-medium'>{quantity}</span>
+                                            <button onClick={inc} className='px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-r-md transition-colors duration-300'>+</button>
+                                        </div>
+                                        <button onClick={add_card} className='flex-grow py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-md transition-colors duration-300'>Add To Cart</button>
+                                    </>
+                                ) : (
+                                    <p className='text-red-600 font-semibold'>Out of Stock</p>
+                                )}
+                                <button onClick={add_wishlist} className='p-2 bg-gray-100 hover:bg-gray-200 text-red-500 rounded-md transition-colors duration-300'>
+                                    <FaHeart size={24} />
+                                </button>
+                            </div>
+                            <div className='flex justify-between items-center py-4 border-t border-gray-200'>
+                                <div>
+                                    <span className='font-semibold text-gray-700'>Availability: </span>
+                                    <span className={`font-medium ${product.stock ? 'text-green-600' : 'text-red-600'}`}>
+                                        {product.stock ? `In Stock (${product.stock})` : 'Out Of Stock'}
+                                    </span>
+                                </div>
+                                <div className='flex items-center gap-2'>
+                                    <span className='font-semibold text-gray-700'>Share:</span>
+                                    <div className='flex gap-2'>
+                                        {[FaFacebookF, FaTwitter, FaLinkedin, FaGithub].map((Icon, index) => (
+                                            <a key={index} href="#" className='w-8 h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-full text-gray-700 transition-colors duration-300'>
+                                                <Icon />
+                                            </a>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className='flex gap-3'>
+                                {product.stock ? (
+                                    <button onClick={buynow} className='flex-grow py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition-colors duration-300'>Buy Now</button>
+                                ) : ''}
+                                <Link to={`/dashboard/chat/${product.sellerId}`} className='py-2 px-4 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-md transition-colors duration-300'>
+                                    Chat Seller
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div className='flex gap-3'>
-                    {product.stock ? (
-                        <button onClick={buynow} className='flex-grow py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition-colors duration-300'>Buy Now</button>
-                    ) : ''}
-                    <Link to={`/dashboard/chat/${product.sellerId}`} className='py-2 px-4 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-md transition-colors duration-300'>
-                        Chat Seller
-                    </Link>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+            </section>
 
             <section>
                 <div className='w-[85%] md:w-[80%] sm:w-[90%] lg:w-[90%] h-full mx-auto pb-16'>

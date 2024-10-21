@@ -1,4 +1,4 @@
-const {Schema, model} = require("mongoose");
+const { Schema, model } = require("mongoose");
 
 const productSchema = new Schema({
     sellerId: {
@@ -54,15 +54,34 @@ const productSchema = new Schema({
         type: String,
         required: true,
         enum: ['kg', 'g', 'pc', 'pack']
-    }
-}, {timestamps: true})
+    },
+    harvestDate: {
+        type: Date,
+        required: true
+    },
+    bestBefore: {
+        type: Date,
+        required: true
+    },
+    salesCount: {
+        type: Number,
+        default: 0
+    },
+    lastSaleDate: {
+        type: Date
+    },
+    inventoryHistory: [{
+        date: Date,
+        quantity: Number
+    }]
+}, { timestamps: true })
 
 productSchema.index({
     name: 'text',
     category: 'text',
     brand: 'text',
     description: 'text'
-},{
+}, {
     weights: {
         name: 5,
         category: 4,
