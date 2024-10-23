@@ -1,17 +1,19 @@
-const productController = require('../../controllers/dasboard/productController')
-const { authMiddleware } = require('../../middlewares/authMiddleware')
-const router = require('express').Router()
+const router = require('express').Router();
+const productController = require('../../controllers/dasboard/productController');
+const { authMiddleware } = require('../../middlewares/authMiddleware');
 
-// Existing routes
-router.post('/product-add', authMiddleware, productController.add_product)
-router.get('/products-get', authMiddleware, productController.products_get)
-router.get('/product-get/:productId', authMiddleware, productController.product_get)
-router.post('/product-update', authMiddleware, productController.product_update)
-router.post('/product-image-update', authMiddleware, productController.product_image_update)
+// Basic product operations
+router.post('/product-add', authMiddleware, productController.add_product);
+router.get('/products-get', authMiddleware, productController.products_get);
+router.get('/product-get/:productId', authMiddleware, productController.product_get);
+router.post('/product-update', authMiddleware, productController.product_update);
+router.post('/product-image-update', authMiddleware, productController.product_image_update);
+router.delete('/product/:productId', authMiddleware, productController.delete_product);
 
-// New routes for inventory management and sales analysis
-router.get('/product-analytics', authMiddleware, productController.get_product_analytics)
-router.get('/inventory-history/:productId', authMiddleware, productController.get_inventory_history)
-router.post('/update-product-sales', authMiddleware, productController.update_product_sales)
+// Analytics routes
+router.get('/product-analytics', authMiddleware, productController.get_product_analytics);
+router.get('/inventory-history/:productId', authMiddleware, productController.get_inventory_history);
+router.post('/update-product-sales', authMiddleware, productController.update_product_sales);
+router.post('/handle-alert', authMiddleware, productController.handle_alert_action);
 
-module.exports = router
+module.exports = router;

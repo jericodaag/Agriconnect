@@ -88,7 +88,7 @@ const Index = () => {
                 recentOrders.map((o,i) => (
                     <tr key={i} className='bg-white border-b'>
                         <td scope='row' className='px-6 py-4 font-medium whitespace-nowrap'>#{o._id}</td>
-                        <td scope='row' className='px-6 py-4 font-medium whitespace-nowrap'>${o.price}</td>
+                        <td scope='row' className='px-6 py-4 font-medium whitespace-nowrap'>₱{o.price}</td>
                         <td scope='row' className='px-6 py-4 font-medium whitespace-nowrap'>{o.payment_status}</td>
                         <td scope='row' className='px-6 py-4 font-medium whitespace-nowrap'>{o.delivery_status}</td>
                         <td scope='row' className='px-6 py-4 font-medium whitespace-nowrap'>

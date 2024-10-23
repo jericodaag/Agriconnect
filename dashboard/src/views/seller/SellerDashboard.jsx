@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { MdCurrencyExchange, MdProductionQuantityLimits, MdPendingActions } from "react-icons/md";
+import React, { useEffect, useState } from 'react';
+import { MdCurrencyExchange, MdProductionQuantityLimits, MdPendingActions, MdWarning } from "react-icons/md";
 import { FaCartShopping, FaUsers } from "react-icons/fa6"; 
 import Chart from 'react-apexcharts';
 import { Link } from 'react-router-dom';
@@ -9,11 +9,24 @@ import RecentMessages from '../../components/RecentMessages.jsx';
 
 const SellerDashboard = () => {
     const dispatch = useDispatch();
-    const { totalSale, totalOrder, totalProduct, totalPendingOrder, recentOrder, recentMessages, chartData, productStatusCounts } = useSelector(state => state.dashboard);
+    const { 
+        totalSale = 0, 
+        totalOrder = 0, 
+        totalProduct = 0, 
+        totalPendingOrder = 0, 
+        recentOrder = [], 
+        recentMessages = [], 
+        chartData = [], 
+        productStatusCounts = {}, 
+        expiringProducts = []
+    } = useSelector(state => state.dashboard);
     const { userInfo } = useSelector(state => state.auth);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        dispatch(get_seller_dashboard_data());
+        dispatch(get_seller_dashboard_data())
+            .then(() => setIsLoading(false))
+            .catch(() => setIsLoading(false));
     }, [dispatch]);
 
     const chartOptions = {
@@ -64,20 +77,19 @@ const SellerDashboard = () => {
     };
 
     const series = [
-        { name: "Orders", data: chartData.map(data => data.totalOrders) },
-        { name: "Revenue", data: chartData.map(data => data.totalRevenue) },
-        { name: "Customers", data: chartData.map(data => data.customers) },
+        { name: "Orders", data: chartData.map(data => data.totalOrders || 0) },
+        { name: "Revenue", data: chartData.map(data => data.totalRevenue || 0) },
+        { name: "Customers", data: chartData.map(data => data.customers || 0) },
     ];
 
     const roundToHundred = (arr) => {
-        const rounded = arr.map(num => Math.round(num));
+        if (!arr || arr.length === 0) return [0, 0, 0, 0, 0];
+        const rounded = arr.map(num => Math.round(num || 0));
         const sum = rounded.reduce((a, b) => a + b, 0);
         const diff = 100 - sum;
         
         if (diff !== 0) {
-            // Find the index of the largest value
             const maxIndex = rounded.indexOf(Math.max(...rounded));
-            // Adjust the largest value
             rounded[maxIndex] += diff;
         }
         
@@ -116,14 +128,18 @@ const SellerDashboard = () => {
     };
 
     const originalSeries = [
-        productStatusCounts.pending,
-        productStatusCounts.processing,
-        productStatusCounts.warehouse,
-        productStatusCounts.placed,
-        productStatusCounts.cancelled
+        productStatusCounts.pending || 0,
+        productStatusCounts.processing || 0,
+        productStatusCounts.warehouse || 0,
+        productStatusCounts.placed || 0,
+        productStatusCounts.cancelled || 0
     ];
 
     const radialSeries = roundToHundred(originalSeries);
+
+    if (isLoading) {
+        return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    }
 
     return (
         <div className='p-4 bg-gray-50'>
@@ -135,7 +151,7 @@ const SellerDashboard = () => {
                     { title: 'Products', value: totalProduct, icon: <MdProductionQuantityLimits />, color: 'bg-green-500' },
                     { title: 'Orders', value: totalOrder, icon: <FaCartShopping />, color: 'bg-yellow-500' },
                     { title: 'Pending Orders', value: totalPendingOrder, icon: <MdPendingActions />, color: 'bg-red-500' },
-                    { title: 'Customers', value: chartData.reduce((sum, data) => sum + data.customers, 0), icon: <FaUsers />, color: 'bg-purple-500' },
+                    { title: 'Customers', value: chartData.reduce((sum, data) => sum + (data.customers || 0), 0), icon: <FaUsers />, color: 'bg-purple-500' },
                 ].map((item, index) => (
                     <div key={index} className='bg-white rounded-lg shadow-sm p-4 flex items-center'>
                         <div className={`${item.color} text-white p-3 rounded-full mr-4`}>
@@ -148,6 +164,22 @@ const SellerDashboard = () => {
                     </div>
                 ))}
             </div>
+
+            {expiringProducts.length > 0 && (
+                <div className='mb-6 bg-yellow-100 border-l-4 border-yellow-500 p-4'>
+                    <div className='flex items-center'>
+                        <MdWarning className='text-yellow-500 mr-2' size={24} />
+                        <p className='font-semibold text-yellow-700'>Products Expiring Soon</p>
+                    </div>
+                    <ul className='mt-2'>
+                        {expiringProducts.map((product, index) => (
+                            <li key={index} className='text-yellow-700'>
+                                {product.name} - Expires in {product.daysUntilExpiry} days
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
 
             <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6'>
                 <div className='lg:col-span-2 bg-white rounded-lg shadow-sm p-4'>

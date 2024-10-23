@@ -3,6 +3,7 @@ const customerOrder = require('../../models/customerOrder')
 const myShopWallet = require('../../models/myShopWallet')
 const sellerWallet = require('../../models/sellerWallet')
 const cardModel = require('../../models/cardModel')
+const productModel = require('../../models/productModel')
 const moment = require("moment")
 const { responseReturn } = require('../../utilities/response') 
 const { mongo: {ObjectId}} = require('mongoose')
@@ -84,6 +85,24 @@ class orderController {
             await authOrderModel.insertMany(authorOrderData)
             for (let k = 0; k < cardId.length; k++) {
                 await cardModel.findByIdAndDelete(cardId[k]) 
+            }
+
+            // Update product sales data
+            for (let product of customerOrderProduct) {
+                await productModel.findByIdAndUpdate(product._id, {
+                    $inc: { 
+                        salesCount: product.quantity, 
+                        stock: -product.quantity 
+                    },
+                    $set: { lastSaleDate: new Date() },
+                    $push: { 
+                        inventoryHistory: { 
+                            date: new Date(), 
+                            quantity: product.quantity,
+                            type: 'sale'
+                        } 
+                    }
+                });
             }
    
             setTimeout(() => {
