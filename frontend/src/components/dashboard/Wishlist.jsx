@@ -3,71 +3,83 @@ import { FaEye, FaRegHeart } from "react-icons/fa";
 import { RiShoppingCartLine } from "react-icons/ri";
 import Rating from '../Rating';
 import { Link } from 'react-router-dom';
-import { useDispatch,useSelector } from 'react-redux';
-import { get_wishlist_products, remove_wishlist,messageClear } from '../../store/reducers/cardReducer';
+import { useDispatch, useSelector } from 'react-redux';
+import { get_wishlist_products, remove_wishlist, messageClear } from '../../store/reducers/cardReducer';
 import toast from 'react-hot-toast';
 
-const Wishlist = () => { 
-
+const Wishlist = () => {
     const dispatch = useDispatch()
-    const {userInfo } = useSelector(state => state.auth)
-    const {wishlist,successMessage } = useSelector(state => state.card)
-   
+    const { userInfo } = useSelector(state => state.auth)
+    const { wishlist, successMessage } = useSelector(state => state.card)
+
     useEffect(() => {
         dispatch(get_wishlist_products(userInfo.id))
-    },[])
+    }, [])
 
-    useEffect(() => { 
+    useEffect(() => {
         if (successMessage) {
             toast.success(successMessage)
-            dispatch(messageClear())  
-        }   
-    },[successMessage])
-
+            dispatch(messageClear())
+        }
+    }, [successMessage])
 
     return (
-        <div className='w-full grid grid-cols-4 md-lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-6'>
+        <div className='w-full grid grid-cols-5 md-lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 gap-4'>
             {
-                wishlist.map((p, i) => <div key={i} className='border group transition-all duration-500 hover:shadow-md hover:-mt-3 bg-white'>
-                <div className='relative overflow-hidden'>
-                
-                {
-                    p.discount !== 0 && <div className='flex justify-center items-center absolute text-white w-[38px] h-[38px] rounded-full bg-red-500 font-semibold text-xs left-2 top-2'>{p.discount}% </div> 
-                }
-           
-                   
-            
-    
-            <img className='sm:w-full w-full h-[240px]' src={p.image} alt="" />  
-    
-            <ul className='flex transition-all duration-700 -bottom-10 justify-center items-center gap-2 absolute w-full group-hover:bottom-3'>
-                <li onClick={() => dispatch(remove_wishlist(p._id))} className='w-[38px] h-[38px] cursor-pointer bg-white flex justify-center items-center rounded-full hover:bg-[#059473] hover:text-white hover:rotate-[720deg] transition-all'>
-                <FaRegHeart />
-                </li>
-                <Link to={`/product/details/${p.slug}`} className='w-[38px] h-[38px] cursor-pointer bg-white flex justify-center items-center rounded-full hover:bg-[#059473] hover:text-white hover:rotate-[720deg] transition-all'>
-                <FaEye />
-                </Link>
-                <li className='w-[38px] h-[38px] cursor-pointer bg-white flex justify-center items-center rounded-full hover:bg-[#059473] hover:text-white hover:rotate-[720deg] transition-all'>
-                <RiShoppingCartLine />
-                </li>
-            </ul>    
-                </div>
-    
-                <div className='py-3 text-slate-600 px-2'>
-                        <h2 className='font-bold'>{p.name}</h2>
-                        <div className='flex justify-start items-center gap-3'>
-                            <span className='text-md font-semibold'>₱{p.price}/{p.unit}</span>
-                            <div className='flex'>
-                                <Rating ratings={p.rating} />
+                wishlist.map((p, i) => (
+                    <Link to={`/product/details/${p.slug}`} key={i} className='block'>
+                        <div className='border border-gray-100 rounded-lg group transition-all duration-500 hover:shadow-lg hover:-mt-2 bg-white h-full'>
+                            <div className='relative overflow-hidden aspect-square rounded-t-lg'>
+                                {p.discount !== 0 && (
+                                    <div className='flex justify-center items-center absolute text-white w-[35px] h-[35px] rounded-full bg-red-500 font-semibold text-xs left-2 top-2 shadow-sm'>
+                                        {p.discount}%
+                                    </div>
+                                )}
+
+                                <img 
+                                    className='w-full h-full object-cover' 
+                                    src={p.image} 
+                                    alt={p.name} 
+                                />
+
+                                <ul className='flex transition-all duration-700 -bottom-10 justify-center items-center gap-2 absolute w-full group-hover:bottom-3'>
+                                    <li 
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            dispatch(remove_wishlist(p._id));
+                                        }} 
+                                        className='w-[32px] h-[32px] cursor-pointer bg-white/90 flex justify-center items-center rounded-full hover:bg-[#059473] hover:text-white hover:rotate-[720deg] transition-all shadow-sm'
+                                    >
+                                        <FaRegHeart />
+                                    </li>
+                                    <Link 
+                                        to={`/product/details/${p.slug}`}
+                                        onClick={(e) => e.stopPropagation()} 
+                                        className='w-[32px] h-[32px] cursor-pointer bg-white/90 flex justify-center items-center rounded-full hover:bg-[#059473] hover:text-white hover:rotate-[720deg] transition-all shadow-sm'
+                                    >
+                                        <FaEye />
+                                    </Link>
+                                    <li 
+                                        onClick={(e) => e.preventDefault()} 
+                                        className='w-[32px] h-[32px] cursor-pointer bg-white/90 flex justify-center items-center rounded-full hover:bg-[#059473] hover:text-white hover:rotate-[720deg] transition-all shadow-sm'
+                                    >
+                                        <RiShoppingCartLine />
+                                    </li>
+                                </ul>
                             </div>
-    
-                </div>
-            </div>    
-    
-    
-    
-    
-            </div> )
+
+                            <div className='p-3 text-slate-600'>
+                                <h2 className='font-medium text-sm truncate'>{p.name}</h2>
+                                <div className='flex justify-between items-center gap-2 mt-1'>
+                                    <span className='text-sm font-semibold'>₱{p.price}/{p.unit}</span>
+                                    <div className='flex scale-90'>
+                                        <Rating ratings={p.rating} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </Link>
+                ))
             }
         </div>
     );
