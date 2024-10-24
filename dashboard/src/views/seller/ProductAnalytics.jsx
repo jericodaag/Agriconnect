@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { get_product_analytics } from '../../store/Reducers/productReducer';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { TrendingUp, TrendingDown, Package, Clock, AlertTriangle, } from 'lucide-react';
+import { TrendingUp, TrendingDown, Package, Clock, AlertTriangle } from 'lucide-react';
 import moment from 'moment';
 import { calculateQualityScore } from '../../utils/analytics-helper';
 import ProductPerformanceCharts from '../../views/seller/ProductPerformanceCharts';
@@ -236,231 +236,597 @@ const ProductAnalytics = () => {
         return { text: `${days} days until expiry`, color: 'text-green-600' };
     };
 
-    const InventoryTab = () => (
-        <div className="space-y-6">
-            {/* Inventory Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">  {/* Changed to grid-cols-5 */}
-                {[
-                    {
-                        title: 'Total Products',
-                        value: inventoryInsights.totalProducts,
-                        icon: <Package className="h-6 w-6 text-blue-600"/>,
-                        bgColor: 'bg-blue-100'
-                    },
-                    {
-                        title: 'Low Stock',
-                        value: inventoryInsights.lowStock,
-                        icon: <AlertTriangle className="h-6 w-6 text-yellow-600"/>,
-                        bgColor: 'bg-yellow-100'
-                    },
-                    {
-                        title: 'Expiring Soon',
-                        value: inventoryInsights.expiringIn7Days,
-                        icon: <Clock className="h-6 w-6 text-red-600"/>,
-                        bgColor: 'bg-red-100'
-                    },
-                    {
-                        title: 'Expired Products',  // New card
-                        value: productAnalytics.filter(product => 
-                            moment(product.bestBefore).isBefore(moment())
-                        ).length,
-                        icon: <AlertTriangle className="h-6 w-6 text-red-600"/>,
-                        bgColor: 'bg-red-50'
-                    },
-                    {
-                        title: 'Out of Stock',
-                        value: inventoryInsights.outOfStock,
-                        icon: <TrendingDown className="h-6 w-6 text-gray-600"/>,
-                        bgColor: 'bg-gray-100'
-                    }
-                ].map((stat, index) => (
-                    <div key={index} className="bg-white p-6 rounded-lg shadow">
-                        <div className="flex items-center gap-4">
-                            <div className={`p-4 rounded-full ${stat.bgColor}`}>
-                                {stat.icon}
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-600">{stat.title}</p>
-                                <p className="text-2xl font-bold">{stat.value}</p>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
+    const InventoryTab = () => {
+        const [currentPage, setCurrentPage] = useState(1);
+        const [itemsPerPage, setItemsPerPage] = useState(5);
     
-            {/* Inventory Status Table */}
-            <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-4">Inventory Status</h3>
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock Status</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sales Info</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dates</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {productAnalytics.map((product, index) => {
-                                const stockStatus = getStockStatus(product.stock);
-                                const expiryStatus = getDaysUntilExpiry(product.bestBefore);
-                                const avgDailySales = calculateAverageDailySales(product);
+        // Calculate pagination
+        const indexOfLastItem = currentPage * itemsPerPage;
+        const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+        const currentItems = productAnalytics.slice(indexOfFirstItem, indexOfLastItem);
     
-                                return (
-                                    <tr key={index} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center">
-                                                {product.images && product.images[0] && (
-                                                    <img 
-                                                        src={product.images[0]} 
-                                                        alt={product.name}
-                                                        className="w-12 h-12 rounded-md object-cover mr-3"
-                                                    />
-                                                )}
-                                                <div>
-                                                    <div className="font-medium text-gray-900">{product.name}</div>
-                                                    <div className="text-sm text-gray-500">{product.category}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className={`font-medium ${stockStatus.color}`}>
-                                                {stockStatus.text}
-                                                <div className="text-sm text-gray-500">
-                                                    {product.stock} {product.unit} remaining
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm">
-                                                <div className="font-medium">Total Sales: {product.salesCount}</div>
-                                                <div>Avg. Daily: {calculateAverageDailySales(product)}</div>
-                                                {product.lastSaleDate && (
-                                                    <div className="text-gray-500">
-                                                        Last Sale: {moment(product.lastSaleDate).fromNow()}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm">
-                                                <div>Harvest: {moment(product.harvestDate).format('MMM D, YYYY')}</div>
-                                                <div className={`mt-1 ${expiryStatus.color}`}>
-                                                    {expiryStatus.text}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center gap-2">
-                                                <Rating ratings={product.rating || 0} />
-                                                <span className="text-sm text-gray-600">
-                                                    ({product.rating ? product.rating.toFixed(1) : '0'})
-                                                </span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    );
-
-    const FreshnessTab = () => (
-        <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Product Freshness Status</h3>
-            {expiringProducts.length > 0 && (
-                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-                    <div className="flex items-center">
-                        <AlertTriangle className="h-5 w-5 text-yellow-400 mr-2" />
-                        <p className="text-sm text-yellow-700">
-                            You have {expiringProducts.length} products expiring within the next 7 days
-                        </p>
-                    </div>
-                </div>
-            )}
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Product</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Harvest Date</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Expires In</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Status</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Quality Score</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {productAnalytics.map(product => (
-                            <tr key={product._id}>
-                                <td className="px-4 py-3">{product.name}</td>
-                                <td className="px-4 py-3">{moment(product.harvestDate).format('MMM D, YYYY')}</td>
-                                <td className="px-4 py-3">{product.daysUntilExpiry} days</td>
-                                <td className="px-4 py-3">
-                                    <span className={`px-2 py-1 rounded-full text-sm ${
-                                        product.freshnessStatus === 'Very Fresh' ? 'bg-green-100 text-green-800' :
-                                        product.freshnessStatus === 'Fresh' ? 'bg-blue-100 text-blue-800' :
-                                        product.freshnessStatus === 'Still Good' ? 'bg-yellow-100 text-yellow-800' :
-                                        'bg-red-100 text-red-800'
-                                    }`}>
-                                        {product.freshnessStatus}
-                                    </span>
-                                </td>
-                                <td className="px-4 py-3">{calculateQualityScore(product)}%</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    );
-
-    const MarketabilityTab = () => (
-        <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Product Market Share</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <ResponsiveContainer width="100%" height={400}>
-                    <PieChart>
-                        <Pie 
-                            data={marketability} 
-                            dataKey="marketShare"
-                            nameKey="name"
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={150}
-                            fill="#8884d8"
-                            label={({ name, marketShare }) => `${name}: ${parseFloat(marketShare).toFixed(1)}%`}
-                        >
-                            {marketability.map((entry, index) => (
-                                <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                        </Pie>
-                        <Tooltip />
-                    </PieChart>
-                </ResponsiveContainer>
-                <div className="space-y-4">
-                    <h4 className="font-medium text-gray-700">Market Share Details</h4>
-                    {marketability.map((product, index) => (
-                        <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                            <span className="font-medium">{product.name}</span>
-                            <div className="text-right">
-                                <div className="text-sm font-medium text-gray-900">
-                                    {parseFloat(product.marketShare).toFixed(1)}%
+        return (
+            <div className="space-y-6">
+                {/* Inventory Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    {[
+                        {
+                            title: 'Total Products',
+                            value: inventoryInsights.totalProducts,
+                            icon: <Package className="h-6 w-6 text-blue-600"/>,
+                            bgColor: 'bg-blue-100'
+                        },
+                        {
+                            title: 'Low Stock',
+                            value: inventoryInsights.lowStock,
+                            icon: <AlertTriangle className="h-6 w-6 text-yellow-600"/>,
+                            bgColor: 'bg-yellow-100'
+                        },
+                        {
+                            title: 'Expiring Soon',
+                            value: inventoryInsights.expiringIn7Days,
+                            icon: <Clock className="h-6 w-6 text-red-600"/>,
+                            bgColor: 'bg-red-100'
+                        },
+                        {
+                            title: 'Expired Products',
+                            value: productAnalytics.filter(product => 
+                                moment(product.bestBefore).isBefore(moment())
+                            ).length,
+                            icon: <AlertTriangle className="h-6 w-6 text-red-600"/>,
+                            bgColor: 'bg-red-50'
+                        },
+                        {
+                            title: 'Out of Stock',
+                            value: inventoryInsights.outOfStock,
+                            icon: <TrendingDown className="h-6 w-6 text-gray-600"/>,
+                            bgColor: 'bg-gray-100'
+                        }
+                    ].map((stat, index) => (
+                        <div key={index} className="bg-white p-6 rounded-lg shadow">
+                            <div className="flex items-center gap-4">
+                                <div className={`p-4 rounded-full ${stat.bgColor}`}>
+                                    {stat.icon}
                                 </div>
-                                <div className="text-xs text-gray-500">
-                                    Sales Velocity: {product.salesVelocity}/day
+                                <div>
+                                    <p className="text-sm text-gray-600">{stat.title}</p>
+                                    <p className="text-2xl font-bold">{stat.value}</p>
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
+        
+                {/* Inventory Status Table */}
+                <div className="bg-white p-6 rounded-lg shadow">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-semibold">Inventory Status</h3>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600">Show:</span>
+                            <select 
+                                value={itemsPerPage} 
+                                onChange={(e) => {
+                                    setItemsPerPage(Number(e.target.value));
+                                    setCurrentPage(1); // Reset to first page when changing items per page
+                                }}
+                                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-[#438206]"
+                            >
+                                <option value={5}>5</option>
+                                <option value={10}>10</option>
+                                <option value={20}>20</option>
+                            </select>
+                            <span className="text-sm text-gray-600">entries</span>
+                        </div>
+                    </div>
+    
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock Status</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sales Info</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dates</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {currentItems.map((product, index) => {
+                                    const stockStatus = getStockStatus(product.stock);
+                                    const expiryStatus = getDaysUntilExpiry(product.bestBefore);
+                                    const avgDailySales = calculateAverageDailySales(product);
+        
+                                    return (
+                                        <tr key={index} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex items-center">
+                                                    {product.images && product.images[0] && (
+                                                        <img 
+                                                            src={product.images[0]} 
+                                                            alt={product.name}
+                                                            className="w-12 h-12 rounded-md object-cover mr-3"
+                                                        />
+                                                    )}
+                                                    <div>
+                                                        <div className="font-medium text-gray-900">{product.name}</div>
+                                                        <div className="text-sm text-gray-500">{product.category}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className={`font-medium ${stockStatus.color}`}>
+                                                    {stockStatus.text}
+                                                    <div className="text-sm text-gray-500">
+                                                        {product.stock} {product.unit} remaining
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm">
+                                                    <div className="font-medium">Total Sales: {product.salesCount}</div>
+                                                    <div>Avg. Daily: {avgDailySales}</div>
+                                                    {product.lastSaleDate && (
+                                                        <div className="text-gray-500">
+                                                            Last Sale: {moment(product.lastSaleDate).fromNow()}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm">
+                                                    <div>Harvest: {moment(product.harvestDate).format('MMM D, YYYY')}</div>
+                                                    <div className={`mt-1 ${expiryStatus.color}`}>
+                                                        {expiryStatus.text}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex items-center gap-2">
+                                                    <Rating ratings={product.rating || 0} />
+                                                    <span className="text-sm text-gray-600">
+                                                        ({product.rating ? product.rating.toFixed(1) : '0'})
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+    
+                    {/* Pagination */}
+                    <div className="mt-4 flex justify-between items-center">
+                        <div className="text-sm text-gray-500">
+                            Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, productAnalytics.length)} of {productAnalytics.length} entries
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className={`px-3 py-1 rounded ${
+                                    currentPage === 1 
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                        : 'bg-white text-gray-700 hover:bg-gray-50 border'
+                                }`}
+                            >
+                                Previous
+                            </button>
+                            <div className="flex gap-1">
+                                {[...Array(Math.ceil(productAnalytics.length / itemsPerPage))].map((_, idx) => (
+                                    <button
+                                        key={idx + 1}
+                                        onClick={() => setCurrentPage(idx + 1)}
+                                        className={`px-3 py-1 rounded ${
+                                            currentPage === idx + 1
+                                                ? 'bg-[#438206] text-white'
+                                                : 'bg-white text-gray-700 hover:bg-gray-50 border'
+                                        }`}
+                                    >
+                                        {idx + 1}
+                                    </button>
+                                ))}
+                            </div>
+                            <button
+                                onClick={() => setCurrentPage(prev => 
+                                    Math.min(prev + 1, Math.ceil(productAnalytics.length / itemsPerPage))
+                                )}
+                                disabled={currentPage >= Math.ceil(productAnalytics.length / itemsPerPage)}
+                                className={`px-3 py-1 rounded ${
+                                    currentPage >= Math.ceil(productAnalytics.length / itemsPerPage)
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                        : 'bg-white text-gray-700 hover:bg-gray-50 border'
+                                }`}
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const FreshnessTab = () => {
+        const [currentPage, setCurrentPage] = useState(1);
+        const [itemsPerPage, setItemsPerPage] = useState(5);
+    
+        // Calculate freshness status based on days until expiry
+        const getFreshnessStatus = (daysUntilExpiry) => {
+            if (daysUntilExpiry <= 0) return { status: 'Expired', class: 'bg-red-100 text-red-800' };
+            if (daysUntilExpiry <= 3) return { status: 'Critical', class: 'bg-red-100 text-red-800' };
+            if (daysUntilExpiry <= 7) return { status: 'Warning', class: 'bg-yellow-100 text-yellow-800' };
+            if (daysUntilExpiry <= 14) return { status: 'Good', class: 'bg-blue-100 text-blue-800' };
+            return { status: 'Very Fresh', class: 'bg-green-100 text-green-800' };
+        };
+    
+        // Enhanced product data with computed properties
+        const productsWithFreshness = productAnalytics.map(product => {
+            const daysUntilExpiry = moment(product.bestBefore).diff(moment(), 'days');
+            const shelfLife = moment(product.bestBefore).diff(moment(product.harvestDate), 'days');
+            const remainingShelfLifePercentage = Math.max(0, (daysUntilExpiry / shelfLife) * 100);
+            const freshnessStatus = getFreshnessStatus(daysUntilExpiry);
+    
+            return {
+                ...product,
+                daysUntilExpiry,
+                shelfLife,
+                remainingShelfLifePercentage,
+                freshnessStatus
+            };
+        }).sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry); // Sort by expiry (soonest first)
+    
+        const expiredCount = productsWithFreshness.filter(p => p.daysUntilExpiry <= 0).length;
+        const criticalCount = productsWithFreshness.filter(p => p.daysUntilExpiry > 0 && p.daysUntilExpiry <= 3).length;
+        const warningCount = productsWithFreshness.filter(p => p.daysUntilExpiry > 3 && p.daysUntilExpiry <= 7).length;
+    
+        // Calculate pagination
+        const indexOfLastItem = currentPage * itemsPerPage;
+        const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+        const currentItems = productsWithFreshness.slice(indexOfFirstItem, indexOfLastItem);
+    
+        return (
+            <div className="space-y-6">
+                {/* Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="bg-white p-4 rounded-lg shadow">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 bg-red-100 rounded-full">
+                                <AlertTriangle className="h-6 w-6 text-red-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-600">Expired Products</p>
+                                <p className="text-2xl font-bold text-red-600">{expiredCount}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg shadow">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 bg-yellow-100 rounded-full">
+                                <Clock className="h-6 w-6 text-yellow-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-600">Critical (≤ 3 days)</p>
+                                <p className="text-2xl font-bold text-yellow-600">{criticalCount}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg shadow">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 bg-blue-100 rounded-full">
+                                <Clock className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-600">Warning (4-7 days)</p>
+                                <p className="text-2xl font-bold text-blue-600">{warningCount}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg shadow">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 bg-green-100 rounded-full">
+                                <Package className="h-6 w-6 text-green-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-600">Total Products</p>
+                                <p className="text-2xl font-bold">{productsWithFreshness.length}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Product Table */}
+            <div className="bg-white p-6 rounded-lg shadow">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold">Product Freshness Status</h3>
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">Show:</span>
+                        <select 
+                            value={itemsPerPage} 
+                            onChange={(e) => {
+                                setItemsPerPage(Number(e.target.value));
+                                setCurrentPage(1);
+                            }}
+                            className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-[#438206]"
+                        >
+                            <option value={5}>5</option>
+                            <option value={10}>10</option>
+                            <option value={20}>20</option>
+                        </select>
+                        <span className="text-sm text-gray-600">entries</span>
+                    </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Product</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Harvest Date</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Best Before</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Remaining Life</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Status</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Quality Score</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {currentItems.map(product => (
+                                <tr key={product._id} className="hover:bg-gray-50">
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center">
+                                            {product.images && product.images[0] && (
+                                                <img 
+                                                    src={product.images[0]} 
+                                                    alt={product.name}
+                                                    className="w-10 h-10 rounded-md object-cover mr-3"
+                                                />
+                                            )}
+                                            <div>
+                                                <div className="font-medium">{product.name}</div>
+                                                <div className="text-sm text-gray-500">{product.category}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-3 text-sm">
+                                        {moment(product.harvestDate).format('MMM D, YYYY')}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm">
+                                        {moment(product.bestBefore).format('MMM D, YYYY')}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <div className="text-sm">
+                                            {product.daysUntilExpiry <= 0 ? (
+                                                <span className="text-red-600">Expired</span>
+                                            ) : product.daysUntilExpiry === 1 ? (
+                                                '1 day left'
+                                            ) : (
+                                                `${product.daysUntilExpiry} days left`
+                                            )}
+                                            <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                                <div 
+                                                    className={`h-2 rounded-full ${
+                                                        product.remainingShelfLifePercentage > 50 ? 'bg-green-500' :
+                                                        product.remainingShelfLifePercentage > 25 ? 'bg-yellow-500' :
+                                                        'bg-red-500'
+                                                    }`}
+                                                    style={{ width: `${product.remainingShelfLifePercentage}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <span className={`px-2 py-1 rounded-full text-xs ${product.freshnessStatus.class}`}>
+                                            {product.freshnessStatus.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center">
+                                            <span className={`text-sm ${
+                                                product.daysUntilExpiry <= 0 ? 'text-red-600' :
+                                                product.daysUntilExpiry <= 3 ? 'text-yellow-600' :
+                                                'text-green-600'
+                                            }`}>
+                                                {calculateQualityScore(product)}%
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Pagination */}
+                <div className="mt-4 flex justify-between items-center">
+                    <div className="text-sm text-gray-500">
+                        Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, productsWithFreshness.length)} of {productsWithFreshness.length} entries
+                    </div>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className={`px-3 py-1 rounded ${
+                                currentPage === 1 
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                    : 'bg-white text-gray-700 hover:bg-gray-50 border'
+                            }`}
+                        >
+                            Previous
+                        </button>
+                        <div className="flex gap-1">
+                            {[...Array(Math.ceil(productsWithFreshness.length / itemsPerPage))].map((_, idx) => (
+                                <button
+                                    key={idx + 1}
+                                    onClick={() => setCurrentPage(idx + 1)}
+                                    className={`px-3 py-1 rounded ${
+                                        currentPage === idx + 1
+                                            ? 'bg-[#438206] text-white'
+                                            : 'bg-white text-gray-700 hover:bg-gray-50 border'
+                                    }`}
+                                >
+                                    {idx + 1}
+                                </button>
+                            ))}
+                        </div>
+                        <button
+                            onClick={() => setCurrentPage(prev => 
+                                Math.min(prev + 1, Math.ceil(productsWithFreshness.length / itemsPerPage))
+                            )}
+                            disabled={currentPage >= Math.ceil(productsWithFreshness.length / itemsPerPage)}
+                            className={`px-3 py-1 rounded ${
+                                currentPage >= Math.ceil(productsWithFreshness.length / itemsPerPage)
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    : 'bg-white text-gray-700 hover:bg-gray-50 border'
+                            }`}
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );
+};
+
+const MarketabilityTab = ({ marketability = [] }) => {
+    console.log('Marketability Data:', marketability); // Debug log
+    
+    const [filterType, setFilterType] = useState('all');
+    const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+
+    // Process data for market share calculation
+    const processedMarketData = useMemo(() => {
+        if (!marketability || !marketability.length) return [];
+
+        const totalRevenue = marketability.reduce((sum, product) => 
+            sum + ((product.salesCount || 0) * (product.price || 0)), 0);
+
+        return marketability.map(product => ({
+            name: product.name,
+            marketShare: totalRevenue ? ((product.salesCount * product.price) / totalRevenue) * 100 : 0,
+            salesVelocity: product.salesCount / Math.max(moment().diff(moment(product.createdAt), 'days'), 1)
+        }));
+    }, [marketability]);
+
+    // Performance metrics
+    const metrics = useMemo(() => {
+        const totalProducts = marketability.length;
+        const starProducts = marketability.filter(p => p.salesCount >= 10).length;
+        const growingProducts = marketability.filter(p => p.salesCount > 0).length;
+        const atRiskProducts = marketability.filter(p => p.stock <= 10).length;
+
+        return { totalProducts, starProducts, growingProducts, atRiskProducts };
+    }, [marketability]);
+
+    // Component JSX remains the same as before
+    return (
+        <div className="space-y-6">
+            {/* Performance Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white p-4 rounded-lg shadow">
+                    <h4 className="font-medium text-gray-700 mb-3">Star Products</h4>
+                    <div className="flex items-center gap-3">
+                        <div className="p-3 bg-green-100 rounded-full">
+                            <TrendingUp className="h-6 w-6 text-green-600" />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold">{metrics.starProducts}</p>
+                            <p className="text-sm text-gray-600">Market Leaders</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-lg shadow">
+                    <h4 className="font-medium text-gray-700 mb-3">Growing Products</h4>
+                    <div className="flex items-center gap-3">
+                        <div className="p-3 bg-blue-100 rounded-full">
+                            <TrendingUp className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold">{metrics.growingProducts}</p>
+                            <p className="text-sm text-gray-600">Positive Growth</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-lg shadow">
+                    <h4 className="font-medium text-gray-700 mb-3">At Risk</h4>
+                    <div className="flex items-center gap-3">
+                        <div className="p-3 bg-red-100 rounded-full">
+                            <AlertTriangle className="h-6 w-6 text-red-600" />
+                        </div>
+                        <div>
+                            <p className="text-2xl font-bold">{metrics.atRiskProducts}</p>
+                            <p className="text-sm text-gray-600">Need Attention</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Market Share Analysis */}
+            <div className="bg-white p-6 rounded-lg shadow">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-semibold">Product Market Share</h3>
+                    <div className="flex gap-2">
+                        {['all', 'growing', 'declining', 'at risk'].map((filter) => (
+                            <button
+                                key={filter}
+                                onClick={() => setFilterType(filter)}
+                                className={`px-3 py-1 rounded-md ${
+                                    filterType === filter
+                                        ? 'bg-green-600 text-white'
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                            >
+                                {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <ResponsiveContainer width="100%" height={400}>
+                        <PieChart>
+                            <Pie 
+                                data={processedMarketData} 
+                                dataKey="marketShare"
+                                nameKey="name"
+                                cx="50%"
+                                cy="50%"
+                                outerRadius={150}
+                                label={({ name, marketShare }) => 
+                                    `${name}: ${marketShare.toFixed(1)}%`
+                                }
+                            >
+                                {processedMarketData.map((_, index) => (
+                                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Pie>
+                            <Tooltip formatter={(value) => `${parseFloat(value).toFixed(1)}%`} />
+                        </PieChart>
+                    </ResponsiveContainer>
+
+                    <div className="space-y-4">
+                        <h4 className="font-medium text-gray-700">Market Performance Details</h4>
+                        {processedMarketData.map((product, index) => (
+                            <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                <span className="font-medium">{product.name}</span>
+                                <div className="text-right">
+                                    <div className="text-sm font-medium text-gray-900">
+                                        {product.marketShare.toFixed(1)}%
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                        Sales: {product.salesVelocity.toFixed(1)}/day
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
     return (
         <div className="min-h-screen bg-gray-50 p-6">
@@ -514,7 +880,7 @@ const ProductAnalytics = () => {
                     {activeTab === 'performance' && <PerformanceTab />}
                     {activeTab === 'inventory' && <InventoryTab />}
                     {activeTab === 'freshness' && <FreshnessTab />}
-                    {activeTab === 'marketability' && <MarketabilityTab />}
+                    {activeTab === 'marketability' && <MarketabilityTab marketability={productAnalytics} />}
                 </div>
             </div>
         </div>

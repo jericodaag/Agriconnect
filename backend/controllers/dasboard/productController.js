@@ -347,14 +347,14 @@ class ProductController {
             const reviews = await reviewModel.find({ 
                 productId: { $in: products.map(p => p._id) } 
             });
-
+    
             // Calculate analytics
             const analytics = products.map(product => {
                 const productReviews = reviews.filter(r => r.productId.toString() === product._id.toString());
                 const rating = productReviews.length > 0 
                     ? productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length 
                     : 0;
-
+    
                 return {
                     _id: product._id,
                     name: product.name,
@@ -363,7 +363,10 @@ class ProductController {
                     salesCount: product.salesCount,
                     rating,
                     category: product.category,
-                    bestBefore: product.bestBefore
+                    bestBefore: product.bestBefore,
+                    images: product.images,  // Add this line to include images
+                    unit: product.unit,      // Add unit as well since you're using it
+                    harvestDate: product.harvestDate  // Add harvest date
                 };
             });
 
