@@ -7,8 +7,7 @@ const { createToken } = require('../utilities/tokenCreate')
 const cloudinary = require('cloudinary').v2
 const formidable = require("formidable")
 
-class authControllers{
-   
+class authControllers {
     admin_login = async(req,res) => {
         const {email,password} = req.body
         try {
@@ -62,12 +61,38 @@ class authControllers{
     }
 
     seller_register = async(req, res) => {
-        const { email, name, password, shopName, division, district } = req.body
-        try {
-            const getUser = await sellerModel.findOne({email})
-            if (getUser) {
-                responseReturn(res,404,{error: 'Email Already Exists'})
-            } else {
+        const form = formidable({ multiples: true })
+        
+        form.parse(req, async(err, fields, files) => {
+            if (err) {
+                return responseReturn(res, 500, { error: 'Form parsing failed' })
+            }
+
+            const { email, name, password, shopName, division, district, idType, idNumber } = fields
+
+            try {
+                const getUser = await sellerModel.findOne({email})
+                if (getUser) {
+                    return responseReturn(res,404,{error: 'Email Already Exists'})
+                }
+
+                // Configure and upload to cloudinary
+                cloudinary.config({
+                    cloud_name: process.env.cloud_name,
+                    api_key: process.env.api_key,
+                    api_secret: process.env.api_secret,
+                    secure: true
+                })
+
+                // Upload ID image
+                let idImageUrl = ''
+                if (files.idImage) {
+                    const result = await cloudinary.uploader.upload(files.idImage.filepath, {
+                        folder: 'seller_ids'
+                    })
+                    idImageUrl = result.url
+                }
+
                 const seller = await sellerModel.create({
                     name,
                     email,
@@ -77,17 +102,24 @@ class authControllers{
                         shopName,
                         division,
                         district
+                    },
+                    identityVerification: {
+                        idType,
+                        idNumber,
+                        idImage: idImageUrl,
+                        verificationStatus: 'pending'
                     }
                 })
+
                 await sellerCustomerModel.create({
                     myId: seller.id
                 })
-    
+
                 const token = await createToken({ id: seller.id, role: seller.role })
                 res.cookie('accessToken', token, {
                     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
                 })
-    
+
                 const userInfo = {
                     id: seller.id,
                     name: seller.name,
@@ -96,15 +128,16 @@ class authControllers{
                     status: seller.status,
                     payment: seller.payment,
                     image: seller.image,
-                    shopInfo: seller.shopInfo
+                    shopInfo: seller.shopInfo,
+                    identityVerification: seller.identityVerification
                 }
-    
+
                 responseReturn(res, 201, { token, message: 'Register Success', userInfo })
+            } catch (error) {
+                console.error('Registration error:', error)
+                responseReturn(res, 500, { error: 'Internal Server Error' })
             }
-        } catch (error) {
-            console.error('Registration error:', error);
-            responseReturn(res, 500, { error: 'Internal Server Error' })
-        }
+        })
     }
 
     getUser = async (req, res) => {
@@ -178,13 +211,152 @@ class authControllers{
             status: updatedSeller.status,
             payment: updatedSeller.payment,
             image: updatedSeller.image,
-            shopInfo: updatedSeller.shopInfo
+            shopInfo: updatedSeller.shopInfo,
+            identityVerification: updatedSeller.identityVerification
         };
 
         responseReturn(res, 200, { message: 'Profile info updated successfully', userInfo });
        } catch (error) {
         responseReturn(res, 500, { error: error.message });
        }
+    }
+
+    renew_seller_id = async(req, res) => {
+        const { id } = req;
+        const form = formidable({ multiples: true });
+        
+        form.parse(req, async(err, fields, files) => {
+            if (err) {
+                return responseReturn(res, 500, { error: 'Form parsing failed' });
+            }
+
+            try {
+                const seller = await sellerModel.findById(id);
+                if (!seller) {
+                    return responseReturn(res, 404, { error: 'Seller not found' });
+                }
+
+                const renewalHistory = {
+                    previousImage: seller.identityVerification?.idImage,
+                    renewalDate: new Date(),
+                    reason: fields.reason,
+                    previousStatus: seller.identityVerification?.verificationStatus,
+                    previousIdNumber: seller.identityVerification?.idNumber
+                };
+
+                cloudinary.config({
+                    cloud_name: process.env.cloud_name,
+                    api_key: process.env.api_key,
+                    api_secret: process.env.api_secret,
+                    secure: true
+                });
+
+                let newIdImageUrl = '';
+                if (files.idImage) {
+                    const result = await cloudinary.uploader.upload(files.idImage.filepath, {
+                        folder: 'seller_ids'
+                    });
+                    newIdImageUrl = result.url;
+                }
+
+                const updatedSeller = await sellerModel.findByIdAndUpdate(
+                    id,
+                    {
+                        $push: { 
+                            'identityVerification.renewalHistory': renewalHistory 
+                        },
+                        $set: {
+                            'identityVerification.idImage': newIdImageUrl,
+                            'identityVerification.idType': fields.idType,
+                            'identityVerification.idNumber': fields.idNumber,
+                            'identityVerification.verificationStatus': 'pending_renewal',
+                            'identityVerification.rejectionReason': ''
+                        }
+                    },
+                    { new: true }
+                );
+
+                const userInfo = {
+                    id: updatedSeller.id,
+                    name: updatedSeller.name,
+                    email: updatedSeller.email,
+                    role: updatedSeller.role,
+                    status: updatedSeller.status,
+                    payment: updatedSeller.payment,
+                    image: updatedSeller.image,
+                    shopInfo: updatedSeller.shopInfo,
+                    identityVerification: updatedSeller.identityVerification
+                };
+
+                responseReturn(res, 200, { 
+                    message: 'ID renewal submitted successfully', 
+                    userInfo 
+                });
+            } catch (error) {
+                responseReturn(res, 500, { error: error.message });
+            }
+        });
+    }
+
+    verify_seller_id = async(req, res) => {
+        const { sellerId } = req.params;
+        try {
+            const seller = await sellerModel.findByIdAndUpdate(
+                sellerId,
+                {
+                    $set: {
+                        'identityVerification.verificationStatus': 'verified',
+                        status: 'active'
+                    }
+                },
+                { new: true }
+            );
+            
+            if (!seller) {
+                return responseReturn(res, 404, { error: 'Seller not found' });
+            }
+
+            responseReturn(res, 200, { 
+                message: 'ID verification successful', 
+                seller 
+            });
+        } catch (error) {
+            responseReturn(res, 500, { error: error.message });
+        }
+    }
+
+    reject_seller_id = async(req, res) => {
+        const { sellerId } = req.params;
+        const { reason } = req.body;
+        
+        if (!reason) {
+            return responseReturn(res, 400, { error: 'Rejection reason is required' });
+        }
+
+        try {
+            const seller = await sellerModel.findByIdAndUpdate(
+                sellerId,
+                {
+                    $set: {
+                        'identityVerification.verificationStatus': 'rejected',
+                        'identityVerification.rejectionReason': reason,
+                        status: 'pending'
+                    }
+                },
+                { new: true }
+            );
+
+            if (!seller) {
+                return responseReturn(res, 404, { error: 'Seller not found' });
+            }
+
+            responseReturn(res, 200, { 
+                message: 'ID verification rejected', 
+                seller 
+            });
+        } catch (error) {
+            responseReturn(res, 500, { error: error.message });
+        }
     }
 
     logout = async (req, res) => {

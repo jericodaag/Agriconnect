@@ -53,6 +53,35 @@ const sellerSchema = new Schema({
             default: ''
         }
     },
+    identityVerification: {
+        idType: {
+            type: String,
+            required: true,
+            enum: ['SSS', 'UMID', 'Drivers License', 'Philippine Passport', 'PhilHealth', 'TIN', 'Postal ID']
+        },
+        idNumber: {
+            type: String,
+            required: true
+        },
+        idImage: {
+            type: String,
+            required: true
+        },
+        verificationStatus: {
+            type: String,
+            enum: ['pending', 'verified', 'rejected'],
+            default: 'pending'
+        },
+        rejectionReason: {
+            type: String,
+            default: ''
+        },
+        renewalHistory: [{
+            previousImage: String,
+            renewalDate: Date,
+            reason: String
+        }]
+    },
 }, { timestamps: true });
 
 module.exports = model('sellers', sellerSchema);

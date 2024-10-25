@@ -14,7 +14,6 @@ const ProductAnalytics = () => {
         productAnalytics = [], 
         loader, 
         categoryPerformance = [], 
-        marketability = [],
         alerts = [],
         inventoryInsights = {
             totalProducts: 0,
@@ -48,14 +47,11 @@ const ProductAnalytics = () => {
 
     const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
-    // Derived data
-    const topSellingProducts = [...productAnalytics]
-        .sort((a, b) => b.salesCount - a.salesCount)
-        .slice(0, 5);
+        // Derived data
+        const topSellingProducts = [...productAnalytics]
+            .sort((a, b) => b.salesCount - a.salesCount)
+            .slice(0, 5);
 
-    const expiringProducts = productAnalytics
-        .filter(product => product.daysUntilExpiry <= 7)
-        .sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
 
         const AlertsSection = () => {
             const [showAllAlerts, setShowAllAlerts] = useState(false);
@@ -218,9 +214,26 @@ const ProductAnalytics = () => {
     );
 
     const calculateAverageDailySales = (product) => {
-        if (!product.salesCount || !product.createdAt) return 0;
-        const daysActive = Math.max(1, moment().diff(moment(product.createdAt), 'days'));
-        return (product.salesCount / daysActive).toFixed(2);
+        if (!product.salesCount) return '0.00';
+    
+        // Get the days since creation or first sale
+        const createdAt = moment(product.createdAt || product.harvestDate);
+        const lastSale = product.lastSaleDate ? moment(product.lastSaleDate) : moment();
+        const daysSinceCreation = Math.max(1, moment().diff(createdAt, 'days'));
+        
+        // Calculate daily average
+        let averageSales;
+        if (product.lastSaleDate) {
+            // If there are sales, calculate based on days between first and last sale
+            const daysBetweenSales = Math.max(1, moment(lastSale).diff(createdAt, 'days'));
+            averageSales = product.salesCount / daysBetweenSales;
+        } else {
+            // If no sales, calculate based on total days since creation
+            averageSales = product.salesCount / daysSinceCreation;
+        }
+    
+        // Return formatted number with 2 decimal places
+        return averageSales.toFixed(2);
     };
     
     const getStockStatus = (stock) => {
@@ -453,7 +466,8 @@ const ProductAnalytics = () => {
     
         // Calculate freshness status based on days until expiry
         const getFreshnessStatus = (daysUntilExpiry) => {
-            if (daysUntilExpiry <= 0) return { status: 'Expired', class: 'bg-red-100 text-red-800' };
+            if (daysUntilExpiry < 0) return { status: 'Expired', class: 'bg-red-100 text-red-800' };
+            if (daysUntilExpiry === 0) return { status: 'Expires Today', class: 'bg-red-100 text-red-800' };
             if (daysUntilExpiry <= 3) return { status: 'Critical', class: 'bg-red-100 text-red-800' };
             if (daysUntilExpiry <= 7) return { status: 'Warning', class: 'bg-yellow-100 text-yellow-800' };
             if (daysUntilExpiry <= 14) return { status: 'Good', class: 'bg-blue-100 text-blue-800' };
@@ -462,8 +476,13 @@ const ProductAnalytics = () => {
     
         // Enhanced product data with computed properties
         const productsWithFreshness = productAnalytics.map(product => {
-            const daysUntilExpiry = moment(product.bestBefore).diff(moment(), 'days');
-            const shelfLife = moment(product.bestBefore).diff(moment(product.harvestDate), 'days');
+            // Use startOf('day') to ignore time components
+            const bestBefore = moment(product.bestBefore).startOf('day');
+            const today = moment().startOf('day');
+            const harvestDate = moment(product.harvestDate).startOf('day');
+            
+            const daysUntilExpiry = bestBefore.diff(today, 'days');
+            const shelfLife = bestBefore.diff(harvestDate, 'days');
             const remainingShelfLifePercentage = Math.max(0, (daysUntilExpiry / shelfLife) * 100);
             const freshnessStatus = getFreshnessStatus(daysUntilExpiry);
     
@@ -474,9 +493,9 @@ const ProductAnalytics = () => {
                 remainingShelfLifePercentage,
                 freshnessStatus
             };
-        }).sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry); // Sort by expiry (soonest first)
+        }).sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
     
-        const expiredCount = productsWithFreshness.filter(p => p.daysUntilExpiry <= 0).length;
+        const expiredCount = productsWithFreshness.filter(p => p.daysUntilExpiry < 0).length;
         const criticalCount = productsWithFreshness.filter(p => p.daysUntilExpiry > 0 && p.daysUntilExpiry <= 3).length;
         const warningCount = productsWithFreshness.filter(p => p.daysUntilExpiry > 3 && p.daysUntilExpiry <= 7).length;
     
@@ -534,157 +553,159 @@ const ProductAnalytics = () => {
                         </div>
                     </div>
                 </div>
-
+    
                 {/* Product Table */}
-            <div className="bg-white p-6 rounded-lg shadow">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold">Product Freshness Status</h3>
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600">Show:</span>
-                        <select 
-                            value={itemsPerPage} 
-                            onChange={(e) => {
-                                setItemsPerPage(Number(e.target.value));
-                                setCurrentPage(1);
-                            }}
-                            className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-[#438206]"
-                        >
-                            <option value={5}>5</option>
-                            <option value={10}>10</option>
-                            <option value={20}>20</option>
-                        </select>
-                        <span className="text-sm text-gray-600">entries</span>
-                    </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Product</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Harvest Date</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Best Before</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Remaining Life</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Status</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Quality Score</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {currentItems.map(product => (
-                                <tr key={product._id} className="hover:bg-gray-50">
-                                    <td className="px-4 py-3">
-                                        <div className="flex items-center">
-                                            {product.images && product.images[0] && (
-                                                <img 
-                                                    src={product.images[0]} 
-                                                    alt={product.name}
-                                                    className="w-10 h-10 rounded-md object-cover mr-3"
-                                                />
-                                            )}
-                                            <div>
-                                                <div className="font-medium">{product.name}</div>
-                                                <div className="text-sm text-gray-500">{product.category}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3 text-sm">
-                                        {moment(product.harvestDate).format('MMM D, YYYY')}
-                                    </td>
-                                    <td className="px-4 py-3 text-sm">
-                                        {moment(product.bestBefore).format('MMM D, YYYY')}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <div className="text-sm">
-                                            {product.daysUntilExpiry <= 0 ? (
-                                                <span className="text-red-600">Expired</span>
-                                            ) : product.daysUntilExpiry === 1 ? (
-                                                '1 day left'
-                                            ) : (
-                                                `${product.daysUntilExpiry} days left`
-                                            )}
-                                            <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                                                <div 
-                                                    className={`h-2 rounded-full ${
-                                                        product.remainingShelfLifePercentage > 50 ? 'bg-green-500' :
-                                                        product.remainingShelfLifePercentage > 25 ? 'bg-yellow-500' :
-                                                        'bg-red-500'
-                                                    }`}
-                                                    style={{ width: `${product.remainingShelfLifePercentage}%` }}
-                                                ></div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <span className={`px-2 py-1 rounded-full text-xs ${product.freshnessStatus.class}`}>
-                                            {product.freshnessStatus.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex items-center">
-                                            <span className={`text-sm ${
-                                                product.daysUntilExpiry <= 0 ? 'text-red-600' :
-                                                product.daysUntilExpiry <= 3 ? 'text-yellow-600' :
-                                                'text-green-600'
-                                            }`}>
-                                                {calculateQualityScore(product)}%
-                                            </span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Pagination */}
-                <div className="mt-4 flex justify-between items-center">
-                    <div className="text-sm text-gray-500">
-                        Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, productsWithFreshness.length)} of {productsWithFreshness.length} entries
-                    </div>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                            disabled={currentPage === 1}
-                            className={`px-3 py-1 rounded ${
-                                currentPage === 1 
-                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                                    : 'bg-white text-gray-700 hover:bg-gray-50 border'
-                            }`}
-                        >
-                            Previous
-                        </button>
-                        <div className="flex gap-1">
-                            {[...Array(Math.ceil(productsWithFreshness.length / itemsPerPage))].map((_, idx) => (
-                                <button
-                                    key={idx + 1}
-                                    onClick={() => setCurrentPage(idx + 1)}
-                                    className={`px-3 py-1 rounded ${
-                                        currentPage === idx + 1
-                                            ? 'bg-[#438206] text-white'
-                                            : 'bg-white text-gray-700 hover:bg-gray-50 border'
-                                    }`}
-                                >
-                                    {idx + 1}
-                                </button>
-                            ))}
+                <div className="bg-white p-6 rounded-lg shadow">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-semibold">Product Freshness Status</h3>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600">Show:</span>
+                            <select 
+                                value={itemsPerPage} 
+                                onChange={(e) => {
+                                    setItemsPerPage(Number(e.target.value));
+                                    setCurrentPage(1);
+                                }}
+                                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-[#438206]"
+                            >
+                                <option value={5}>5</option>
+                                <option value={10}>10</option>
+                                <option value={20}>20</option>
+                            </select>
+                            <span className="text-sm text-gray-600">entries</span>
                         </div>
-                        <button
-                            onClick={() => setCurrentPage(prev => 
-                                Math.min(prev + 1, Math.ceil(productsWithFreshness.length / itemsPerPage))
-                            )}
-                            disabled={currentPage >= Math.ceil(productsWithFreshness.length / itemsPerPage)}
-                            className={`px-3 py-1 rounded ${
-                                currentPage >= Math.ceil(productsWithFreshness.length / itemsPerPage)
-                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                    : 'bg-white text-gray-700 hover:bg-gray-50 border'
-                            }`}
-                        >
-                            Next
-                        </button>
+                    </div>
+    
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Product</th>
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Harvest Date</th>
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Best Before</th>
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Remaining Life</th>
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Status</th>
+                                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">Quality Score</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {currentItems.map(product => (
+                                    <tr key={product._id} className="hover:bg-gray-50">
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center">
+                                                {product.images && product.images[0] && (
+                                                    <img 
+                                                        src={product.images[0]} 
+                                                        alt={product.name}
+                                                        className="w-10 h-10 rounded-md object-cover mr-3"
+                                                    />
+                                                )}
+                                                <div>
+                                                    <div className="font-medium">{product.name}</div>
+                                                    <div className="text-sm text-gray-500">{product.category}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-sm">
+                                            {moment(product.harvestDate).format('MMM D, YYYY')}
+                                        </td>
+                                        <td className="px-4 py-3 text-sm">
+                                            {moment(product.bestBefore).format('MMM D, YYYY')}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="text-sm">
+                                                {product.daysUntilExpiry < 0 ? (
+                                                    <span className="text-red-600">Expired</span>
+                                                ) : product.daysUntilExpiry === 0 ? (
+                                                    <span className="text-red-600">Expires Today</span>
+                                                ) : product.daysUntilExpiry === 1 ? (
+                                                    '1 day left'
+                                                ) : (
+                                                    `${product.daysUntilExpiry} days left`
+                                                )}
+                                                <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                                    <div 
+                                                        className={`h-2 rounded-full ${
+                                                            product.remainingShelfLifePercentage > 50 ? 'bg-green-500' :
+                                                            product.remainingShelfLifePercentage > 25 ? 'bg-yellow-500' :
+                                                            'bg-red-500'
+                                                        }`}
+                                                        style={{ width: `${product.remainingShelfLifePercentage}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <span className={`px-2 py-1 rounded-full text-xs ${product.freshnessStatus.class}`}>
+                                                {product.freshnessStatus.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center">
+                                                <span className={`text-sm ${
+                                                    product.daysUntilExpiry <= 0 ? 'text-red-600' :
+                                                    product.daysUntilExpiry <= 3 ? 'text-yellow-600' :
+                                                    'text-green-600'
+                                                }`}>
+                                                    {calculateQualityScore(product)}%
+                                                </span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+    
+                    {/* Pagination */}
+                    <div className="mt-4 flex justify-between items-center">
+                        <div className="text-sm text-gray-500">
+                            Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, productsWithFreshness.length)} of {productsWithFreshness.length} entries
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className={`px-3 py-1 rounded ${
+                                    currentPage === 1 
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                        : 'bg-white text-gray-700 hover:bg-gray-50 border'
+                                }`}
+                            >
+                                Previous
+                            </button>
+                            <div className="flex gap-1">
+                                {[...Array(Math.ceil(productsWithFreshness.length / itemsPerPage))].map((_, idx) => (
+                                    <button
+                                        key={idx + 1}
+                                        onClick={() => setCurrentPage(idx + 1)}
+                                        className={`px-3 py-1 rounded ${
+                                            currentPage === idx + 1
+                                                ? 'bg-[#438206] text-white'
+                                                : 'bg-white text-gray-700 hover:bg-gray-50 border'
+                                        }`}
+                                    >
+                                        {idx + 1}
+                                    </button>
+                                ))}
+                            </div>
+                            <button
+                                onClick={() => setCurrentPage(prev => 
+                                    Math.min(prev + 1, Math.ceil(productsWithFreshness.length / itemsPerPage))
+                                )}
+                                disabled={currentPage >= Math.ceil(productsWithFreshness.length / itemsPerPage)}
+                                className={`px-3 py-1 rounded ${
+                                    currentPage >= Math.ceil(productsWithFreshness.length / itemsPerPage)
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                        : 'bg-white text-gray-700 hover:bg-gray-50 border'
+                                }`}
+                            >
+                                Next
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
     );
 };
 
