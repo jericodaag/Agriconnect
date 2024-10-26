@@ -41,9 +41,14 @@ export const get_product = createAsyncThunk(
 
 export const update_product = createAsyncThunk(
     'product/update_product',
-    async(product, {rejectWithValue, fulfillWithValue}) => {
+    async(formData, {rejectWithValue, fulfillWithValue}) => {
         try {
-            const {data} = await api.post('/product-update', product, {withCredentials: true})
+            const {data} = await api.post('/product-update', formData, {
+                withCredentials: true,
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
             return fulfillWithValue(data)
         } catch (error) {
             return rejectWithValue(error.response.data)

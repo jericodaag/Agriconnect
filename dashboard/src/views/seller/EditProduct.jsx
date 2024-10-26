@@ -30,6 +30,7 @@ const EditProduct = () => {
     const [allCategory, setAllCategory] = useState([]);
     const [searchValue, setSearchValue] = useState('');
     const [imageShow, setImageShow] = useState([]);
+    const [images, setImages] = useState([]);
 
     useEffect(() => {
         dispatch(get_category({ searchValue: '', parPage: '', page: "" }));
@@ -47,7 +48,7 @@ const EditProduct = () => {
             unit: product.unit
         });
         setCategory(product.category);
-        setImageShow(product.images);
+        setImageShow(product.images ? product.images.map(img => ({ url: img })) : []);
     }, [product]);
 
     useEffect(() => {
@@ -85,28 +86,64 @@ const EditProduct = () => {
         }
     };
 
-    const changeImage = (img, files) => {
-        if (files.length > 0) {
-            dispatch(product_image_update({
-                oldImage: img,
-                newImage: files[0],
-                productId
+    const imageHandle = (e) => {
+        const files = e.target.files;
+        const length = files.length;
+
+        if (length > 0) {
+            setImages([...images, ...files]);
+            const newImageUrls = Array.from(files).map(file => ({
+                url: URL.createObjectURL(file)
             }));
+            setImageShow([...imageShow, ...newImageUrls]);
         }
+    };
+
+    const changeImage = (img, files, index) => {
+        if (files.length > 0) {
+            if (img.url.startsWith('http')) {
+                // If it's an existing image from server
+                dispatch(product_image_update({
+                    oldImage: img.url,
+                    newImage: files[0],
+                    productId
+                }));
+            } else {
+                // If it's a newly added image
+                const tempImages = [...images];
+                const tempImageShow = [...imageShow];
+                tempImages[index] = files[0];
+                tempImageShow[index] = { url: URL.createObjectURL(files[0]) };
+                setImages(tempImages);
+                setImageShow(tempImageShow);
+            }
+        }
+    };
+
+    const removeImage = (index) => {
+        const filteredImageShow = imageShow.filter((_, i) => i !== index);
+        const filteredImages = images.filter((_, i) => i !== index);
+        setImageShow(filteredImageShow);
+        setImages(filteredImages);
     };
 
     const update = (e) => {
         e.preventDefault();
-        dispatch(update_product({
-            name: state.name,
-            description: state.description,
-            discount: state.discount,
-            price: state.price,
-            brand: state.brand,
-            stock: state.stock,
-            productId: productId,
-            unit: state.unit
-        }));
+        const formData = new FormData();
+        formData.append('name', state.name);
+        formData.append('description', state.description);
+        formData.append('discount', state.discount);
+        formData.append('price', state.price);
+        formData.append('brand', state.brand);
+        formData.append('stock', state.stock);
+        formData.append('productId', productId);
+        formData.append('unit', state.unit);
+
+        for (let i = 0; i < images.length; i++) {
+            formData.append('newImages', images[i]);
+        }
+
+        dispatch(update_product(formData));
     };
 
     return (
@@ -265,40 +302,48 @@ const EditProduct = () => {
                             </div>
         
                             <div>
-                                <label className="block text-sm font-medium text-[#438206] mb-2">Product Images</label>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    {imageShow && imageShow.length > 0 && imageShow.map((img, i) => (
-                                        <div key={i} className="relative group">
-                                            <img src={img} alt="" className="w-full h-32 object-cover rounded-lg" />
-                                            <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                <label htmlFor={`file-${i}`} className="text-white cursor-pointer">
-                                                    <IoMdImages className="h-8 w-8" />
-                                                </label>
-                                            </div>
-                                            <input
-                                                onChange={(e) => changeImage(img, e.target.files)}
-                                                type="file"
-                                                id={`file-${i}`}
-                                                className="hidden"
-                                            />
-                                        </div>
-                                    ))}
+                            <label className="block text-sm font-medium text-[#438206] mb-2">Product Images</label>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {imageShow.map((img, i) => (
+                                <div key={i} className="relative group">
+                                    <img src={img.url} alt="" className="w-full h-32 object-cover rounded-lg" />
+                                    <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <label htmlFor={`file-${i}`} className="text-white cursor-pointer mr-2">
+                                            <IoMdImages className="h-6 w-6" />
+                                        </label>
+                                        <button type="button" onClick={() => removeImage(i)} className="text-white">
+                                            <IoMdCloseCircle className="h-6 w-6" />
+                                        </button>
+                                    </div>
+                                    <input
+                                        onChange={(e) => changeImage(img, e.target.files, i)}
+                                        type="file"
+                                        id={`file-${i}`}
+                                        className="hidden"
+                                    />
                                 </div>
-                            </div>
-        
-                            <div>
-                                <button
-                                    disabled={loader}
-                                    type="submit"
-                                    className="w-full bg-[#438206] text-white py-2 px-4 rounded-md hover:bg-[#61BD12] transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#61BD12]"
-                                >
-                                    {loader ? <PropagateLoader color='#fff' cssOverride={overrideStyle} /> : 'Save Changes'}
-                                </button>
-                            </div>
-                        </form>
+                            ))}
+                            <label className="flex flex-col items-center justify-center h-32 border-2 border-[#61BD12] border-dashed rounded-lg cursor-pointer hover:bg-[#F7F7FC] transition-colors duration-300">
+                                <IoMdImages className="h-8 w-8 text-[#438206]" />
+                                <span className="mt-2 text-sm text-[#438206]">Add Image</span>
+                                <input type="file" onChange={imageHandle} multiple className="hidden" />
+                            </label>
+                        </div>
                     </div>
-                </div>
-            );
-        };
-        
-        export default EditProduct;
+
+                    <div>
+                        <button
+                            disabled={loader}
+                            type="submit"
+                            className="w-full bg-[#438206] text-white py-2 px-4 rounded-md hover:bg-[#61BD12] transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#61BD12]"
+                        >
+                            {loader ? <PropagateLoader color='#fff' cssOverride={overrideStyle} /> : 'Save Changes'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+export default EditProduct;

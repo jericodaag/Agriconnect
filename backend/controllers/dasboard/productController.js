@@ -119,25 +119,71 @@ class ProductController {
     }
 
     async product_update(req, res) {
-        let {name, description, stock, price, discount, brand, productId, unit} = req.body;
-        name = name.trim()
-        const slug = name.split(' ').join('-')
-
-        try {
-            const product = await productModel.findById(productId)
-            if (stock !== product.stock) {
-                product.inventoryHistory.push({ date: new Date(), quantity: parseInt(stock) })
-            }
+        const form = formidable({ multiples: true })
+    
+        form.parse(req, async(err, fields, files) => {
+            const {name, description, stock, price, discount, brand, productId, unit} = fields;
+            const { newImages } = files;
             
-            await productModel.findByIdAndUpdate(productId, {
-                name, description, stock, price, discount, brand, slug, unit,
-                inventoryHistory: product.inventoryHistory
-            })
-            const updatedProduct = await productModel.findById(productId)
-            responseReturn(res, 200, {product: updatedProduct, message: 'Product Updated Successfully'})
-        } catch (error) {
-            responseReturn(res, 500, { error: error.message })
-        }
+            try {
+                const product = await productModel.findById(productId);
+                if (!product) {
+                    return responseReturn(res, 404, { error: 'Product not found' });
+                }
+    
+                // Handle new images if any
+                let allImageUrl = [...product.images];  // Start with existing images
+                
+                if (newImages) {
+                    cloudinary.config({
+                        cloud_name: process.env.cloud_name,
+                        api_key: process.env.api_key,
+                        api_secret: process.env.api_secret,
+                        secure: true
+                    });
+    
+                    const imageArray = Array.isArray(newImages) ? newImages : [newImages];
+                    
+                    for (let image of imageArray) {
+                        const result = await cloudinary.uploader.upload(image.filepath, {
+                            folder: 'products'
+                        });
+                        allImageUrl.push(result.url);
+                    }
+                }
+    
+                // Update inventory history if stock changed
+                if (stock !== product.stock) {
+                    product.inventoryHistory.push({ 
+                        date: new Date(), 
+                        quantity: parseInt(stock) 
+                    });
+                }
+    
+                const slug = name.trim().split(' ').join('-');
+                
+                await productModel.findByIdAndUpdate(productId, {
+                    name: name.trim(),
+                    description: description.trim(),
+                    stock: parseInt(stock),
+                    price: parseInt(price),
+                    discount: parseInt(discount),
+                    brand: brand.trim(),
+                    slug,
+                    unit,
+                    images: allImageUrl,
+                    inventoryHistory: product.inventoryHistory
+                });
+    
+                const updatedProduct = await productModel.findById(productId);
+                responseReturn(res, 200, {
+                    product: updatedProduct,
+                    message: 'Product Updated Successfully'
+                });
+            } catch (error) {
+                responseReturn(res, 500, { error: error.message });
+            }
+        });
     }
 
     async product_image_update(req, res) {
