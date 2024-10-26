@@ -4,15 +4,45 @@ const cors = require('cors')
 const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser')
 const { dbConnect } = require('./utilities/db')
+const { initializeEmailService } = require('./utilities/emailService')
+const dotenv = require('dotenv')
 
 const socket = require('socket.io')
 const http = require('http')
 const server = http.createServer(app)
+
+// Load environment variables first
+dotenv.config()
+
+// Initialize all services
+const initializeServices = async () => {
+    try {
+        // Initialize email service
+        console.log('Initializing email service...')
+        const emailServiceInitialized = await initializeEmailService()
+        if (!emailServiceInitialized) {
+            console.error('Failed to initialize email service. Check your email configuration.')
+        } else {
+            console.log('Email service initialized successfully')
+        }
+
+        // Initialize database
+        await dbConnect()
+        console.log('Database connected successfully')
+
+    } catch (error) {
+        console.error('Service initialization failed:', error)
+        throw error
+    }
+}
+
+// Cors setup
 app.use(cors({
-    origin : ['http://localhost:3000','http://localhost:3001'],
+    origin: ['http://localhost:3000', 'http://localhost:3001'],
     credentials: true
 }))
 
+// Socket.io setup
 const io = socket(server, {
     cors: {
         origin: '*',
@@ -20,6 +50,7 @@ const io = socket(server, {
     }
 })
 
+// Socket user management
 var allCustomer = []
 var allSeller = []
 let admin = {}
@@ -33,7 +64,7 @@ const addUser = (customerId, socketId, userInfo) => {
             userInfo
         })
     }
-} 
+}
 
 const addSeller = (sellerId, socketId, userInfo) => {
     const checkSeller = allSeller.some(u => u.sellerId === sellerId)
@@ -44,7 +75,7 @@ const addSeller = (sellerId, socketId, userInfo) => {
             userInfo
         })
     }
-} 
+}
 
 const findCustomer = (customerId) => {
     return allCustomer.find(c => c.customerId === customerId)
@@ -59,6 +90,7 @@ const remove = (socketId) => {
     allSeller = allSeller.filter(c => c.socketId !== socketId)
 }
 
+// Socket event handlers
 io.on('connection', (soc) => {
     console.log('Socket server connected, ID:', soc.id)
 
@@ -93,7 +125,7 @@ io.on('connection', (soc) => {
         } else {
             console.error('Customer not found:', msg.receverId)
         }
-    })  
+    })
 
     soc.on('send_customer_message', (msg) => {
         console.log('Sending customer message to:', msg.receverId)
@@ -104,7 +136,7 @@ io.on('connection', (soc) => {
         } else {
             console.error('Seller not found:', msg.receverId)
         }
-    })  
+    })
 
     soc.on('send_message_admin_to_seller', (msg) => {
         console.log('Sending admin message to seller:', msg.receverId)
@@ -117,7 +149,7 @@ io.on('connection', (soc) => {
         }
     })
 
-    soc.on('send_message_seller_to_admin', (msg) => { 
+    soc.on('send_message_seller_to_admin', (msg) => {
         console.log('Sending seller message to admin')
         if (admin.socketId) {
             soc.to(admin.socketId).emit('receved_seller_message', msg)
@@ -134,7 +166,7 @@ io.on('connection', (soc) => {
             if ('email' in safeAdminInfo) delete safeAdminInfo.email
             if ('password' in safeAdminInfo) delete safeAdminInfo.password
             admin = safeAdminInfo
-            admin.socketId = soc.id  
+            admin.socketId = soc.id
             io.emit('activeSeller', allSeller)
             console.log('Admin added successfully')
         } else {
@@ -149,11 +181,11 @@ io.on('connection', (soc) => {
     })
 })
 
-require('dotenv').config()
-
+// Middleware
 app.use(bodyParser.json())
 app.use(cookieParser())
- 
+
+// Routes
 app.use('/api/home', require('./routes/home/homeRoutes'))
 app.use('/api', require('./routes/authRoutes'))
 app.use('/api', require('./routes/order/orderRoutes'))
@@ -166,8 +198,38 @@ app.use('/api', require('./routes/chatRoutes'))
 app.use('/api', require('./routes/paymentRoutes'))
 app.use('/api', require('./routes/dashboard/dashboardRoutes'))
 
+// Test route for email service
+app.get('/api/test-email', async (req, res) => {
+    try {
+        const { sendResetPasswordEmail } = require('./utilities/emailService')
+        await sendResetPasswordEmail(
+            process.env.EMAIL_USER,
+            'Test User',
+            'test-token-123'
+        )
+        res.json({ message: 'Test email sent successfully' })
+    } catch (error) {
+        console.error('Test email failed:', error)
+        res.status(500).json({ error: error.message })
+    }
+})
+
 app.get('/', (req, res) => res.send('Hello Server'))
 
-const port = process.env.PORT
-dbConnect()
-server.listen(port, () => console.log(`Server is running on port ${port}`))
+// Start server with all services
+const startServer = async () => {
+    try {
+        await initializeServices()
+        const port = process.env.PORT
+        server.listen(port, () => {
+            console.log(`Server is running on port ${port}`)
+            console.log(`Email service configured for: ${process.env.EMAIL_USER}`)
+        })
+    } catch (error) {
+        console.error('Failed to start server:', error)
+        process.exit(1)
+    }
+}
+
+// Initialize everything
+startServer()

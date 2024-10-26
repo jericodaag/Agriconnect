@@ -1,11 +1,13 @@
 const adminModel = require('../models/adminModel')
 const sellerModel = require('../models/sellerModel')
-const sellerCustomerModel  = require('../models/chat/sellerCustomerModel')
+const sellerCustomerModel = require('../models/chat/sellerCustomerModel')
 const { responseReturn } = require('../utilities/response')
 const bcrpty = require('bcrypt')
 const { createToken } = require('../utilities/tokenCreate')
+const { sendResetPasswordEmail } = require('../utilities/emailService')
 const cloudinary = require('cloudinary').v2
 const formidable = require("formidable")
+const crypto = require('crypto')
 
 class authControllers {
     admin_login = async(req,res) => {
@@ -76,7 +78,6 @@ class authControllers {
                     return responseReturn(res,404,{error: 'Email Already Exists'})
                 }
 
-                // Configure and upload to cloudinary
                 cloudinary.config({
                     cloud_name: process.env.cloud_name,
                     api_key: process.env.api_key,
@@ -84,7 +85,6 @@ class authControllers {
                     secure: true
                 })
 
-                // Upload ID image
                 let idImageUrl = ''
                 if (files.idImage) {
                     const result = await cloudinary.uploader.upload(files.idImage.filepath, {
@@ -353,6 +353,231 @@ class authControllers {
             responseReturn(res, 200, { 
                 message: 'ID verification rejected', 
                 seller 
+            });
+        } catch (error) {
+            responseReturn(res, 500, { error: error.message });
+        }
+    }
+
+    forgot_password = async(req, res) => {
+        const { email } = req.body;
+
+        try {
+            const seller = await sellerModel.findOne({ email });
+            if (!seller) {
+                return responseReturn(res, 404, { error: 'No account found with this email' });
+            }
+
+            // Generate reset token
+            const resetToken = crypto.randomBytes(32).toString('hex');
+            const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+            seller.passwordReset = {
+                token: resetToken,
+                expiresAt: tokenExpiry,
+                requested: true,
+                status: 'pending',
+                requestDate: new Date()
+            };
+
+            await seller.save();
+
+            // Send reset email
+            try {
+                await sendResetPasswordEmail(seller.email, seller.name, resetToken);
+                responseReturn(res, 200, { 
+                    message: 'Password reset instructions sent to your email' 
+                });
+            } catch (emailError) {
+                console.error('Email sending failed:', emailError);
+                seller.passwordReset = undefined;
+                await seller.save();
+                return responseReturn(res, 500, { error: 'Failed to send reset email' });
+            }
+        } catch (error) {
+            responseReturn(res, 500, { error: error.message });
+        }
+    }
+
+    verify_reset_token = async(req, res) => {
+        const { token } = req.params;
+        console.log('Verifying token:', token);
+    
+        try {
+            const seller = await sellerModel.findOne({
+                'passwordReset.token': token,
+                'passwordReset.expiresAt': { $gt: Date.now() }
+            });
+    
+            console.log('Token verification result:', {
+                tokenFound: !!seller,
+                expiryTime: seller?.passwordReset?.expiresAt
+            });
+    
+            if (!seller) {
+                return responseReturn(res, 400, { valid: false });
+            }
+    
+            responseReturn(res, 200, { valid: true });
+        } catch (error) {
+            console.error('Token verification error:', error);
+            responseReturn(res, 500, { error: error.message });
+        }
+    };
+
+    reset_password = async(req, res) => {
+        const { token } = req.params;
+        const { newPassword } = req.body;
+
+        if (!newPassword) {
+            return responseReturn(res, 400, { error: 'New password is required' });
+        }
+
+        try {
+            const seller = await sellerModel.findOne({
+                'passwordReset.token': token,
+                'passwordReset.expiresAt': { $gt: Date.now() }
+            }).select('+password');
+
+            if (!seller) {
+                return responseReturn(res, 400, { error: 'Invalid or expired reset token' });
+            }
+
+            // Hash and update password
+            seller.password = await bcrpty.hash(newPassword, 10);
+            
+            // Clear reset token data
+            seller.passwordReset = {
+                requested: false,
+                token: null,
+                expiresAt: null,
+                status: 'completed',
+                requestDate: null
+            };
+
+            await seller.save();
+
+            responseReturn(res, 200, { message: 'Password reset successful' });
+        } catch (error) {
+            responseReturn(res, 500, { error: error.message });
+        }
+    }
+
+    get_password_reset_requests = async(req, res) => {
+        try {
+            const requests = await sellerModel.find({
+                'passwordReset.requested': true,
+                'passwordReset.status': 'pending'
+            })
+            .select('name email passwordReset')
+            .sort({ 'passwordReset.requestDate': -1 });
+
+            responseReturn(res, 200, { requests });
+        } catch (error) {
+            responseReturn(res, 500, { error: error.message });
+        }
+    }
+
+    get_seller_reset_status = async(req, res) => {
+        const { sellerId } = req.params;
+
+        try {
+            const seller = await sellerModel.findById(sellerId)
+                .select('name email passwordReset');
+
+            if (!seller) {
+                return responseReturn(res, 404, { error: 'Seller not found' });
+            }
+
+            responseReturn(res, 200, { resetStatus: seller.passwordReset });
+        } catch (error) {
+            responseReturn(res, 500, { error: error.message });
+        }
+    }
+
+    approve_password_reset = async(req, res) => {
+        const { sellerId } = req.params;
+        const { adminId } = req.body;
+
+        try {
+            const seller = await sellerModel.findById(sellerId);
+            
+            if (!seller) {
+                return responseReturn(res, 404, { error: 'Seller not found' });
+            }
+
+            if (!seller.passwordReset?.requested) {
+                return responseReturn(res, 400, { error: 'No password reset request found' });
+            }
+
+            if (seller.passwordReset?.status !== 'pending') {
+                return responseReturn(res, 400, { error: 'Request has already been processed' });
+            }
+
+            // Update reset request status
+            seller.passwordReset.status = 'approved';
+
+            // Generate new token for the actual reset
+            const resetToken = crypto.randomBytes(32).toString('hex');
+            seller.passwordReset.token = resetToken;
+            seller.passwordReset.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+            await seller.save();
+
+            // Send reset email with token
+            try {
+                await sendResetPasswordEmail(seller.email, seller.name, resetToken);
+                responseReturn(res, 200, {
+                    message: 'Password reset request approved and email sent',
+                    seller
+                });
+            } catch (emailError) {
+                console.error('Failed to send reset email:', emailError);
+                return responseReturn(res, 500, { error: 'Failed to send reset email' });
+            }
+        } catch (error) {
+            responseReturn(res, 500, { error: error.message });
+        }
+    }
+
+    reject_password_reset = async(req, res) => {
+        const { sellerId } = req.params;
+        const { reason, adminId } = req.body;
+
+        if (!reason) {
+            return responseReturn(res, 400, { error: 'Rejection reason is required' });
+        }
+
+        try {
+            const seller = await sellerModel.findById(sellerId);
+
+            if (!seller) {
+                return responseReturn(res, 404, { error: 'Seller not found' });
+            }
+
+            if (!seller.passwordReset?.requested) {
+                return responseReturn(res, 400, { error: 'No password reset request found' });
+            }
+
+            if (seller.passwordReset?.status !== 'pending') {
+                return responseReturn(res, 400, { error: 'Request has already been processed' });
+            }
+
+            // Update reset request status
+            seller.passwordReset = {
+                ...seller.passwordReset,
+                status: 'rejected',
+                rejectionReason: reason,
+                requested: false,
+                token: null,
+                expiresAt: null
+            };
+
+            await seller.save();
+
+            responseReturn(res, 200, {
+                message: 'Password reset request rejected',
+                seller
             });
         } catch (error) {
             responseReturn(res, 500, { error: error.message });

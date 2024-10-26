@@ -18,4 +18,15 @@ router.post('/renew-seller-id', authMiddleware, authControllers.renew_seller_id)
 router.put('/verify-seller-id/:sellerId', authMiddleware, authControllers.verify_seller_id)
 router.put('/reject-seller-id/:sellerId', authMiddleware, authControllers.reject_seller_id)
 
+// Password reset flow
+router.post('/forgot-password', authControllers.forgot_password)  // Initial request without auth
+router.get('/verify-reset-token/:token', authControllers.verify_reset_token)  // Verify token validity
+router.post('/reset-password/:token', authControllers.reset_password)  // Actual password reset
+
+// Admin password reset management
+router.get('/admin/password-reset-requests', authMiddleware, authControllers.get_password_reset_requests)
+router.get('/admin/password-reset/:sellerId', authMiddleware, authControllers.get_seller_reset_status)
+router.post('/admin/approve-reset/:sellerId', authMiddleware, authControllers.approve_password_reset)
+router.post('/admin/reject-reset/:sellerId', authMiddleware, authControllers.reject_password_reset)
+
 module.exports = router

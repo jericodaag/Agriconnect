@@ -5,6 +5,8 @@ const AdminLogin = lazy(()=> import('../../views/auth/AdminLogin'))
 const Home = lazy(()=> import('../../views/Home'))   
 const UnAuthorized = lazy(()=> import('../../views/UnAuthorized'))   
 const Success = lazy(()=> import('../../views/Success'))   
+const ForgotPassword = lazy(()=> import('../../views/auth/ForgotPassword'))    // Add this
+const ResetPassword = lazy(()=> import('../../views/auth/ResetPassword'))      // Add this
 
 const publicRoutes = [
     {
@@ -30,6 +32,15 @@ const publicRoutes = [
     {
         path : '/success?',
         element : <Success/>
+    },
+    // Add these new routes
+    {
+        path: '/forgot-password',
+        element: <ForgotPassword/>
+    },
+    {
+        path: '/reset-password/:token',
+        element: <ResetPassword/>
     }
 ]
 

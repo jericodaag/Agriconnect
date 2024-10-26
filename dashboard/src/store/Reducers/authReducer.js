@@ -156,6 +156,98 @@ export const logout = createAsyncThunk(
     }
 );
 
+export const forgot_password = createAsyncThunk(
+    'auth/forgot_password',
+    async(email, { rejectWithValue, fulfillWithValue }) => {
+        try {
+            const { data } = await api.post('/forgot-password', { email });
+            return fulfillWithValue(data);
+        } catch (error) {
+            return rejectWithValue(error.response.data);
+        }
+    }
+);
+
+export const verify_reset_token = createAsyncThunk(
+    'auth/verify_reset_token',
+    async(token, { rejectWithValue, fulfillWithValue }) => {
+        try {
+            console.log('Attempting to verify token:', token);
+            // Add leading slash here
+            const { data } = await api.get(`/verify-reset-token/${token}`); // Add forward slash
+            console.log('Token verification response:', data);
+            return fulfillWithValue(data);
+        } catch (error) {
+            console.error('Token verification failed:', {
+                error: error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+                url: error.config?.url // Log the attempted URL
+            });
+            return rejectWithValue(
+                error.response?.data || 
+                { error: 'Failed to verify reset token' }
+            );
+        }
+    }
+);
+
+export const reset_password = createAsyncThunk(
+    'auth/reset_password',
+    async({ token, newPassword }, { rejectWithValue, fulfillWithValue }) => {
+        try {
+            const { data } = await api.post(`/reset-password/${token}`, { newPassword });
+            return fulfillWithValue(data);
+        } catch (error) {
+            return rejectWithValue(error.response.data);
+        }
+    }
+);
+
+// Admin password reset management actions
+export const get_password_reset_requests = createAsyncThunk(
+    'auth/get_password_reset_requests',
+    async(_, { rejectWithValue, fulfillWithValue }) => {
+        try {
+            const { data } = await api.get('/admin/password-reset-requests', { 
+                withCredentials: true 
+            });
+            return fulfillWithValue(data);
+        } catch (error) {
+            return rejectWithValue(error.response.data);
+        }
+    }
+);
+
+export const approve_password_reset = createAsyncThunk(
+    'auth/approve_password_reset',
+    async(sellerId, { rejectWithValue, fulfillWithValue }) => {
+        try {
+            const { data } = await api.post(`/admin/approve-reset/${sellerId}`, {}, { 
+                withCredentials: true 
+            });
+            return fulfillWithValue(data);
+        } catch (error) {
+            return rejectWithValue(error.response.data);
+        }
+    }
+);
+
+export const reject_password_reset = createAsyncThunk(
+    'auth/reject_password_reset',
+    async({ sellerId, reason }, { rejectWithValue, fulfillWithValue }) => {
+        try {
+            const { data } = await api.post(`/admin/reject-reset/${sellerId}`, { reason }, { 
+                withCredentials: true 
+            });
+            return fulfillWithValue(data);
+        } catch (error) {
+            return rejectWithValue(error.response.data);
+        }
+    }
+);
+
+
 export const authReducer = createSlice({
     name: 'auth',
     initialState: {
@@ -164,7 +256,9 @@ export const authReducer = createSlice({
         loader: false,
         userInfo: '',
         role: returnRole(localStorage.getItem('accessToken')),
-        token: localStorage.getItem('accessToken')
+        token: localStorage.getItem('accessToken'),
+        resetRequests: [],
+        validResetToken: false
     },
     reducers: {
         messageClear: (state, _) => {
@@ -286,6 +380,84 @@ export const authReducer = createSlice({
                 state.token = null;
                 state.userInfo = '';
                 state.role = '';
+            })
+            .addCase(forgot_password.pending, (state) => {
+                state.loader = true;
+            })
+            .addCase(forgot_password.fulfilled, (state, { payload }) => {
+                state.loader = false;
+                state.successMessage = payload.message;
+            })
+            .addCase(forgot_password.rejected, (state, { payload }) => {
+                state.loader = false;
+                state.errorMessage = payload.error;
+            })
+
+            .addCase(verify_reset_token.pending, (state) => {
+                state.loader = true;
+                state.validResetToken = false;
+                console.log('Token verification pending...');
+            })
+            .addCase(verify_reset_token.fulfilled, (state, { payload }) => {
+                state.loader = false;
+                state.validResetToken = payload.valid;
+                console.log('Token verification successful:', payload);
+            })
+            .addCase(verify_reset_token.rejected, (state, { payload }) => {
+                state.loader = false;
+                state.validResetToken = false;
+                state.errorMessage = payload?.error || 'Token verification failed';
+                console.log('Token verification rejected:', payload);
+            })
+
+            .addCase(reset_password.pending, (state) => {
+                state.loader = true;
+            })
+            .addCase(reset_password.fulfilled, (state, { payload }) => {
+                state.loader = false;
+                state.successMessage = payload.message;
+                state.validResetToken = false;
+            })
+            .addCase(reset_password.rejected, (state, { payload }) => {
+                state.loader = false;
+                state.errorMessage = payload.error;
+            })
+
+            .addCase(get_password_reset_requests.fulfilled, (state, { payload }) => {
+                state.resetRequests = payload.requests;
+            })
+            .addCase(get_password_reset_requests.rejected, (state) => {
+                state.resetRequests = [];
+            })
+
+            .addCase(approve_password_reset.pending, (state) => {
+                state.loader = true;
+            })
+            .addCase(approve_password_reset.fulfilled, (state, { payload }) => {
+                state.loader = false;
+                state.successMessage = payload.message;
+                state.resetRequests = state.resetRequests.filter(
+                    req => req._id !== payload.seller._id
+                );
+            })
+            .addCase(approve_password_reset.rejected, (state, { payload }) => {
+                state.loader = false;
+                state.errorMessage = payload.error;
+            })
+
+            .addCase(reject_password_reset.pending, (state) => {
+                state.loader = true;
+            })
+            .addCase(reject_password_reset.fulfilled, (state, { payload }) => {
+                state.loader = false;
+                state.successMessage = payload.message;
+                state.resetRequests = state.resetRequests.filter(
+                    req => req._id !== payload.seller._id
+                );
+            })
+            .addCase(reject_password_reset.rejected, (state, { payload }) => {
+                state.loader = false;
+                state.errorMessage = payload.error;
             });
     }
 });
