@@ -7,9 +7,11 @@ import toast from 'react-hot-toast';
 const OrderDetails = () => {
     const { orderId } = useParams();
     const dispatch = useDispatch();
-    const [status, setStatus] = useState('');
+    const [deliveryStatus, setDeliveryStatus] = useState('');
+    const [paymentStatus, setPaymentStatus] = useState('');
     const { order, errorMessage, successMessage } = useSelector(state => state.order);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
 
     useEffect(() => {
         dispatch(get_admin_order(orderId));
@@ -17,12 +19,30 @@ const OrderDetails = () => {
     }, [orderId, dispatch]);
 
     useEffect(() => {
-        setStatus(order?.delivery_status);
+        if (order) {
+            setDeliveryStatus(order.delivery_status || '');
+            setPaymentStatus(order.payment_status || '');
+        }
     }, [order]);
 
-    const status_update = (e) => {
-        dispatch(admin_order_status_update({ orderId, info: { status: e.target.value } }));
-        setStatus(e.target.value);
+    const update_status = async () => {
+        setIsUpdating(true);
+        try {
+            await dispatch(admin_order_status_update({ 
+                orderId, 
+                info: { 
+                    status: deliveryStatus,
+                    paymentStatus: paymentStatus
+                } 
+            })).unwrap();
+            
+            // Refresh order data
+            dispatch(get_admin_order(orderId));
+        } catch (error) {
+            toast.error('Failed to update status');
+        } finally {
+            setIsUpdating(false);
+        }
     };
 
     useEffect(() => {
@@ -37,9 +57,12 @@ const OrderDetails = () => {
     }, [successMessage, errorMessage, dispatch]);
 
     const StatusBadge = ({ status }) => {
-        const color = status === 'paid' || status === 'delivered' 
-            ? 'bg-green-100 text-green-800' 
-            : 'bg-yellow-100 text-yellow-800';
+        let color = 'bg-yellow-100 text-yellow-800';
+        if (status === 'paid' || status === 'delivered') {
+            color = 'bg-green-100 text-green-800';
+        } else if (status === 'unpaid' || status === 'cancelled') {
+            color = 'bg-red-100 text-red-800';
+        }
         return (
             <span className={`${color} text-xs font-medium px-2 py-1 rounded-full`}>
                 {status}
@@ -90,18 +113,54 @@ const OrderDetails = () => {
                             <Icon name="order" />
                             <h1 className="text-2xl font-semibold text-gray-800">Order #{order._id}</h1>
                         </div>
-                        <select
-                            onChange={status_update}
-                            value={status}
-                            className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        >
-                            <option value="pending">Pending</option>
-                            <option value="processing">Processing</option>
-                            <option value="warehouse">Warehouse</option>
-                            <option value="placed">Placed</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
+                        <div className="flex items-center gap-4">
+                            <div className="flex flex-col items-end gap-2">
+                                <select
+                                    onChange={(e) => setDeliveryStatus(e.target.value)}
+                                    value={deliveryStatus}
+                                    className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                    disabled={isUpdating}
+                                >
+                                    <option value="pending">Pending</option>
+                                    <option value="processing">Processing</option>
+                                    <option value="warehouse">Warehouse</option>
+                                    <option value="placed">Placed</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                                {order?.payment_method === 'cod' && (
+                                    <select
+                                        onChange={(e) => setPaymentStatus(e.target.value)}
+                                        value={paymentStatus}
+                                        className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                        disabled={isUpdating}
+                                    >
+                                        <option value="unpaid">Unpaid</option>
+                                        <option value="paid">Paid</option>
+                                        <option value="pending">Payment Pending</option>
+                                    </select>
+                                )}
+                            </div>
+                            <button
+                                onClick={update_status}
+                                disabled={isUpdating}
+                                className={`px-4 py-2 text-white rounded-md transition-colors ${
+                                    isUpdating 
+                                        ? 'bg-gray-400 cursor-not-allowed' 
+                                        : 'bg-green-600 hover:bg-green-700'
+                                }`}
+                            >
+                                {isUpdating ? (
+                                    <div className="flex items-center space-x-2">
+                                        <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                                        <span>Updating...</span>
+                                    </div>
+                                ) : (
+                                    'Update Status'
+                                )}
+                            </button>
+                        </div>
                     </div>
+                    
                     <div className="flex items-center space-x-2 mt-2 text-gray-500">
                         <Icon name="calendar" />
                         <p className="text-sm">{order.date}</p>
@@ -146,6 +205,10 @@ const OrderDetails = () => {
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-gray-600">Total Price</span>
                                     <span className="text-xl font-semibold text-gray-800">₱{order.price}</span>
+                                </div>
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-gray-600">Payment Method</span>
+                                    <span className="font-medium">{order.payment_method?.toUpperCase()}</span>
                                 </div>
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-gray-600">Payment Status</span>

@@ -1,6 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaIdCard, FaStore, FaMapMarkerAlt, FaUser, FaEnvelope, FaLock } from "react-icons/fa";
+import { 
+    FaTimes, 
+    FaFileContract, 
+    FaUserShield, 
+    FaListAlt, 
+    FaHandshake, 
+    FaMoneyBillWave,
+    FaCheckCircle, 
+    FaExclamationTriangle, 
+    FaBalanceScale,
+    FaUser,
+    FaEnvelope,
+    FaLock,
+    FaStore,
+    FaMapMarkerAlt,
+    FaIdCard
+} from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import { PropagateLoader } from 'react-spinners';
 import { overrideStyle } from '../../utils/utils';
@@ -11,6 +27,9 @@ const Register = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const { loader, successMessage, errorMessage } = useSelector(state => state.auth);
+    
+    const [showTerms, setShowTerms] = useState(false);
+    const [termsAccepted, setTermsAccepted] = useState(false);
     
     const [state, setState] = useState({
         name: "",
@@ -47,6 +66,10 @@ const Register = () => {
 
     const submit = (e) => {
         e.preventDefault();
+        if (!termsAccepted) {
+            toast.error('Please accept the Terms and Conditions');
+            return;
+        }
         const formData = new FormData();
         Object.keys(state).forEach(key => {
             formData.append(key, state[key]);
@@ -75,6 +98,206 @@ const Register = () => {
         'TIN',
         'Postal ID'
     ];
+
+    const TermsAndConditions = () => (
+        <div className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-center items-center p-4 ${showTerms ? '' : 'hidden'}`}>
+            <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl">
+                {/* Enhanced Header */}
+                <div className="p-6 bg-gradient-to-r from-blue-600 to-blue-800 flex justify-between items-center">
+                    <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-white/20 rounded-lg">
+                            <FaFileContract className="w-6 h-6 text-white" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-white">Terms and Conditions</h2>
+                    </div>
+                    <button 
+                        onClick={() => setShowTerms(false)}
+                        className="p-2 hover:bg-white/20 rounded-lg transition-colors duration-200"
+                    >
+                        <FaTimes className="w-6 h-6 text-white" />
+                    </button>
+                </div>
+    
+                {/* Terms Content */}
+                <div className="p-6 overflow-y-auto max-h-[60vh]">
+                    <div className="space-y-8">
+                        {/* Introduction */}
+                        <section className="p-6 rounded-xl transition-all duration-300 hover:bg-blue-50">
+                            <div className="flex items-start space-x-4">
+                                <div className="p-3 bg-white rounded-lg shadow-sm">
+                                    <FaUserShield className="w-6 h-6 text-blue-500" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-3 text-gray-800">1. Introduction</h3>
+                                    <p className="text-gray-600">Welcome to AgriConnect, an agricultural e-commerce platform. By registering as a seller, you agree to be bound by these terms and conditions.</p>
+                                </div>
+                            </div>
+                        </section>
+    
+                        {/* Seller Eligibility */}
+                        <section className="p-6 rounded-xl transition-all duration-300 hover:bg-blue-50">
+                            <div className="flex items-start space-x-4">
+                                <div className="p-3 bg-white rounded-lg shadow-sm">
+                                    <FaCheckCircle className="w-6 h-6 text-green-500" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-3 text-gray-800">2. Seller Eligibility</h3>
+                                    <ul className="space-y-2">
+                                        {['Must be at least 18 years old',
+                                          'Must be a legitimate agricultural product seller or farmer',
+                                          'Must provide valid government-issued identification',
+                                          'Must have the legal right to sell agricultural products'
+                                        ].map((item, index) => (
+                                            <li key={index} className="flex items-center space-x-2 text-gray-600">
+                                                <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                                                <span>{item}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+    
+                        {/* Product Guidelines */}
+                        <section className="p-6 rounded-xl hover:bg-purple-50 transition-all duration-300">
+                            <div className="flex items-start space-x-4">
+                                <div className="p-3 bg-white rounded-lg shadow-sm">
+                                    <FaListAlt className="w-6 h-6 text-purple-500" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-3 text-gray-800">3. Product Guidelines</h3>
+                                    <ul className="space-y-2">
+                                        {['Only agricultural and farm-related products may be sold',
+                                          'All products must comply with Philippine agricultural standards',
+                                          'Products must be accurately described and photographed',
+                                          'Sellers must maintain product quality and freshness',
+                                          'Prohibited items include illegal substances and harmful chemicals'
+                                        ].map((item, index) => (
+                                            <li key={index} className="flex items-center space-x-2 text-gray-600">
+                                                <span className="w-1.5 h-1.5 bg-purple-500 rounded-full" />
+                                                <span>{item}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+    
+                        {/* Seller Responsibilities */}
+                        <section className="p-6 rounded-xl hover:bg-orange-50 transition-all duration-300">
+                            <div className="flex items-start space-x-4">
+                                <div className="p-3 bg-white rounded-lg shadow-sm">
+                                    <FaHandshake className="w-6 h-6 text-orange-500" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-3 text-gray-800">4. Seller Responsibilities</h3>
+                                    <ul className="space-y-2">
+                                        {['Maintain accurate inventory information',
+                                          'Process orders within 24 hours',
+                                          'Provide fair and transparent pricing',
+                                          'Ensure proper packaging and handling of products',
+                                          'Respond to customer inquiries promptly'
+                                        ].map((item, index) => (
+                                            <li key={index} className="flex items-center space-x-2 text-gray-600">
+                                                <span className="w-1.5 h-1.5 bg-orange-500 rounded-full" />
+                                                <span>{item}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+    
+                        {/* Commission and Payments */}
+                        <section className="p-6 rounded-xl hover:bg-indigo-50 transition-all duration-300">
+                            <div className="flex items-start space-x-4">
+                                <div className="p-3 bg-white rounded-lg shadow-sm">
+                                    <FaMoneyBillWave className="w-6 h-6 text-indigo-500" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-3 text-gray-800">5. Commission and Payments</h3>
+                                    <ul className="space-y-2">
+                                        {['AgriConnect charges a 5% commission on each sale',
+                                          'Payments are processed within 3-5 business days',
+                                          'Sellers must maintain valid payment information',
+                                          'All transactions must be processed through the platform'
+                                        ].map((item, index) => (
+                                            <li key={index} className="flex items-center space-x-2 text-gray-600">
+                                                <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
+                                                <span>{item}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+    
+                        {/* Account Suspension */}
+                        <section className="p-6 rounded-xl hover:bg-red-50 transition-all duration-300">
+                            <div className="flex items-start space-x-4">
+                                <div className="p-3 bg-white rounded-lg shadow-sm">
+                                    <FaExclamationTriangle className="w-6 h-6 text-red-500" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-3 text-gray-800">6. Account Suspension</h3>
+                                    <p className="text-gray-600 mb-2">AgriConnect reserves the right to suspend or terminate accounts for:</p>
+                                    <ul className="space-y-2">
+                                        {['Violation of terms and conditions',
+                                          'Selling prohibited items',
+                                          'Poor customer service',
+                                          'Fraudulent activities'
+                                        ].map((item, index) => (
+                                            <li key={index} className="flex items-center space-x-2 text-gray-600">
+                                                <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+                                                <span>{item}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+    
+                        {/* Dispute Resolution */}
+                        <section className="p-6 rounded-xl hover:bg-teal-50 transition-all duration-300">
+                            <div className="flex items-start space-x-4">
+                                <div className="p-3 bg-white rounded-lg shadow-sm">
+                                    <FaBalanceScale className="w-6 h-6 text-teal-500" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-3 text-gray-800">7. Dispute Resolution</h3>
+                                    <ul className="space-y-2">
+                                        {['Commitment to resolve customer complaints',
+                                          'Participation in platform\'s dispute resolution process',
+                                          'Adherence to refund policies',
+                                          'Cooperation with investigation procedures'
+                                        ].map((item, index) => (
+                                            <li key={index} className="flex items-center space-x-2 text-gray-600">
+                                                <span className="w-1.5 h-1.5 bg-teal-500 rounded-full" />
+                                                <span>{item}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+    
+                {/* Enhanced Accept Button */}
+                <div className="sticky bottom-0 p-6 bg-white border-t border-gray-200">
+                    <button
+                        onClick={() => {
+                            setTermsAccepted(true);
+                            setShowTerms(false);
+                        }}
+                        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl px-6 py-4 font-semibold text-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                        I Accept the Terms and Conditions
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
 
     return (
         <div className='min-h-screen bg-gradient-to-br from-green-400 to-blue-500 flex justify-center items-center px-6 py-12 sm:px-8'>
@@ -277,16 +500,25 @@ const Register = () => {
                                 </div>
 
                                 <div className='space-y-6'>
-                                <div className='flex items-center'>
+                                    <div className='flex items-center'>
                                         <input
                                             className='w-4 h-4 border-2 rounded text-blue-500 focus:ring-blue-500 focus:ring-offset-0'
                                             type="checkbox"
                                             name="terms"
                                             id="terms"
+                                            checked={termsAccepted}
+                                            onChange={() => setShowTerms(true)}
                                             required
                                         />
                                         <label htmlFor="terms" className='ml-2 text-sm text-gray-600'>
-                                            I agree to the <Link to="/terms" className='text-blue-500 hover:text-blue-700 transition-colors duration-200 hover:underline'>Terms and Conditions</Link>
+                                            I agree to the{' '}
+                                            <button 
+                                                type="button"
+                                                onClick={() => setShowTerms(true)}
+                                                className='text-blue-500 hover:text-blue-700 transition-colors duration-200 hover:underline'
+                                            >
+                                                Terms and Conditions
+                                            </button>
                                         </label>
                                     </div>
 
@@ -315,6 +547,9 @@ const Register = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Terms and Conditions Modal */}
+            <TermsAndConditions />
         </div>
     );
 };
