@@ -34,6 +34,7 @@ const Index = () => {
         } else {
             switch(status) {
                 case 'delivered':
+                case 'placed':
                     className += 'bg-green-100 text-green-800';
                     break;
                 case 'shipped':
@@ -52,7 +53,7 @@ const Index = () => {
                     className += 'bg-gray-100 text-gray-800';
             }
         }
-
+    
         return <span className={className}>{status.charAt(0).toUpperCase() + status.slice(1)}</span>;
     }
 

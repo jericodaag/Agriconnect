@@ -31,7 +31,7 @@ class orderController {
     }
 
     place_order = async (req, res) => {
-        const {price, products, shipping_fee, shippingInfo, userId } = req.body
+        const { price, products, shipping_fee, shippingInfo, userId, payment_method } = req.body
         let authorOrderData = []
         let cardId = []
         const tempDate = moment(Date.now()).format('LLL')
@@ -51,15 +51,20 @@ class orderController {
         }
 
         try {
+            // Set initial payment status based on payment method
+            const payment_status = payment_method === 'cod' ? 'unpaid' : 'pending';
+            
             const order = await customerOrder.create({
                 customerId: userId,
                 shippingInfo,
                 products: customerOrderProduct,
                 price: price + shipping_fee,
-                payment_status: 'unpaid',
+                payment_status,
                 delivery_status: 'pending',
-                date: tempDate
+                date: tempDate,
+                payment_method
             })
+
             for (let i = 0; i < products.length; i++) {
                 const pro = products[i].products
                 const pri = products[i].price
@@ -72,13 +77,15 @@ class orderController {
                 }
 
                 authorOrderData.push({
-                    orderId: order.id, sellerId,
+                    orderId: order.id,
+                    sellerId,
                     products: storePor,
                     price: pri,
-                    payment_status: 'unpaid',
+                    payment_status,
                     shippingInfo: 'Agriconnect Warehouse',
                     delivery_status: 'pending',
-                    date: tempDate
+                    date: tempDate,
+                    payment_method
                 }) 
             }
 
@@ -104,12 +111,23 @@ class orderController {
                     }
                 });
             }
-   
-            setTimeout(() => {
-                this.paymentCheck(order.id)
-            }, 15000)
 
-            responseReturn(res, 200, {message: "Order Placed Success", orderId: order.id })
+            // For COD orders, we don't need to wait for payment confirmation
+            if (payment_method === 'cod') {
+                responseReturn(res, 200, { 
+                    message: "Order Placed Successfully", 
+                    orderId: order.id 
+                });
+            } else {
+                // For other payment methods, check payment status after delay
+                setTimeout(() => {
+                    this.paymentCheck(order.id)
+                }, 15000)
+                responseReturn(res, 200, { 
+                    message: "Order Placed Success", 
+                    orderId: order.id 
+                });
+            }
         } catch (error) {
             console.log(error.message)
             responseReturn(res, 500, {message: "Internal server error"})

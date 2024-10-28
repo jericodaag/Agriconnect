@@ -4,7 +4,7 @@ import Footer from '../components/Footer';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { IoIosArrowForward } from "react-icons/io";
 import { useDispatch, useSelector } from 'react-redux';
-import { place_order } from '../store/reducers/orderReducer';
+import { toast } from 'react-hot-toast';
 
 const shippingFees = {
     'Mabalacat City': {
@@ -53,7 +53,7 @@ const Shipping = () => {
         city: '',
         barangay: ''
     });
-    const [shippingFee, setShippingFee] = useState(40); // Default shipping fee
+    const [shippingFee, setShippingFee] = useState(40);
 
     const cities = ['Angeles City', 'Mabalacat City'];
     const barangays = {
@@ -117,16 +117,49 @@ const Shipping = () => {
     };
 
     const placeOrder = () => {
-        const shippingInfo = res ? state : {};
-        dispatch(place_order({
-            price,
-            products,
-            shipping_fee: shippingFee,
-            items,
-            shippingInfo,
-            userId: userInfo.id,
-            navigate
+        if (!res) {
+            toast.error('Please provide shipping information');
+            return;
+        }
+
+        if (!products || products.length === 0) {
+            toast.error('No products in cart');
+            return;
+        }
+
+        const formattedProducts = products.map(p => ({
+            products: p.products.map(pt => ({
+                productInfo: {
+                    _id: pt.productInfo._id,
+                    name: pt.productInfo.name,
+                    images: pt.productInfo.images,
+                    price: pt.productInfo.price - Math.floor((pt.productInfo.price * pt.productInfo.discount) / 100),
+                    discount: pt.productInfo.discount,
+                    brand: pt.productInfo.brand,
+                    quantity: pt.quantity
+                },
+                quantity: pt.quantity,
+                _id: pt._id
+            })),
+            price: p.price,
+            sellerId: p.sellerId,
+            shopName: p.shopName
         }));
+
+        const orderData = {
+            price,
+            products: formattedProducts,
+            shipping_fee: shippingFee,
+            shippingInfo: state,
+            userId: userInfo.id,
+            items
+        };
+
+        console.log('Navigating to payment with data:', orderData);
+
+        navigate('/payment', {
+            state: orderData
+        });
     };
 
     return (
