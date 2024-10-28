@@ -261,17 +261,29 @@ class orderController {
     }
 
     admin_order_status_update = async(req, res) => {
-        const { orderId } = req.params
-        const { status } = req.body
-
+        const { orderId } = req.params;
+        const { delivery_status, payment_status } = req.body;
+    
         try {
+            // Update main order
             await customerOrder.findByIdAndUpdate(orderId, {
-                delivery_status : status
-            })
-            responseReturn(res, 200, {message: 'Order status change success'})
+                delivery_status,
+                payment_status
+            });
+    
+            // Update related authorOrders
+            await authOrderModel.updateMany(
+                { orderId: new ObjectId(orderId) },
+                {
+                    delivery_status,
+                    payment_status
+                }
+            );
+    
+            responseReturn(res, 200, { message: 'Order status updated successfully' });
         } catch (error) {
-            console.log('get admin status error' + error.message)
-            responseReturn(res, 500, {message: 'Internal server error'})
+            console.log('admin status update error:', error.message);
+            responseReturn(res, 500, { message: 'Internal server error' });
         }
     }
 

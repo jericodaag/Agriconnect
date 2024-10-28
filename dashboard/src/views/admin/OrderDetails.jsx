@@ -3,6 +3,18 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { admin_order_status_update, get_admin_order, messageClear } from '../../store/Reducers/OrderReducer';
 import toast from 'react-hot-toast';
+import { 
+    Package, 
+    CreditCard, 
+    Truck, 
+    User, 
+    MapPin, 
+    Phone,
+    ShoppingBag,
+    Store,
+    Save,
+    Calendar
+} from 'lucide-react';
 
 const OrderDetails = () => {
     const { orderId } = useParams();
@@ -28,16 +40,16 @@ const OrderDetails = () => {
     const update_status = async () => {
         setIsUpdating(true);
         try {
-            await dispatch(admin_order_status_update({ 
-                orderId, 
-                info: { 
-                    status: deliveryStatus,
-                    paymentStatus: paymentStatus
-                } 
+            await dispatch(admin_order_status_update({
+                orderId,
+                info: {
+                    delivery_status: deliveryStatus,
+                    payment_status: paymentStatus
+                }
             })).unwrap();
             
-            // Refresh order data
-            dispatch(get_admin_order(orderId));
+            await dispatch(get_admin_order(orderId));
+            toast.success('Status updated successfully');
         } catch (error) {
             toast.error('Failed to update status');
         } finally {
@@ -56,12 +68,20 @@ const OrderDetails = () => {
         }
     }, [successMessage, errorMessage, dispatch]);
 
-    const StatusBadge = ({ status }) => {
+    const StatusBadge = ({ status, type = 'delivery' }) => {
         let color = 'bg-yellow-100 text-yellow-800';
-        if (status === 'paid' || status === 'delivered') {
-            color = 'bg-green-100 text-green-800';
-        } else if (status === 'unpaid' || status === 'cancelled') {
-            color = 'bg-red-100 text-red-800';
+        if (type === 'payment') {
+            if (status === 'paid') {
+                color = 'bg-green-100 text-green-800';
+            } else if (status === 'unpaid') {
+                color = 'bg-red-100 text-red-800';
+            }
+        } else {
+            if (status === 'delivered' || status === 'placed') {
+                color = 'bg-green-100 text-green-800';
+            } else if (status === 'cancelled') {
+                color = 'bg-red-100 text-red-800';
+            }
         }
         return (
             <span className={`${color} text-xs font-medium px-2 py-1 rounded-full`}>
@@ -70,83 +90,68 @@ const OrderDetails = () => {
         );
     };
 
-    const Icon = ({ name }) => {
-        const icons = {
-            order: (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd" />
-                </svg>
-            ),
-            calendar: (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                </svg>
-            ),
-            summary: (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                    <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
-                </svg>
-            ),
-            shipping: (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-                    <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z" />
-                </svg>
-            ),
-            contact: (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                </svg>
-            ),
-        };
-        return icons[name] || null;
-    };
-
     return (
         <div className={`bg-gray-50 min-h-screen p-4 sm:p-6 md:p-8 transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
             <div className="max-w-7xl mx-auto bg-white shadow-sm rounded-lg overflow-hidden">
                 <div className="p-6 border-b border-gray-200">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                            <Icon name="order" />
+                        <div className="flex items-center gap-2">
+                            <Package className="w-6 h-6 text-[#059473]" />
                             <h1 className="text-2xl font-semibold text-gray-800">Order #{order._id}</h1>
                         </div>
+                        
+                        {/* Status Update Section */}
                         <div className="flex items-center gap-4">
-                            <div className="flex flex-col items-end gap-2">
-                                <select
-                                    onChange={(e) => setDeliveryStatus(e.target.value)}
-                                    value={deliveryStatus}
-                                    className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                    disabled={isUpdating}
-                                >
-                                    <option value="pending">Pending</option>
-                                    <option value="processing">Processing</option>
-                                    <option value="warehouse">Warehouse</option>
-                                    <option value="placed">Placed</option>
-                                    <option value="cancelled">Cancelled</option>
-                                </select>
-                                {order?.payment_method === 'cod' && (
+                            {/* Status Dropdowns */}
+                            <div className="flex items-center gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <div className="flex items-center gap-1">
+                                            <Truck className="w-4 h-4" />
+                                            Delivery Status
+                                        </div>
+                                    </label>
+                                    <select
+                                        onChange={(e) => setDeliveryStatus(e.target.value)}
+                                        value={deliveryStatus}
+                                        className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#059473] focus:border-[#059473] min-w-[150px]"
+                                        disabled={isUpdating}
+                                    >
+                                        <option value="pending">Pending</option>
+                                        <option value="processing">Processing</option>
+                                        <option value="warehouse">Warehouse</option>
+                                        <option value="placed">Placed</option>
+                                        <option value="cancelled">Cancelled</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        <div className="flex items-center gap-1">
+                                            <CreditCard className="w-4 h-4" />
+                                            Payment Status
+                                        </div>
+                                    </label>
                                     <select
                                         onChange={(e) => setPaymentStatus(e.target.value)}
                                         value={paymentStatus}
-                                        className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                        className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#059473] focus:border-[#059473] min-w-[150px]"
                                         disabled={isUpdating}
                                     >
                                         <option value="unpaid">Unpaid</option>
                                         <option value="paid">Paid</option>
-                                        <option value="pending">Payment Pending</option>
                                     </select>
-                                )}
+                                </div>
                             </div>
+
+                            {/* Update Button */}
                             <button
                                 onClick={update_status}
                                 disabled={isUpdating}
-                                className={`px-4 py-2 text-white rounded-md transition-colors ${
+                                className={`px-4 py-2 text-white rounded-md transition-colors h-[42px] self-end flex items-center gap-2 ${
                                     isUpdating 
                                         ? 'bg-gray-400 cursor-not-allowed' 
-                                        : 'bg-green-600 hover:bg-green-700'
+                                        : 'bg-[#059473] hover:bg-[#048063]'
                                 }`}
                             >
                                 {isUpdating ? (
@@ -155,22 +160,32 @@ const OrderDetails = () => {
                                         <span>Updating...</span>
                                     </div>
                                 ) : (
-                                    'Update Status'
+                                    <>
+                                        <Save className="w-4 h-4" />
+                                        Update Status
+                                    </>
                                 )}
                             </button>
                         </div>
                     </div>
                     
-                    <div className="flex items-center space-x-2 mt-2 text-gray-500">
-                        <Icon name="calendar" />
-                        <p className="text-sm">{order.date}</p>
+                    <div className="mt-4 text-gray-500">
+                        <p className="text-sm flex items-center gap-1">
+                            <Calendar className="w-4 h-4" />
+                            Order Date: {order.date}
+                        </p>
                     </div>
                 </div>
                 
+                {/* Order Content */}
                 <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Products Section */}
                     <div className="space-y-6 md:col-span-2">
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-800 mb-3">Order Items</h2>
+                            <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                <ShoppingBag className="w-5 h-5 text-[#059473]" />
+                                Order Items
+                            </h2>
                             <div className="space-y-4">
                                 {order.products?.map((p, i) => (
                                     <div key={i} className="flex items-center gap-4 pb-4 border-b border-gray-100 last:border-b-0">
@@ -178,7 +193,10 @@ const OrderDetails = () => {
                                         <div className="flex-grow">
                                             <h3 className="text-gray-800">{p.name}</h3>
                                             <p className="text-sm text-gray-500">Quantity: {p.quantity}</p>
-                                            <p className="text-sm text-gray-500">Seller: {p.shopName}</p>
+                                            <p className="text-sm text-gray-500 flex items-center gap-1">
+                                                <Store className="w-4 h-4" />
+                                                {p.shopName}
+                                            </p>
                                         </div>
                                         <div className="text-right">
                                             <p className="text-gray-800 font-semibold">₱{p.price - Math.floor((p.price * p.discount) / 100)}</p>
@@ -194,13 +212,14 @@ const OrderDetails = () => {
                             </div>
                         </div>
                     </div>
-                    
+
+                    {/* Order Summary Section */}
                     <div className="space-y-6">
                         <div>
-                            <div className="flex items-center space-x-2 mb-3">
-                                <Icon name="summary" />
-                                <h2 className="text-lg font-semibold text-gray-800">Order Summary</h2>
-                            </div>
+                            <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                <CreditCard className="w-5 h-5 text-[#059473]" />
+                                Order Summary
+                            </h2>
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-gray-600">Total Price</span>
@@ -212,7 +231,7 @@ const OrderDetails = () => {
                                 </div>
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-gray-600">Payment Status</span>
-                                    <StatusBadge status={order.payment_status} />
+                                    <StatusBadge status={order.payment_status} type="payment" />
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-gray-600">Delivery Status</span>
@@ -221,27 +240,28 @@ const OrderDetails = () => {
                             </div>
                         </div>
                         
+                        {/* Shipping Information */}
                         <div>
-                            <div className="flex items-center space-x-2 mb-3">
-                                <Icon name="shipping" />
-                                <h2 className="text-lg font-semibold text-gray-800">Shipping Information</h2>
-                            </div>
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <p className="text-gray-600">{order.shippingInfo?.name}</p>
-                                <p className="text-gray-600">{order.shippingInfo?.address}</p>
-                                <p className="text-gray-600">{order.shippingInfo?.city}, {order.shippingInfo?.province}</p>
-                                <p className="text-gray-600">{order.shippingInfo?.area}</p>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <div className="flex items-center space-x-2 mb-3">
-                                <Icon name="contact" />
-                                <h2 className="text-lg font-semibold text-gray-800">Contact</h2>
-                            </div>
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <p className="text-gray-600">{order.shippingInfo?.email}</p>
-                                <p className="text-gray-600">{order.shippingInfo?.phone}</p>
+                            <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                <Truck className="w-5 h-5 text-[#059473]" />
+                                Shipping Information
+                            </h2>
+                            <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                                <p className="text-gray-600 flex items-center gap-2">
+                                    <User className="w-4 h-4" />
+                                    {order.shippingInfo?.name}
+                                </p>
+                                <p className="text-gray-600 flex items-center gap-2">
+                                    <MapPin className="w-4 h-4" />
+                                    {order.shippingInfo?.address}
+                                </p>
+                                <p className="text-gray-600 pl-6">
+                                    {order.shippingInfo?.city}, {order.shippingInfo?.province}
+                                </p>
+                                <p className="text-gray-600 flex items-center gap-2">
+                                    <Phone className="w-4 h-4" />
+                                    {order.shippingInfo?.phone}
+                                </p>
                             </div>
                         </div>
                     </div>
