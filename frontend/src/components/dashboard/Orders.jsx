@@ -72,6 +72,7 @@ const Orders = () => {
         } else {
             switch(status) {
                 case 'delivered':
+                case 'placed':
                     className += 'bg-green-100 text-green-800';
                     break;
                 case 'shipped':
@@ -90,7 +91,7 @@ const Orders = () => {
                     className += 'bg-gray-100 text-gray-800';
             }
         }
-
+    
         return (
             <span className={className}>
                 {type === 'delivery' && getOrderStatusIcon(status)}
