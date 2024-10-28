@@ -11,15 +11,7 @@ const Payment = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const dispatch = useDispatch();
-
-    // Redirect if no state
-    useEffect(() => {
-        if (!location.state) {
-            toast.error('Please complete your order first');
-            navigate('/cart');
-            return;
-        }
-    }, [location.state, navigate]);
+    const [orderId, setOrderId] = useState(null);
 
     const {
         price = 0,
@@ -34,40 +26,52 @@ const Payment = () => {
     const [loading, setLoading] = useState(false);
     const [termsAccepted, setTermsAccepted] = useState(false);
 
-    const handleCODOrder = async () => {
-        if (!termsAccepted) {
-            toast.error('Please accept the terms and conditions');
-            return;
+    useEffect(() => {
+        if (!location.state) {
+            toast.error('Please complete your order first');
+            navigate('/cart');
         }
+    }, [location.state, navigate]);
 
-        if (!products || !products.length) {
-            toast.error('No products found in order');
-            return;
-        }
-
-        setLoading(true);
+    const handleOrder = async (payment_method) => {
         try {
+            setLoading(true);
             const orderData = {
                 price,
                 products,
                 shipping_fee,
                 shippingInfo,
                 userId,
-                payment_method: 'cod',
-                payment_status: 'unpaid'
+                payment_method,
+                payment_status: payment_method === 'cod' ? 'unpaid' : 'pending'
             };
 
             const result = await dispatch(place_order(orderData)).unwrap();
-            const orderId = result.orderId; // Get the orderId from the response
-
-            toast.success('Order placed successfully!');
-            navigate('/dashboard/my-orders');
+            
+            if (payment_method === 'cod') {
+                toast.success('Order placed successfully!');
+                navigate('/dashboard/my-orders');
+            } else {
+                setOrderId(result.orderId);
+            }
         } catch (error) {
             console.error('Order placement error:', error);
             toast.error(error?.message || 'Failed to place order');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleCODOrder = () => {
+        if (!termsAccepted) {
+            toast.error('Please accept the terms and conditions');
+            return;
+        }
+        handleOrder('cod');
+    };
+
+    const handleStripeOrder = async () => {
+        await handleOrder('stripe');
     };
 
     return (
@@ -102,7 +106,17 @@ const Payment = () => {
 
                                 {paymentMethod === 'stripe' && (
                                     <div>
-                                        <Stripe price={price} /> {/* Remove orderId since we'll get it after payment */}
+                                        {!orderId ? (
+                                            <button 
+                                                onClick={handleStripeOrder}
+                                                disabled={loading}
+                                                className='px-10 py-[6px] rounded-sm hover:shadow-green-700/30 hover:shadow-lg bg-green-700 text-white'
+                                            >
+                                                {loading ? 'Processing...' : 'Place Order'}
+                                            </button>
+                                        ) : (
+                                            <Stripe price={price + shipping_fee} orderId={orderId} />
+                                        )}
                                     </div>
                                 )}
 

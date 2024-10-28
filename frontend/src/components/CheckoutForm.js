@@ -1,52 +1,67 @@
 import React, { useState } from 'react';
-import { PaymentElement,LinkAuthenticationElement,useStripe,useElements } from '@stripe/react-stripe-js' 
+import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { toast } from 'react-hot-toast';
 
-const CheckoutForm = ({orderId}) => {
+const CheckoutForm = () => {
+    const stripe = useStripe();
+    const elements = useElements();
+    const [loading, setLoading] = useState(false);
 
-    localStorage.setItem('orderId',orderId)
-    const stripe = useStripe()
-    const elements = useElements()
-    const [message, setMessage] = useState(null)
-    const [isLoading, setIsLoading] = useState(false)
+    const handleSubmit = async (e) => {
+        e.preventDefault();
 
-    const paymentElementOptions = {
-        loyout: 'tabs'
-    }
-
-    const submit = async (e) => {
-        e.preventDefault()
         if (!stripe || !elements) {
-            return
+            toast.error('Stripe not initialized');
+            return;
         }
-        setIsLoading(true)
-        const { error } = await stripe.confirmPayment({
-            elements,
-            confirmParams: {
-                return_url: 'http://localhost:3000/order/confirm'
-            } 
-        })
-        if (error.type === 'card_error' || error.type === 'validation_error') {
-            setMessage(error.message)
-        } else {
-            setMessage('An Unexpected error occured')
-        }
-        setIsLoading(false)
-    }
 
+        const orderId = localStorage.getItem('orderId');
+        if (!orderId) {
+            toast.error('Order information not found');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const { error } = await stripe.confirmPayment({
+                elements,
+                confirmParams: {
+                    return_url: `${window.location.origin}/order/confirm`
+                }
+            });
+
+            if (error) {
+                throw error;
+            }
+        } catch (err) {
+            console.error('Payment error:', err);
+            toast.error(err.message || 'Payment failed');
+            setLoading(false);
+        }
+    };
 
     return (
-        <form onSubmit={submit} id='payment-form'>
-            <LinkAuthenticationElement id='link-authentication-element'/>
-            <PaymentElement id='payment-element' options={paymentElementOptions} />
-
-            <button disabled={isLoading || !stripe || !elements} id='submit' className='px-10 py-[6px] rounded-sm hover:shadow-green-700/30 hover:shadow-lg bg-green-700 text-white'>
-                <span id='button-text'>
-                    {
-                        isLoading ? <div>Loading...</div> : "Pay Now"
-                    }
-                </span> 
+        <form onSubmit={handleSubmit} className="w-full space-y-6">
+            <PaymentElement />
+            <button
+                type="submit"
+                disabled={!stripe || loading}
+                className={`w-full py-3 px-4 rounded-md text-white font-medium
+                    ${loading || !stripe 
+                        ? 'bg-gray-400 cursor-not-allowed' 
+                        : 'bg-[#059473] hover:bg-[#048063] transition-colors'
+                    }`}
+            >
+                {loading ? (
+                    <div className="flex items-center justify-center space-x-2">
+                        <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                        <span>Processing...</span>
+                    </div>
+                ) : (
+                    'Pay Now'
+                )}
             </button>
-               {message && <div>{message}</div>}
         </form>
     );
 };

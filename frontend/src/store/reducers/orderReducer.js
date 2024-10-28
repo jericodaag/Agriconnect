@@ -8,13 +8,23 @@ export const place_order = createAsyncThunk(
             const { data } = await api.post('/home/order/place-order', orderData);
             return data;
         } catch (error) {
-            console.error('Place order error:', error);
-            return rejectWithValue(error.response?.data || { 
-                message: 'Failed to place order' 
-            });
+            return rejectWithValue(error.response.data);
         }
     }
 );
+
+export const confirm_payment = createAsyncThunk(
+    'order/confirm_payment',
+    async (orderId, { rejectWithValue }) => {
+        try {
+            const { data } = await api.get(`/api/order/confirm/${orderId}`);
+            return data;
+        } catch (error) {
+            return rejectWithValue(error.response.data);
+        }
+    }
+);
+
 
 export const get_orders = createAsyncThunk(
     'order/get_orders',
@@ -55,12 +65,12 @@ export const get_admin_order = createAsyncThunk(
 export const orderReducer = createSlice({
     name: 'order',
     initialState: {
-        successMessage: '',
-        errorMessage: '',
-        loader: false,
         myOrders: [],
-        myOrder: {}, // Add this
-        order: {}
+        errorMessage: '',
+        successMessage: '',
+        myOrder: {},
+        order: {},
+        loading: false
     },
     reducers: {
         messageClear: (state) => {
@@ -71,15 +81,18 @@ export const orderReducer = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(place_order.pending, (state) => {
-                state.loader = true;
+                state.loading = true;
             })
             .addCase(place_order.fulfilled, (state, { payload }) => {
-                state.loader = false;
+                state.loading = false;
                 state.successMessage = payload.message;
             })
             .addCase(place_order.rejected, (state, { payload }) => {
-                state.loader = false;
-                state.errorMessage = payload?.message || "Order placement failed";
+                state.loading = false;
+                state.errorMessage = payload.message;
+            })
+            .addCase(confirm_payment.fulfilled, (state, { payload }) => {
+                state.successMessage = payload.message;
             })
             .addCase(get_orders.fulfilled, (state, { payload }) => { 
                 state.myOrders = payload.orders; 
