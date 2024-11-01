@@ -125,21 +125,21 @@ class dashboardController {
     get_seller_dashboard_data = async (req, res) => {
         const {id} = req 
         try {
-            const totalSale = await sellerWallet.aggregate([
+            // Calculate total sales from all orders (both COD and Stripe)
+            const totalSales = await authOrder.aggregate([
                 {
                     $match: { 
-                        sellerId: {
-                            $eq: id
-                        } 
+                        sellerId: new ObjectId(id)
                     }
-                },{
+                },
+                {
                     $group: {
                         _id: null,
-                        totalAmount: {$sum: '$amount'}
+                        totalAmount: { $sum: '$price' }
                     }
                 }
             ])
-
+    
             const totalProduct = await productModel.find({ 
                 sellerId: new ObjectId(id) 
             }).countDocuments()
@@ -147,7 +147,7 @@ class dashboardController {
             const totalOrder = await authOrder.find({
                 sellerId: new ObjectId(id) 
             }).countDocuments()
-
+    
             const totalPendingOrder = await authOrder.find({
                 $and: [
                     {
@@ -162,7 +162,7 @@ class dashboardController {
                     }
                 ]
             }).countDocuments()
-
+    
             const messages = await sellerCustomerMessage.find({
                 $or: [
                     {
@@ -176,11 +176,11 @@ class dashboardController {
                     }
                 ]
             }).limit(3)   
-
+    
             const recentOrders = await authOrder.find({
                 sellerId: new ObjectId(id)
             }).limit(5)
-
+    
             // Generate chart data
             const currentYear = new Date().getFullYear()
             const chartData = await authOrder.aggregate([
@@ -200,20 +200,20 @@ class dashboardController {
                 },
                 { $sort: { _id: 1 } }
             ])
-
+    
             const formattedChartData = Array.from({ length: 12 }, (_, i) => ({
                 month: i + 1,
                 totalOrders: 0,
                 totalRevenue: 0,
                 customers: 0
             }))
-
+    
             chartData.forEach(data => {
                 formattedChartData[data._id - 1].totalOrders = data.totalOrders
                 formattedChartData[data._id - 1].totalRevenue = data.totalRevenue
                 formattedChartData[data._id - 1].customers = data.customers
             })
-
+    
             // Get product status counts and calculate percentages for the seller
             const productStatusCounts = await authOrder.aggregate([
                 {
@@ -226,9 +226,9 @@ class dashboardController {
                     }
                 }
             ])
-
+    
             const totalStatusCount = productStatusCounts.reduce((sum, status) => sum + status.count, 0)
-
+    
             const formattedProductStatusCounts = {
                 pending: 0,
                 processing: 0,
@@ -236,20 +236,20 @@ class dashboardController {
                 placed: 0,
                 cancelled: 0
             }
-
+    
             productStatusCounts.forEach(status => {
                 if (formattedProductStatusCounts.hasOwnProperty(status._id)) {
                     formattedProductStatusCounts[status._id] = (status.count / totalStatusCount) * 100
                 }
             })
-
+    
             responseReturn(res, 200, {
                 totalProduct,
                 totalOrder,
                 totalPendingOrder,
                 messages,
                 recentOrders,
-                totalSale: totalSale.length > 0 ? totalSale[0].totalAmount : 0,
+                totalSale: totalSales.length > 0 ? totalSales[0].totalAmount : 0,
                 chartData: formattedChartData,
                 productStatusCounts: formattedProductStatusCounts
             })

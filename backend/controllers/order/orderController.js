@@ -35,25 +35,28 @@ class orderController {
         let authorOrderData = []
         let cardId = []
         const tempDate = moment(Date.now()).format('LLL')
-
         let customerOrderProduct = []
-
+    
+        // First loop to gather customer order products
         for (let i = 0; i < products.length; i++) {
             const pro = products[i].products
             for (let j = 0; j < pro.length; j++) {
                 const tempCusPro = pro[j].productInfo;
-                tempCusPro.quantity = pro[j].quantity
-                customerOrderProduct.push(tempCusPro)
+                const productPrice = tempCusPro.price; // Get original price
+                tempCusPro.quantity = pro[j].quantity;
+                // Calculate total for this product
+                tempCusPro.totalPrice = productPrice * pro[j].quantity;
+                customerOrderProduct.push(tempCusPro);
                 if (pro[j]._id) {
-                    cardId.push(pro[j]._id)
+                    cardId.push(pro[j]._id);
                 } 
             } 
         }
-
+    
         try {
-            // Set initial payment status based on payment method
             const payment_status = payment_method === 'cod' ? 'unpaid' : 'pending';
             
+            // Create customer order
             const order = await customerOrder.create({
                 customerId: userId,
                 shippingInfo,
@@ -64,75 +67,88 @@ class orderController {
                 date: tempDate,
                 payment_method
             })
-
+    
+            // Process seller orders with correct price calculation
             for (let i = 0; i < products.length; i++) {
                 const pro = products[i].products
-                const pri = products[i].price
                 const sellerId = products[i].sellerId
                 let storePor = []
+                let sellerOrderPrice = 0
+    
                 for (let j = 0; j < pro.length; j++) {
                     const tempPro = pro[j].productInfo
-                    tempPro.quantity = pro[j].quantity
-                    storePor.push(tempPro)                    
+                    const quantity = pro[j].quantity
+                    const productPrice = tempPro.price
+                    
+                    // Calculate correct price for this product
+                    const productTotal = productPrice * quantity
+                    sellerOrderPrice += productTotal
+    
+                    tempPro.quantity = quantity
+                    tempPro.totalPrice = productTotal
+                    storePor.push(tempPro)
                 }
-
+    
                 authorOrderData.push({
                     orderId: order.id,
                     sellerId,
                     products: storePor,
-                    price: pri,
+                    price: sellerOrderPrice, // Use the correctly calculated price
                     payment_status,
                     shippingInfo: 'Agriconnect Warehouse',
                     delivery_status: 'pending',
                     date: tempDate,
                     payment_method
-                }) 
+                })
             }
-
+    
+            // Insert seller orders
             await authOrderModel.insertMany(authorOrderData)
-            for (let k = 0; k < cardId.length; k++) {
-                await cardModel.findByIdAndDelete(cardId[k]) 
-            }
 
-            // Update product sales data
-            for (let product of customerOrderProduct) {
-                await productModel.findByIdAndUpdate(product._id, {
-                    $inc: { 
-                        salesCount: product.quantity, 
-                        stock: -product.quantity 
-                    },
-                    $set: { lastSaleDate: new Date() },
-                    $push: { 
-                        inventoryHistory: { 
-                            date: new Date(), 
-                            quantity: product.quantity,
-                            type: 'sale'
-                        } 
-                    }
-                });
-            }
-
-            // For COD orders, we don't need to wait for payment confirmation
-            if (payment_method === 'cod') {
-                responseReturn(res, 200, { 
-                    message: "Order Placed Successfully", 
-                    orderId: order.id 
-                });
-            } else {
-                // For other payment methods, check payment status after delay
-                setTimeout(() => {
-                    this.paymentCheck(order.id)
-                }, 15000)
-                responseReturn(res, 200, { 
-                    message: "Order Placed Success", 
-                    orderId: order.id 
-                });
-            }
-        } catch (error) {
-            console.log(error.message)
-            responseReturn(res, 500, {message: "Internal server error"})
+        // Delete cart items
+        for (let k = 0; k < cardId.length; k++) {
+            await cardModel.findByIdAndDelete(cardId[k]) 
         }
+
+        // Update product sales data
+        for (let product of customerOrderProduct) {
+            await productModel.findByIdAndUpdate(product._id, {
+                $inc: { 
+                    salesCount: product.quantity, 
+                    stock: -product.quantity 
+                },
+                $set: { lastSaleDate: new Date() },
+                $push: { 
+                    inventoryHistory: { 
+                        date: new Date(), 
+                        quantity: product.quantity,
+                        type: 'sale'
+                    } 
+                }
+            });
+        }
+
+        // Handle response based on payment method
+        if (payment_method === 'cod') {
+            responseReturn(res, 200, { 
+                message: "Order Placed Successfully", 
+                orderId: order.id 
+            });
+        } else {
+            // For other payment methods, check payment status after delay
+            setTimeout(() => {
+                this.paymentCheck(order.id)
+            }, 15000)
+            responseReturn(res, 200, { 
+                message: "Order Placed Success", 
+                orderId: order.id 
+            });
+        }
+    } catch (error) {
+        console.log(error.message)
+        responseReturn(res, 500, {message: "Internal server error"})
     }
+}
     
     get_customer_dashboard_data = async(req, res) => {
         const { userId } = req.params 
