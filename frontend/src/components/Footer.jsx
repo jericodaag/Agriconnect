@@ -23,7 +23,7 @@ const Footer = () => {
                         <ul className='flex flex-col gap-2 text-slate-600'>
                             <li>Address : MacArthur Highway, Claro M. Recto, Angeles City , Pampanga , Philippines</li>
                             <li>Phone : +63 927-041-6057</li>
-                            <li>Email : support@agriconnect.com</li>
+                            <li>Email : agriconnectshop@gmail.com</li>
                         </ul> 
                     </div> 
                 </div>
@@ -107,7 +107,6 @@ const Footer = () => {
                 <span>@ Agriconnect 2024 All Rights Reserved </span>
             </div>
 
-
     <div className='hidden fixed md-lg:block w-[50px] h-[110px] bottom-3 right-2 bg-white rounded-full p-2'>
         <div className='w-full h-full flex gap-3 flex-col justify-center items-center'>
         <div onClick={() => navigate(userInfo ? '/card' : '/login') }  className='relative flex justify-center items-center cursor-pointer w-[35px] h-[35px] rounded-full bg-[#e2e2e2]'>
@@ -137,7 +136,6 @@ const Footer = () => {
 
         </div>
     </div>
-
 
 
 
