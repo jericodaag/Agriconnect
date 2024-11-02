@@ -16,14 +16,19 @@ class dashboardController {
     get_admin_dashboard_data = async(req, res) => {
         const {id} = req 
         try {
-            const totalSale = await myShopWallet.aggregate([
+            const totalSale = await customerOrder.aggregate([
+                {
+                    $match: {
+                        payment_status: 'paid'  // Only include paid orders
+                    }
+                },
                 {
                     $group: {
                         _id: null,
-                        totalAmount: {$sum: '$amount'}
+                        totalAmount: {$sum: '$price'}
                     }
                 }
-            ])
+            ]);
 
             const totalProduct = await productModel.find({}).countDocuments()
             const totalOrder = await customerOrder.find({}).countDocuments()
@@ -36,18 +41,22 @@ class dashboardController {
             const chartData = await customerOrder.aggregate([
                 {
                     $match: {
-                        createdAt: { $gte: new Date(currentYear, 0, 1), $lt: new Date(currentYear + 1, 0, 1) }
+                        createdAt: { $gte: new Date(currentYear, 0, 1), $lt: new Date(currentYear + 1, 0, 1) },
+                        payment_status: 'paid' // Only include paid orders
                     }
                 },
                 {
                     $group: {
-                        _id: { $month: "$createdAt" },
+                        _id: { 
+                            month: { $month: "$createdAt" },
+                            payment_method: "$payment_method"
+                        },
                         totalOrders: { $sum: 1 },
                         totalRevenue: { $sum: "$price" }
                     }
                 },
-                { $sort: { _id: 1 } }
-            ])
+                { $sort: { "_id.month": 1 } }
+            ]);
 
             const sellerChartData = await sellerModel.aggregate([
                 {
@@ -68,17 +77,27 @@ class dashboardController {
                 month: i + 1,
                 totalOrders: 0,
                 totalRevenue: 0,
+                stripeRevenue: 0,
+                codRevenue: 0,
                 totalSellers: 0
-            }))
+            }));
 
             chartData.forEach(data => {
-                formattedChartData[data._id - 1].totalOrders = data.totalOrders
-                formattedChartData[data._id - 1].totalRevenue = data.totalRevenue
-            })
-
+                const monthIndex = data._id.month - 1;
+                formattedChartData[monthIndex].totalOrders += data.totalOrders;
+                formattedChartData[monthIndex].totalRevenue += data.totalRevenue;
+                
+                if (data._id.payment_method === 'stripe') {
+                    formattedChartData[monthIndex].stripeRevenue = data.totalRevenue;
+                } else {
+                    formattedChartData[monthIndex].codRevenue = data.totalRevenue;
+                }
+            });
+    
+            // Add seller data
             sellerChartData.forEach(data => {
-                formattedChartData[data._id - 1].totalSellers = data.totalSellers
-            })
+                formattedChartData[data._id - 1].totalSellers = data.totalSellers;
+            });
 
             // Get product status counts and calculate percentages
             const productStatusCounts = await customerOrder.aggregate([

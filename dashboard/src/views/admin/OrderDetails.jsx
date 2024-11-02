@@ -49,9 +49,11 @@ const OrderDetails = () => {
             })).unwrap();
             
             await dispatch(get_admin_order(orderId));
-            toast.success('Status updated successfully');
+            // Remove this toast since we'll handle it in the useEffect
+            // toast.success('Status updated successfully');
         } catch (error) {
-            toast.error('Failed to update status');
+            // Remove this toast since we'll handle it in the useEffect
+            // toast.error('Failed to update status');
         } finally {
             setIsUpdating(false);
         }

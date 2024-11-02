@@ -281,6 +281,10 @@ class orderController {
         const { delivery_status, payment_status } = req.body;
     
         try {
+            // Get the original order to check if payment status is changing from unpaid to paid
+            const originalOrder = await customerOrder.findById(orderId);
+            const isPaymentStatusChangingToPaid = originalOrder.payment_status === 'unpaid' && payment_status === 'paid';
+    
             // Update main order
             await customerOrder.findByIdAndUpdate(orderId, {
                 delivery_status,
@@ -296,12 +300,42 @@ class orderController {
                 }
             );
     
+            // If payment status is changing from unpaid to paid, create wallet entries
+            if (isPaymentStatusChangingToPaid) {
+                const cuOrder = await customerOrder.findById(orderId);
+                const auOrder = await authOrderModel.find({
+                    orderId: new ObjectId(orderId)
+                });
+                 
+                const time = moment(Date.now()).format('l');
+                const splitTime = time.split('/');
+    
+                // Create entry in myShopWallet
+                await myShopWallet.create({
+                    amount: cuOrder.price,
+                    month: splitTime[0],
+                    year: splitTime[2],
+                    payment_method: cuOrder.payment_method // Add payment method
+                });
+    
+                // Create entries in sellerWallet for each seller
+                for (let i = 0; i < auOrder.length; i++) {
+                    await sellerWallet.create({
+                        sellerId: auOrder[i].sellerId.toString(),
+                        amount: auOrder[i].price,
+                        month: splitTime[0],
+                        year: splitTime[2],
+                        payment_method: auOrder[i].payment_method // Add payment method
+                    });
+                }
+            }
+    
             responseReturn(res, 200, { message: 'Order status updated successfully' });
         } catch (error) {
             console.log('admin status update error:', error.message);
             responseReturn(res, 500, { message: 'Internal server error' });
         }
-    }
+    };
 
     get_seller_orders = async (req, res) => {
         const {sellerId} = req.params
