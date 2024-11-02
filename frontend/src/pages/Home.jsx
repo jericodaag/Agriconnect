@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { get_products } from '../store/reducers/homeReducer';
 import { FaLeaf, FaTruck, FaStore, FaSeedling, FaArrowRight, FaShoppingBasket } from 'react-icons/fa';
 import { IoMdThumbsUp } from 'react-icons/io';
+import { Link } from 'react-router-dom';
 
 const Home = () => {
     const dispatch = useDispatch();
@@ -52,43 +53,47 @@ const Home = () => {
 
             {/* Featured Products */}
             <div className='py-8'>
-            <div className="w-[85%] mx-auto mb-12">
-                <div className="grid grid-cols-2 gap-6 md:grid-cols-1">
-                    {/* Season's Fresh Picks Card */}
-                    <div className="border rounded-lg p-8">
-                        <div className="flex items-center gap-4 mb-6">
-                            <FaSeedling className="text-[#059473] text-3xl" />
-                            <div>
-                                <h3 className="text-2xl font-bold text-gray-800">Season's Fresh Picks</h3>
-                                <p className="text-gray-600">Discover the freshest harvest of the season</p>
+                <div className="w-[85%] mx-auto mb-12">
+                    <div className="grid grid-cols-2 gap-6 md:grid-cols-1">
+                        {/* Season's Fresh Picks Card */}
+                        <div className="border rounded-lg p-8">
+                            <div className="flex items-center gap-4 mb-6">
+                                <FaSeedling className="text-[#059473] text-3xl" />
+                                <div>
+                                    <h3 className="text-2xl font-bold text-gray-800">Season's Fresh Picks</h3>
+                                    <p className="text-gray-600">Discover the freshest harvest of the season</p>
+                                </div>
                             </div>
+                            <Link to="/shops" className="inline-block">
+                                <button className="bg-[#059473] text-white px-6 py-3 rounded-lg hover:bg-[#048064] transition-all duration-300 flex items-center gap-2">
+                                    View Seasonal Products
+                                    <FaArrowRight size={16} />
+                                </button>
+                            </Link>
                         </div>
-                        <button className="bg-[#059473] text-white px-6 py-3 rounded-lg hover:bg-[#048064] transition-all duration-300 flex items-center gap-2">
-                            View Seasonal Products
-                            <FaArrowRight size={16} />
-                        </button>
-                    </div>
 
-                    {/* Special Deals Card */}
-                    <div className="border rounded-lg p-8">
-                        <div className="flex items-center gap-4 mb-6">
-                            <FaShoppingBasket className="text-[#F98821] text-3xl" />
-                            <div>
-                                <h3 className="text-2xl font-bold text-gray-800">Special Deals</h3>
-                                <p className="text-gray-600">Get the best prices on fresh produce</p>
+                        {/* Special Deals Card */}
+                        <div className="border rounded-lg p-8">
+                            <div className="flex items-center gap-4 mb-6">
+                                <FaShoppingBasket className="text-[#F98821] text-3xl" />
+                                <div>
+                                    <h3 className="text-2xl font-bold text-gray-800">Special Deals</h3>
+                                    <p className="text-gray-600">Get the best prices on fresh produce</p>
+                                </div>
                             </div>
+                            <Link to="/shops" className="inline-block">
+                                <button className="bg-[#F98821] text-white px-6 py-3 rounded-lg hover:bg-[#ea580c] transition-all duration-300 flex items-center gap-2">
+                                    View Special Offers
+                                    <FaArrowRight size={16} />
+                                </button>
+                            </Link>
                         </div>
-                        <button className="bg-[#F98821] text-white px-6 py-3 rounded-lg hover:bg-[#ea580c] transition-all duration-300 flex items-center gap-2">
-                            View Special Offers
-                            <FaArrowRight size={16} />
-                        </button>
                     </div>
                 </div>
+                <div className="w-[85%] mx-auto">
+                    <FeatureProducts products={products} />
+                </div>
             </div>
-            <div className="w-[85%] mx-auto">
-                <FeatureProducts products={products} />
-            </div>
-        </div>
 
             {/* Product Sections */}
             <div className="py-12">
