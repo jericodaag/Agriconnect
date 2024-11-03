@@ -30,28 +30,39 @@ export const get_seller_dashboard_data = createAsyncThunk(
 export const dashboardReducer = createSlice({
   name: 'dashboard',
   initialState: {
-    totalSale: 0,
-    totalOrder: 0,
-    totalProduct: 0,
-    totalPendingOrder: 0,
-    totalSeller: 0,
-    recentOrder: [],
-    recentMessages: [],
-    chartData: [],
-    productStatusCounts: {
-      pending: 0,
-      processing: 0,
-      warehouse: 0,
-      placed: 0,
-      cancelled: 0
-    },
-    errorMessage: "",
-    loading: false
+      totalSale: 0,
+      totalOrder: 0,
+      totalProduct: 0,
+      totalPendingOrder: 0,
+      totalSeller: 0,
+      recentOrder: [],
+      recentMessages: [],
+      chartData: [],
+      productStatusCounts: {
+          pending: 0,
+          processing: 0,
+          warehouse: 0,
+          placed: 0,
+          cancelled: 0
+      },
+      salesData: {
+          total: 0,
+          stripe: {
+              amount: 0,
+              count: 0
+          },
+          cod: {
+              amount: 0,
+              count: 0
+          }
+      },
+      errorMessage: "",
+      loading: false
   },
   reducers: {
-    clearMessage: (state) => {
-      state.errorMessage = ""
-    }
+      clearMessage: (state) => {
+          state.errorMessage = ""
+      }
   },
   extraReducers: (builder) => {
     builder
@@ -77,16 +88,17 @@ export const dashboardReducer = createSlice({
         state.loading = true
       })
       .addCase(get_seller_dashboard_data.fulfilled, (state, { payload }) => {
-        state.loading = false
-        state.totalSale = payload.totalSale
-        state.totalOrder = payload.totalOrder
-        state.totalProduct = payload.totalProduct
-        state.totalPendingOrder = payload.totalPendingOrder
-        state.recentOrder = payload.recentOrders
-        state.recentMessages = payload.recentMessages
-        state.chartData = payload.chartData
-        state.productStatusCounts = payload.productStatusCounts
-      })
+        state.loading = false;
+        state.totalSale = payload.totalSale;
+        state.totalOrder = payload.totalOrder;
+        state.totalProduct = payload.totalProduct;
+        state.totalPendingOrder = payload.totalPendingOrder;
+        state.recentOrder = payload.recentOrders;
+        state.recentMessages = payload.recentMessages;
+        state.chartData = payload.chartData;
+        state.productStatusCounts = payload.productStatusCounts;
+        state.salesData = payload.salesData;
+    })
       .addCase(get_seller_dashboard_data.rejected, (state, { payload }) => {
         state.loading = false
         state.errorMessage = payload.message

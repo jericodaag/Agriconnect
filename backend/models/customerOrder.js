@@ -55,6 +55,11 @@ const customerOrder = new Schema({
         type: String,
         required: true
     },
+    payment_method: {
+        type: String,
+        required: true,
+        enum: ['stripe', 'cod']
+    }
 }, { timestamps: true })
 
 module.exports = model('customerOrders', customerOrder)

@@ -32,7 +32,12 @@ const authSchema = new Schema({
     date: {
         type: String,
         required : true
-    } 
+    },
+    payment_method: {
+        type: String,
+        required: true,
+        enum: ['stripe', 'cod']  // Add validation
+    }
 },{ timestamps: true })
 
 module.exports = model('authorOrders',authSchema)

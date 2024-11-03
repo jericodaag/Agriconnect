@@ -14,12 +14,11 @@ const formidable = require("formidable")
 
 class dashboardController {
     get_admin_dashboard_data = async(req, res) => {
-        const {id} = req 
         try {
             const totalSale = await customerOrder.aggregate([
                 {
                     $match: {
-                        payment_status: 'paid'  // Only include paid orders
+                        payment_status: 'paid'
                     }
                 },
                 {
@@ -30,19 +29,48 @@ class dashboardController {
                 }
             ]);
 
+            const salesByMethod = await customerOrder.aggregate([
+                {
+                    $match: {
+                        payment_status: 'paid'
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$payment_method',
+                        amount: { $sum: '$price' },
+                        count: { $sum: 1 }
+                    }
+                }
+            ]);
+
+            const salesData = {
+                total: totalSale.length > 0 ? totalSale[0].totalAmount : 0,
+                stripe: { amount: 0, count: 0 },
+                cod: { amount: 0, count: 0 }
+            };
+
+            salesByMethod.forEach(method => {
+                if (method._id === 'stripe' || method._id === 'cod') {
+                    salesData[method._id] = {
+                        amount: method.amount || 0,
+                        count: method.count || 0
+                    };
+                }
+            });
+
             const totalProduct = await productModel.find({}).countDocuments()
             const totalOrder = await customerOrder.find({}).countDocuments()
             const totalSeller = await sellerModel.find({}).countDocuments()
             const messages = await adminSellerMessage.find({}).limit(3)
             const recentOrders = await customerOrder.find({}).limit(5)
 
-            // Generate chart data
             const currentYear = new Date().getFullYear()
             const chartData = await customerOrder.aggregate([
                 {
                     $match: {
                         createdAt: { $gte: new Date(currentYear, 0, 1), $lt: new Date(currentYear + 1, 0, 1) },
-                        payment_status: 'paid' // Only include paid orders
+                        payment_status: 'paid'
                     }
                 },
                 {
@@ -89,17 +117,15 @@ class dashboardController {
                 
                 if (data._id.payment_method === 'stripe') {
                     formattedChartData[monthIndex].stripeRevenue = data.totalRevenue;
-                } else {
+                } else if (data._id.payment_method === 'cod') {
                     formattedChartData[monthIndex].codRevenue = data.totalRevenue;
                 }
             });
-    
-            // Add seller data
+
             sellerChartData.forEach(data => {
                 formattedChartData[data._id - 1].totalSellers = data.totalSellers;
             });
 
-            // Get product status counts and calculate percentages
             const productStatusCounts = await customerOrder.aggregate([
                 {
                     $group: {
@@ -131,9 +157,10 @@ class dashboardController {
                 totalSeller,
                 messages,
                 recentOrders,
-                totalSale: totalSale.length > 0 ? totalSale[0].totalAmount : 0,
+                totalSale: salesData.total,
                 chartData: formattedChartData,
-                productStatusCounts: formattedProductStatusCounts
+                productStatusCounts: formattedProductStatusCounts,
+                salesData
             })
         } catch (error) {
             console.log(error.message)
@@ -144,8 +171,23 @@ class dashboardController {
     get_seller_dashboard_data = async (req, res) => {
         const {id} = req 
         try {
-            // Calculate total sales from all orders (both COD and Stripe)
-            const totalSales = await authOrder.aggregate([
+            const salesByMethod = await authOrder.aggregate([
+                {
+                    $match: { 
+                        sellerId: new ObjectId(id)
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$payment_method',
+                        amount: { $sum: '$price' },
+                        count: { $sum: 1 }
+                    }
+                }
+            ]);
+
+            // Calculate unique customers
+            const customers = await authOrder.aggregate([
                 {
                     $match: { 
                         sellerId: new ObjectId(id)
@@ -154,86 +196,99 @@ class dashboardController {
                 {
                     $group: {
                         _id: null,
+                        uniqueCustomers: { $addToSet: '$customerId' },
                         totalAmount: { $sum: '$price' }
                     }
                 }
-            ])
-    
+            ]);
+
+            const salesData = {
+                total: customers[0]?.totalAmount || 0,
+                stripe: { amount: 0, count: 0 },
+                cod: { amount: 0, count: 0 }
+            };
+
+            salesByMethod.forEach(method => {
+                if (method._id === 'stripe' || method._id === 'cod') {
+                    salesData[method._id] = {
+                        amount: method.amount || 0,
+                        count: method.count || 0
+                    };
+                }
+            });
+
             const totalProduct = await productModel.find({ 
                 sellerId: new ObjectId(id) 
-            }).countDocuments()
+            }).countDocuments();
             
             const totalOrder = await authOrder.find({
                 sellerId: new ObjectId(id) 
-            }).countDocuments()
-    
+            }).countDocuments();
+
             const totalPendingOrder = await authOrder.find({
-                $and: [
-                    {
-                        sellerId: {
-                            $eq: new ObjectId(id)
-                        }
-                    },
-                    {
-                        delivery_status: {
-                            $eq: 'pending'
-                        }
-                    }
-                ]
-            }).countDocuments()
-    
+                sellerId: new ObjectId(id),
+                delivery_status: 'pending'
+            }).countDocuments();
+
             const messages = await sellerCustomerMessage.find({
                 $or: [
-                    {
-                        senderId: {
-                            $eq: id
-                        } 
-                    },{
-                        receverId: {
-                            $eq: id
-                        }
-                    }
+                    { senderId: { $eq: id } },
+                    { receverId: { $eq: id } }
                 ]
-            }).limit(3)   
-    
+            }).limit(3);
+
             const recentOrders = await authOrder.find({
                 sellerId: new ObjectId(id)
-            }).limit(5)
-    
-            // Generate chart data
-            const currentYear = new Date().getFullYear()
-            const chartData = await authOrder.aggregate([
+            }).limit(5);
+
+            const currentYear = new Date().getFullYear();
+            const monthlyData = await authOrder.aggregate([
                 {
                     $match: {
                         sellerId: new ObjectId(id),
-                        createdAt: { $gte: new Date(currentYear, 0, 1), $lt: new Date(currentYear + 1, 0, 1) }
+                        createdAt: { 
+                            $gte: new Date(currentYear, 0, 1), 
+                            $lt: new Date(currentYear + 1, 0, 1) 
+                        }
                     }
                 },
                 {
                     $group: {
-                        _id: { $month: "$createdAt" },
-                        totalOrders: { $sum: 1 },
+                        _id: {
+                            month: { $month: "$createdAt" },
+                            payment_method: "$payment_method"
+                        },
                         totalRevenue: { $sum: "$price" },
-                        customers: { $sum: 1 }
+                        totalOrders: { $sum: 1 },
+                        customers: { $addToSet: "$customerId" }
                     }
                 },
-                { $sort: { _id: 1 } }
-            ])
-    
+                { $sort: { "_id.month": 1 } }
+            ]);
+
             const formattedChartData = Array.from({ length: 12 }, (_, i) => ({
                 month: i + 1,
-                totalOrders: 0,
+                stripeRevenue: 0,
+                codRevenue: 0,
                 totalRevenue: 0,
+                totalOrders: 0,
                 customers: 0
-            }))
-    
-            chartData.forEach(data => {
-                formattedChartData[data._id - 1].totalOrders = data.totalOrders
-                formattedChartData[data._id - 1].totalRevenue = data.totalRevenue
-                formattedChartData[data._id - 1].customers = data.customers
-            })
-    
-            // Get product status counts and calculate percentages for the seller
+            }));
+
+            monthlyData.forEach(data => {
+                const monthIndex = data._id.month - 1;
+                if (data._id.payment_method === 'stripe') {
+                    formattedChartData[monthIndex].stripeRevenue = data.totalRevenue;
+                } else if (data._id.payment_method === 'cod') {
+                    formattedChartData[monthIndex].codRevenue = data.totalRevenue;
+                }
+                formattedChartData[monthIndex].totalOrders += data.totalOrders;
+                formattedChartData[monthIndex].customers = data.customers.length;
+                formattedChartData[monthIndex].totalRevenue = 
+                    formattedChartData[monthIndex].stripeRevenue + 
+                    formattedChartData[monthIndex].codRevenue;
+            });
+
             const productStatusCounts = await authOrder.aggregate([
                 {
                     $match: { sellerId: new ObjectId(id) }
@@ -244,66 +299,70 @@ class dashboardController {
                         count: { $sum: 1 }
                     }
                 }
-            ])
-    
-            const totalStatusCount = productStatusCounts.reduce((sum, status) => sum + status.count, 0)
-    
+            ]);
+
+            const totalStatusCount = productStatusCounts.reduce((sum, status) => sum + status.count, 0);
+
             const formattedProductStatusCounts = {
                 pending: 0,
                 processing: 0,
                 warehouse: 0,
                 placed: 0,
                 cancelled: 0
-            }
-    
+            };
+
             productStatusCounts.forEach(status => {
                 if (formattedProductStatusCounts.hasOwnProperty(status._id)) {
-                    formattedProductStatusCounts[status._id] = (status.count / totalStatusCount) * 100
+                    formattedProductStatusCounts[status._id] = (status.count / totalStatusCount) * 100;
                 }
-            })
-    
+            });
+
             responseReturn(res, 200, {
                 totalProduct,
                 totalOrder,
                 totalPendingOrder,
                 messages,
                 recentOrders,
-                totalSale: totalSales.length > 0 ? totalSales[0].totalAmount : 0,
+                totalSale: salesData.total,
                 chartData: formattedChartData,
-                productStatusCounts: formattedProductStatusCounts
-            })
+                productStatusCounts: formattedProductStatusCounts,
+                salesData,
+                totalCustomers: customers[0]?.uniqueCustomers?.length || 0
+            });
+
         } catch (error) {
-            console.log(error.message)
-            responseReturn(res, 500, { error: error.message })
+            console.log(error.message);
+            responseReturn(res, 500, { error: error.message });
         }
     }
 
+    // Keep your existing banner-related methods unchanged
     add_banner = async(req,res) => {
-       const form = formidable({multiples:true})
-       form.parse(req, async(err, field, files) => {
-        const {productId} = field
-        const { mainban } = files
+        const form = formidable({multiples:true})
+        form.parse(req, async(err, field, files) => {
+            const {productId} = field
+            const { mainban } = files
 
-        cloudinary.config({
-            cloud_name: process.env.cloud_name,
-            api_key: process.env.api_key,
-            api_secret: process.env.api_secret,
-            secure: true
-        })
-        
-        try {
-            const {slug} = await productModel.findById(productId) 
-            const result = await cloudinary.uploader.upload(mainban.filepath, {folder: 'banners'})
-            const banner = await bannerModel.create({
-                productId,
-                banner: result.url,
-                link: slug 
+            cloudinary.config({
+                cloud_name: process.env.cloud_name,
+                api_key: process.env.api_key,
+                api_secret: process.env.api_secret,
+                secure: true
             })
-            responseReturn(res, 200, {banner,message: "Banner Add Success"})
-        } catch (error) {
-            responseReturn(res, 500, { error: error.message})
-        } 
-      })
+            
+            try {
+                const {slug} = await productModel.findById(productId) 
+                const result = await cloudinary.uploader.upload(mainban.filepath, {folder: 'banners'})
+                const banner = await bannerModel.create({
+                    productId,
+                    banner: result.url,
+                    link: slug 
+                })
+                responseReturn(res, 200, {banner,message: "Banner Add Success"})
+            } catch (error) {
+                responseReturn(res, 500, { error: error.message})
+            } 
+        })
     }
 
     get_banner = async(req,res) => {
