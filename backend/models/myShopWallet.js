@@ -3,16 +3,21 @@ const {Schema, model} = require("mongoose");
 const myShopWalletSchema = new Schema({
     amount: {
         type: Number,
-        required : true
+        required: true
     },
     month: {
-        type: Number,
-        required : true
+        type: String,
+        required: true
     },
     year: {
-        type: Number,
-        required : true  
-    } 
-},{ timestamps: true })
+        type: String,
+        required: true
+    },
+    payment_method: {
+        type: String,
+        enum: ['stripe', 'cod'],
+        required: true
+    }
+}, { timestamps: true });
 
 module.exports = model('myShopWallets',myShopWalletSchema)

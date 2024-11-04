@@ -310,12 +310,12 @@ class orderController {
                 const time = moment(Date.now()).format('l');
                 const splitTime = time.split('/');
     
-                // Create entry in myShopWallet
+                // Create myShopWallet entry with payment method
                 await myShopWallet.create({
                     amount: cuOrder.price,
                     month: splitTime[0],
                     year: splitTime[2],
-                    payment_method: cuOrder.payment_method // Add payment method
+                    payment_method: cuOrder.payment_method
                 });
     
                 // Create entries in sellerWallet for each seller
@@ -325,7 +325,7 @@ class orderController {
                         amount: auOrder[i].price,
                         month: splitTime[0],
                         year: splitTime[2],
-                        payment_method: auOrder[i].payment_method // Add payment method
+                        payment_method: auOrder[i].payment_method
                     });
                 }
             }
