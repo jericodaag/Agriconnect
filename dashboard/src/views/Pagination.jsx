@@ -1,55 +1,101 @@
 import React from 'react';
-import { MdOutlineKeyboardDoubleArrowLeft,MdOutlineKeyboardDoubleArrowRight } from "react-icons/md";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
-
-const Pagination = ({pageNumber,setPageNumber,totalItem,parPage,showItem}) => {
-
-    let totalPage = Math.ceil(totalItem / parPage)
-    let startPage = pageNumber
-
-    let dif = totalPage - pageNumber
-    if (dif <= showItem) {
-        startPage = totalPage - showItem
-    }
-    let endPage = startPage < 0 ? showItem : showItem + startPage
-     
-    if (startPage <= 0) {
-        startPage = 1
-    }
-
-    const createBtn = () => {
-
-        const btns = []
-        for (let i = startPage; i < endPage; i++) {
-            btns.push(
-                <li onClick={()=>setPageNumber(i)} className={` ${pageNumber === i ? 'bg-indigo-300 shadow-lg shadow-indigo-300/50 text-white' : 'bg-slate-600 hover:bg-indigo-400 shadow-lg hover:shadow-indigo-500/50 hover:text-white text-[#d0d2d6]'} w-[33px] h-[33px] rounded-full flex justify-center items-center cursor-pointer `}>
-                    {i}                    
-                </li>
-            ) 
+const Pagination = ({ pageNumber, setPageNumber, totalItem, parPage }) => {
+    const totalPages = Math.ceil(totalItem / parPage);
+    
+    // Calculate the range of pages to show (always 3 numbers)
+    const getPageRange = () => {
+        let start = pageNumber - 1;
+        let end = pageNumber + 1;
+        
+        // Handle start of range
+        if (start < 1) {
+            start = 1;
+            end = Math.min(3, totalPages);
         }
-        return btns
-    }
+        
+        // Handle end of range
+        if (end > totalPages) {
+            end = totalPages;
+            start = Math.max(1, totalPages - 2);
+        }
+        
+        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+    };
+
+    const handlePageChange = (page) => {
+        if (page >= 1 && page <= totalPages) {
+            setPageNumber(page);
+        }
+    };
 
     return (
-        <ul className='flex gap-3'>
-            {
-                pageNumber > 1 && <li onClick={() => setPageNumber(pageNumber - 1)} className='w-[33px] h-[33px] rounded-full flex justify-center items-center bg-slate-300 text-[#000000] cursor-pointer'>
-                    <MdOutlineKeyboardDoubleArrowLeft />
-                </li>
-            }
-            {
-                createBtn()
-            }
-            {
-                pageNumber < totalPage && <li onClick={() => setPageNumber(pageNumber + 1)} className='w-[33px] h-[33px] rounded-full flex justify-center items-center bg-slate-300 text-[#000000] cursor-pointer'>
-                    <MdOutlineKeyboardDoubleArrowRight  />
-                </li>
-            }
+        <div className="flex items-center justify-center gap-1.5 font-medium">
+            {/* First page button */}
+            {pageNumber > 1 && (
+                <button
+                    onClick={() => handlePageChange(1)}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                    aria-label="First page"
+                >
+                    <ChevronsLeft className="h-4 w-4" />
+                </button>
+            )}
+            
+            {/* Previous page button */}
+            {pageNumber > 1 && (
+                <button
+                    onClick={() => handlePageChange(pageNumber - 1)}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                    aria-label="Previous page"
+                >
+                    <ChevronLeft className="h-4 w-4" />
+                </button>
+            )}
 
-        </ul>
-    )
+            {/* Page numbers */}
+            <div className="flex gap-1.5">
+                {getPageRange().map((page) => (
+                    <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`
+                            w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-colors
+                            ${pageNumber === page 
+                                ? 'bg-blue-600 text-white shadow-sm shadow-blue-200 hover:bg-blue-700' 
+                                : 'border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300'
+                            }
+                        `}
+                    >
+                        {page}
+                    </button>
+                ))}
+            </div>
 
+            {/* Next page button */}
+            {pageNumber < totalPages && (
+                <button
+                    onClick={() => handlePageChange(pageNumber + 1)}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                    aria-label="Next page"
+                >
+                    <ChevronRight className="h-4 w-4" />
+                </button>
+            )}
 
+            {/* Last page button */}
+            {pageNumber < totalPages && (
+                <button
+                    onClick={() => handlePageChange(totalPages)}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                    aria-label="Last page"
+                >
+                    <ChevronsRight className="h-4 w-4" />
+                </button>
+            )}
+        </div>
+    );
 };
 
 export default Pagination;

@@ -174,7 +174,8 @@ class dashboardController {
             const salesByMethod = await authOrder.aggregate([
                 {
                     $match: { 
-                        sellerId: new ObjectId(id)
+                        sellerId: new ObjectId(id),
+                        payment_status: 'paid'  // Add this condition
                     }
                 },
                 {
@@ -185,12 +186,13 @@ class dashboardController {
                     }
                 }
             ]);
-
-            // Calculate unique customers
+    
+            // Calculate unique customers from paid orders only
             const customers = await authOrder.aggregate([
                 {
                     $match: { 
-                        sellerId: new ObjectId(id)
+                        sellerId: new ObjectId(id),
+                        payment_status: 'paid'  // Add this condition
                     }
                 },
                 {
@@ -201,13 +203,13 @@ class dashboardController {
                     }
                 }
             ]);
-
+    
             const salesData = {
                 total: customers[0]?.totalAmount || 0,
                 stripe: { amount: 0, count: 0 },
                 cod: { amount: 0, count: 0 }
             };
-
+    
             salesByMethod.forEach(method => {
                 if (method._id === 'stripe' || method._id === 'cod') {
                     salesData[method._id] = {
@@ -216,7 +218,7 @@ class dashboardController {
                     };
                 }
             });
-
+    
             const totalProduct = await productModel.find({ 
                 sellerId: new ObjectId(id) 
             }).countDocuments();
@@ -224,28 +226,29 @@ class dashboardController {
             const totalOrder = await authOrder.find({
                 sellerId: new ObjectId(id) 
             }).countDocuments();
-
+    
             const totalPendingOrder = await authOrder.find({
                 sellerId: new ObjectId(id),
                 delivery_status: 'pending'
             }).countDocuments();
-
+    
             const messages = await sellerCustomerMessage.find({
                 $or: [
                     { senderId: { $eq: id } },
                     { receverId: { $eq: id } }
                 ]
             }).limit(3);
-
+    
             const recentOrders = await authOrder.find({
                 sellerId: new ObjectId(id)
             }).limit(5);
-
+    
             const currentYear = new Date().getFullYear();
             const monthlyData = await authOrder.aggregate([
                 {
                     $match: {
                         sellerId: new ObjectId(id),
+                        payment_status: 'paid',  // Add this condition
                         createdAt: { 
                             $gte: new Date(currentYear, 0, 1), 
                             $lt: new Date(currentYear + 1, 0, 1) 
@@ -265,7 +268,7 @@ class dashboardController {
                 },
                 { $sort: { "_id.month": 1 } }
             ]);
-
+    
             const formattedChartData = Array.from({ length: 12 }, (_, i) => ({
                 month: i + 1,
                 stripeRevenue: 0,
@@ -274,7 +277,7 @@ class dashboardController {
                 totalOrders: 0,
                 customers: 0
             }));
-
+    
             monthlyData.forEach(data => {
                 const monthIndex = data._id.month - 1;
                 if (data._id.payment_method === 'stripe') {
@@ -288,7 +291,8 @@ class dashboardController {
                     formattedChartData[monthIndex].stripeRevenue + 
                     formattedChartData[monthIndex].codRevenue;
             });
-
+    
+            // Get order status counts
             const productStatusCounts = await authOrder.aggregate([
                 {
                     $match: { sellerId: new ObjectId(id) }
@@ -300,9 +304,9 @@ class dashboardController {
                     }
                 }
             ]);
-
+    
             const totalStatusCount = productStatusCounts.reduce((sum, status) => sum + status.count, 0);
-
+    
             const formattedProductStatusCounts = {
                 pending: 0,
                 processing: 0,
@@ -310,13 +314,13 @@ class dashboardController {
                 placed: 0,
                 cancelled: 0
             };
-
+    
             productStatusCounts.forEach(status => {
                 if (formattedProductStatusCounts.hasOwnProperty(status._id)) {
                     formattedProductStatusCounts[status._id] = (status.count / totalStatusCount) * 100;
                 }
             });
-
+    
             responseReturn(res, 200, {
                 totalProduct,
                 totalOrder,
@@ -329,7 +333,7 @@ class dashboardController {
                 salesData,
                 totalCustomers: customers[0]?.uniqueCustomers?.length || 0
             });
-
+    
         } catch (error) {
             console.log(error.message);
             responseReturn(res, 500, { error: error.message });
