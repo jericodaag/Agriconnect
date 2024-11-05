@@ -14,55 +14,61 @@ export const get_seller_payment_details = createAsyncThunk(
         }
     }
 );
-  // End Method 
-
 
 export const send_withdrowal_request = createAsyncThunk(
     'payment/send_withdrowal_request',
-    async( info,{rejectWithValue, fulfillWithValue}) => { 
+    async(info, {rejectWithValue, fulfillWithValue}) => { 
         try { 
-            const {data} = await api.post(`/payment/withdrowal-request`,info,{withCredentials: true})  
+            const {data} = await api.post(`/payment/withdrowal-request`, info, {withCredentials: true})  
             return fulfillWithValue(data)
         } catch (error) {
-            // console.log(error.response.data)
             return rejectWithValue(error.response.data)
         }
     }
-) 
-  // End Method 
+); 
 
-  export const get_payment_request = createAsyncThunk(
+export const get_payment_request = createAsyncThunk(
     'payment/get_payment_request',
-    async(_,{rejectWithValue, fulfillWithValue}) => { 
+    async(_, {rejectWithValue, fulfillWithValue}) => { 
         try { 
-            const {data} = await api.get(`/payment/request`,{withCredentials: true})  
+            const {data} = await api.get(`/payment/request`, {withCredentials: true})  
             return fulfillWithValue(data)
         } catch (error) {
-            // console.log(error.response.data)
             return rejectWithValue(error.response.data)
         }
     }
-) 
-  // End Method 
+);
 
-  export const confirm_payment_request = createAsyncThunk(
+export const get_withdrawal_history = createAsyncThunk(
+    'payment/get_withdrawal_history',
+    async (_, { rejectWithValue, fulfillWithValue }) => {
+        try {
+            const { data } = await api.get('/payment/withdrawal-history', { 
+                withCredentials: true 
+            });
+            return fulfillWithValue(data);
+        } catch (error) {
+            return rejectWithValue(error.response.data);
+        }
+    }
+);
+
+export const confirm_payment_request = createAsyncThunk(
     'payment/confirm_payment_request',
-    async(paymentId ,{rejectWithValue, fulfillWithValue}) => { 
+    async({ paymentId, withdrawalCode }, {rejectWithValue, fulfillWithValue}) => { 
         try { 
-            const {data} = await api.post(`/payment/request-confirm`,{paymentId},{withCredentials: true})  
+            const {data} = await api.post(`/payment/request-confirm`, {
+                paymentId,
+                withdrawalCode
+            }, {withCredentials: true})  
             return fulfillWithValue(data)
         } catch (error) {
-            // console.log(error.response.data)
             return rejectWithValue(error.response.data)
         }
     }
-) 
-  // End Method 
+); 
 
- 
-
- 
-  export const PaymentReducer = createSlice({
+export const PaymentReducer = createSlice({
     name: 'payment',
     initialState: {
         totalAmount: 0,
@@ -71,6 +77,7 @@ export const send_withdrowal_request = createAsyncThunk(
         availableAmount: 0,
         pendingWithdrows: [],
         successWithdrows: [],
+        withdrawalHistory: [],
         salesData: {
             total: 0,
             stripe: { amount: 0, count: 0 },
@@ -106,42 +113,72 @@ export const send_withdrowal_request = createAsyncThunk(
                 state.errorMessage = payload.message;
             })
 
-        .addCase(send_withdrowal_request.pending, (state, { payload }) => {
-            state.loader = true  
-        })
-        .addCase(send_withdrowal_request.rejected, (state, { payload }) => {
-            state.loader = false  
-            state.errorMessage = payload.message; 
-        })
-        .addCase(send_withdrowal_request.fulfilled, (state, { payload }) => {
-            state.loader = false  
-            state.successMessage = payload.message; 
-            state.pendingWithdrows = [...state.pendingWithdrows,payload.withdrowal]; 
-            state.availableAmount = state.availableAmount - payload.withdrowal.amount; 
-            state.pendingAmount = payload.withdrowal.amount; 
-        })
+            .addCase(send_withdrowal_request.pending, (state) => {
+                state.loader = true;
+            })
+            .addCase(send_withdrowal_request.rejected, (state, { payload }) => {
+                state.loader = false;  
+                state.errorMessage = payload.message; 
+            })
+            .addCase(send_withdrowal_request.fulfilled, (state, { payload }) => {
+                state.loader = false;
+                state.successMessage = payload.message;
+                state.pendingWithdrows = [...state.pendingWithdrows, payload.withdrawal];
+                
+                const withdrawalAmount = payload.withdrawal.amount;
+                
+                // Update available amount and salesData based on payment method
+                if (payload.withdrawal.payment_method === 'stripe') {
+                    state.availableAmount -= withdrawalAmount;
+                    state.salesData.stripe.amount = state.salesData.stripe.amount - withdrawalAmount;
+                } else if (payload.withdrawal.payment_method === 'cod') {
+                    state.availableAmount -= withdrawalAmount;
+                    state.salesData.cod.amount = state.salesData.cod.amount - withdrawalAmount;
+                }
+                
+                // Update pending amount
+                state.pendingAmount = state.pendingWithdrows.reduce((sum, w) => sum + w.amount, 0);
 
-        .addCase(get_payment_request.fulfilled, (state, { payload }) => {
-            state.pendingWithdrows = payload.withdrowalRequest  
-        })
+                // If withdrawal code exists, add it to success message
+                if (payload.withdrawal.withdrawalCode) {
+                    state.successMessage = `Withdrawal request submitted. Your withdrawal code is: ${payload.withdrawal.withdrawalCode}`;
+                }
+            })
 
-        .addCase(confirm_payment_request.pending, (state, { payload }) => {
-            state.loader = true  
-        })
-        .addCase(confirm_payment_request.rejected, (state, { payload }) => {
-            state.loader = false  
-            state.errorMessage = payload.message; 
-        })
-        .addCase(confirm_payment_request.fulfilled, (state, { payload }) => {
-            const temp = state.pendingWithdrows.filter(r => r._id !== payload.payment._id)
-            state.loader = false  
-            state.successMessage = payload.message;
-            state.pendingWithdrows = temp  
-        })
-       
+            .addCase(get_payment_request.fulfilled, (state, { payload }) => {
+                state.pendingWithdrows = payload.withdrowalRequest;
+            })
 
+            .addCase(get_withdrawal_history.fulfilled, (state, { payload }) => {
+                state.withdrawalHistory = payload.withdrawals;
+            })
+
+            .addCase(confirm_payment_request.pending, (state) => {
+                state.loader = true;
+            })
+            .addCase(confirm_payment_request.rejected, (state, { payload }) => {
+                state.loader = false;
+                state.errorMessage = payload.message; 
+            })
+            .addCase(confirm_payment_request.fulfilled, (state, { payload }) => {
+                const temp = state.pendingWithdrows.filter(r => r._id !== payload.payment._id);
+                state.loader = false;
+                state.successMessage = payload.message;
+                state.pendingWithdrows = temp;
+                
+                // Update withdrawal amount
+                state.withdrowAmount += payload.payment.amount;
+                
+                // Update pending amount
+                state.pendingAmount = state.pendingWithdrows.reduce((sum, w) => sum + w.amount, 0);
+                
+                // Add to withdrawal history
+                if (state.withdrawalHistory) {
+                    state.withdrawalHistory = [payload.payment, ...state.withdrawalHistory];
+                }
+            })
     }
+});
 
-})
-export const {messageClear} = PaymentReducer.actions
-export default PaymentReducer.reducer
+export const { messageClear } = PaymentReducer.actions;
+export default PaymentReducer.reducer;

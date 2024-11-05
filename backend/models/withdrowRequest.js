@@ -1,18 +1,28 @@
-const {Schema, model} = require("mongoose");
+const { Schema, model } = require('mongoose');
 
-const withdrowSchema = new Schema({
+const withdrowRequestSchema = new Schema({
     sellerId: {
         type: String,
-        required : true
+        required: true
     },
     amount: {
         type: Number,
-        required : true
+        required: true
     },
     status: {
         type: String,
-        default : 'pending'
-    } 
-},{ timestamps: true })
+        default: 'pending'
+    },
+    payment_method: {
+        type: String,
+        enum: ['stripe', 'cod'],
+        required: true
+    },
+    withdrawalCode: {
+        type: String,
+        unique: true,
+        sparse: true // Only required for COD withdrawals
+    }
+}, { timestamps: true });
 
-module.exports = model('withdrowRequest',withdrowSchema)
+module.exports = model('withdrowRequest', withdrowRequestSchema);

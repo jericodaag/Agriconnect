@@ -4,18 +4,15 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-r
 const Pagination = ({ pageNumber, setPageNumber, totalItem, parPage }) => {
     const totalPages = Math.ceil(totalItem / parPage);
     
-    // Calculate the range of pages to show (always 3 numbers)
     const getPageRange = () => {
         let start = pageNumber - 1;
         let end = pageNumber + 1;
         
-        // Handle start of range
         if (start < 1) {
             start = 1;
             end = Math.min(3, totalPages);
         }
         
-        // Handle end of range
         if (end > totalPages) {
             end = totalPages;
             start = Math.max(1, totalPages - 2);
@@ -36,7 +33,7 @@ const Pagination = ({ pageNumber, setPageNumber, totalItem, parPage }) => {
             {pageNumber > 1 && (
                 <button
                     onClick={() => handlePageChange(1)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                    className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
                     aria-label="First page"
                 >
                     <ChevronsLeft className="h-4 w-4" />
@@ -47,7 +44,7 @@ const Pagination = ({ pageNumber, setPageNumber, totalItem, parPage }) => {
             {pageNumber > 1 && (
                 <button
                     onClick={() => handlePageChange(pageNumber - 1)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                    className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
                     aria-label="Previous page"
                 >
                     <ChevronLeft className="h-4 w-4" />
@@ -61,7 +58,7 @@ const Pagination = ({ pageNumber, setPageNumber, totalItem, parPage }) => {
                         key={page}
                         onClick={() => handlePageChange(page)}
                         className={`
-                            w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-colors
+                            w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium transition-colors
                             ${pageNumber === page 
                                 ? 'bg-blue-600 text-white shadow-sm shadow-blue-200 hover:bg-blue-700' 
                                 : 'border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300'
@@ -77,7 +74,7 @@ const Pagination = ({ pageNumber, setPageNumber, totalItem, parPage }) => {
             {pageNumber < totalPages && (
                 <button
                     onClick={() => handlePageChange(pageNumber + 1)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                    className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
                     aria-label="Next page"
                 >
                     <ChevronRight className="h-4 w-4" />
@@ -88,7 +85,7 @@ const Pagination = ({ pageNumber, setPageNumber, totalItem, parPage }) => {
             {pageNumber < totalPages && (
                 <button
                     onClick={() => handlePageChange(totalPages)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                    className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
                     aria-label="Last page"
                 >
                     <ChevronsRight className="h-4 w-4" />

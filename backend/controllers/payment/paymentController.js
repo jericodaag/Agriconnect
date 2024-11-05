@@ -9,6 +9,7 @@ const { mongo: {ObjectId}} = require('mongoose')
 const stripe = require('stripe')('sk_test_51Phb3kLs4PUYCdHCPpJ794IsxnhwDIo16hMNqRXV0PdupEoBpqQcyjTejSQvxzHItA9mOb3eQs4EMW21dyJA7MHU00FKo5wKjB')
 
 class paymentController {
+    // Existing Stripe methods remain unchanged
     create_stripe_connect_account = async(req,res) => {
         const {id} = req 
         const uid = uuidv4()
@@ -102,7 +103,7 @@ class paymentController {
                     }
                 }
             ]);
-
+    
             // Get all COD payments
             const codSales = await authOrder.aggregate([
                 {
@@ -120,62 +121,68 @@ class paymentController {
                     }
                 }
             ]);
-
-            const salesData = {
-                total: 0,
-                stripe: { 
-                    amount: stripeSales[0]?.amount || 0, 
-                    count: stripeSales[0]?.count || 0 
-                },
-                cod: { 
-                    amount: codSales[0]?.amount || 0, 
-                    count: codSales[0]?.count || 0 
-                }
-            };
-
-            salesData.total = salesData.stripe.amount + salesData.cod.amount;
-
+    
             // Get pending withdrawals
             const pendingWithdrows = await withdrowRequest.find({
-                $and: [
-                    {
-                        sellerId: {
-                            $eq: sellerId
-                        }
-                    },
-                    {
-                        status: {
-                            $eq: 'pending'
-                        }
-                    }
-                ]
+                sellerId,
+                status: 'pending'
             });
-
+    
             // Get successful withdrawals
             const successWithdrows = await withdrowRequest.find({
-                $and: [
-                    {
-                        sellerId: {
-                            $eq: sellerId
-                        }
-                    },
-                    {
-                        status: {
-                            $eq: 'success'
-                        }
-                    }
-                ]
+                sellerId,
+                status: 'success'
             });
-
-            const pendingAmount = this.sumAmount(pendingWithdrows);
-            const withdrowAmount = this.sumAmount(successWithdrows);
-            
-            // Total amount is all paid sales
+    
+            // Calculate withdrawn amounts by payment method
+            const stripeWithdrawn = successWithdrows
+                .filter(w => w.payment_method === 'stripe')
+                .reduce((sum, w) => sum + w.amount, 0);
+    
+            const codWithdrawn = successWithdrows
+                .filter(w => w.payment_method === 'cod')
+                .reduce((sum, w) => sum + w.amount, 0);
+    
+            // Calculate pending amounts by payment method
+            const stripePending = pendingWithdrows
+                .filter(w => w.payment_method === 'stripe')
+                .reduce((sum, w) => sum + w.amount, 0);
+    
+            const codPending = pendingWithdrows
+                .filter(w => w.payment_method === 'cod')
+                .reduce((sum, w) => sum + w.amount, 0);
+    
+            // Get total amounts
+            const stripeTotalAmount = stripeSales[0]?.amount || 0;
+            const codTotalAmount = codSales[0]?.amount || 0;
+    
+            // Calculate available amounts after withdrawals and pending
+            const stripeAvailable = stripeTotalAmount - stripeWithdrawn - stripePending;
+            const codAvailable = codTotalAmount - codWithdrawn - codPending;
+    
+            const salesData = {
+                total: stripeTotalAmount + codTotalAmount,
+                stripe: { 
+                    amount: stripeAvailable, // Use available amount instead of total
+                    count: stripeSales[0]?.count || 0,
+                    total: stripeTotalAmount, // Keep track of original total
+                    withdrawn: stripeWithdrawn,
+                    pending: stripePending
+                },
+                cod: { 
+                    amount: codAvailable, // Use available amount instead of total
+                    count: codSales[0]?.count || 0,
+                    total: codTotalAmount, // Keep track of original total
+                    withdrawn: codWithdrawn,
+                    pending: codPending
+                }
+            };
+    
             const totalAmount = salesData.total;
-            
-            // Available amount is only from Stripe payments minus pending and withdrawn
-            const availableAmount = salesData.stripe.amount - (pendingAmount + withdrowAmount);
-
+            const pendingAmount = stripePending + codPending;
+            const withdrowAmount = stripeWithdrawn + codWithdrawn;
+            const availableAmount = stripeAvailable + codAvailable;
+    
             responseReturn(res, 200, {
                 totalAmount,
                 pendingAmount,
@@ -193,48 +200,104 @@ class paymentController {
     }
 
     withdrowal_request = async (req, res) => {
-        const {amount, sellerId} = req.body
+        const { amount, sellerId, payment_method } = req.body;
 
         try {
-            const withdrowal = await withdrowRequest.create({
+            // Generate unique withdrawal code for COD requests
+            const withdrawalCode = payment_method === 'cod' 
+                ? `WD${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`
+                : undefined;
+
+            const withdrawal = await withdrowRequest.create({
                 sellerId,
                 amount: parseInt(amount),
-                payment_method: 'stripe'
-            })
-            responseReturn(res, 200,{ withdrowal, message: 'Withdrawal Request Sent'})
+                payment_method,
+                withdrawalCode
+            });
+
+            let message = 'Withdrawal request submitted successfully';
+            if (withdrawalCode) {
+                message = `Withdrawal request submitted. Your withdrawal code is: ${withdrawalCode}`;
+            }
+
+            responseReturn(res, 200, { withdrawal, message });
         } catch (error) {
-            responseReturn(res, 500,{ message: 'Internal Server Error'})
+            console.log('withdrawal request error:', error.message);
+            responseReturn(res, 500, { message: 'Internal server error' });
         }
     }
 
     get_payment_request = async (req, res) => {
         try {
-            const withdrowalRequest = await withdrowRequest.find({ status: 'pending'})
-            responseReturn(res, 200, {withdrowalRequest })
+            const withdrowalRequest = await withdrowRequest.find({ 
+                status: 'pending'
+            }).sort({ createdAt: -1 });
+
+            responseReturn(res, 200, { withdrowalRequest });
         } catch (error) {
-            responseReturn(res, 500,{ message: 'Internal Server Error'})
+            responseReturn(res, 500, { message: 'Internal Server Error' });
         }
     }
 
     payment_request_confirm = async (req, res) => {
-        const {paymentId} = req.body 
+        const { paymentId, withdrawalCode } = req.body;
+        
         try {
-            const payment = await withdrowRequest.findById(paymentId)
-            const {stripeId} = await stripeModel.findOne({
-                sellerId: new ObjectId(payment.sellerId)
-            })
+            const payment = await withdrowRequest.findById(paymentId);
+            
+            if (!payment) {
+                return responseReturn(res, 404, { message: 'Payment request not found' });
+            }
 
-            await stripe.transfers.create({
-                amount: payment.amount * 100,
-                currency: 'usd',
-                destination: stripeId
-            })
-             
-            await withdrowRequest.findByIdAndUpdate(paymentId, {status: 'success'})
-            responseReturn(res, 200, {payment, message: 'Request Confirm Success'})
+            // Verify withdrawal code for COD payments
+            if (payment.payment_method === 'cod') {
+                if (!withdrawalCode || withdrawalCode !== payment.withdrawalCode) {
+                    return responseReturn(res, 400, { message: 'Invalid withdrawal code' });
+                }
+            } else {
+                // Process Stripe payment
+                const { stripeId } = await stripeModel.findOne({
+                    sellerId: new ObjectId(payment.sellerId)
+                });
 
-        } catch (error) {   
-            responseReturn(res, 500,{ message: 'Internal Server Error'})
+                if (stripeId) {
+                    await stripe.transfers.create({
+                        amount: payment.amount * 100,
+                        currency: 'usd',
+                        destination: stripeId
+                    });
+                }
+            }
+
+            // Update payment status
+            const updatedPayment = await withdrowRequest.findByIdAndUpdate(
+                paymentId, 
+                { 
+                    status: 'success',
+                    confirmedAt: new Date()
+                },
+                { new: true }
+            );
+            
+            responseReturn(res, 200, {
+                payment: updatedPayment,
+                message: 'Payment request confirmed successfully'
+            });
+        } catch (error) {
+            console.log('payment confirm error:', error.message);
+            responseReturn(res, 500, { message: 'Internal server error' });
+        }
+    }
+
+    get_withdrawal_history = async (req, res) => {
+        try {
+            const withdrawals = await withdrowRequest.find({})
+                .sort({ createdAt: -1 });
+            
+            responseReturn(res, 200, { withdrawals });
+        } catch (error) {
+            console.log('get history error:', error.message);
+            responseReturn(res, 500, { message: 'Internal server error' });
         }
     }
 }
