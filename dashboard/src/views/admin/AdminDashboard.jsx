@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { MdCurrencyExchange, MdProductionQuantityLimits } from "react-icons/md";
 import { FaUsers, FaCartShopping } from "react-icons/fa6"; 
 import Chart from 'react-apexcharts';
@@ -6,15 +6,44 @@ import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { get_admin_dashboard_data } from '../../store/Reducers/dashboardReducer';
 import RecentMessages from '../../components/RecentMessages.jsx';
+import { LuEye } from "react-icons/lu";
 
 const AdminDashboard = () => {
     const dispatch = useDispatch();
     const { totalSale, totalOrder, totalProduct, totalSeller, recentOrder, recentMessages, chartData, productStatusCounts } = useSelector(state => state.dashboard);
     const { userInfo } = useSelector(state => state.auth);
+    
+    const getStatusColor = (status) => {
+        switch(status.toLowerCase()) {
+            case 'pending':
+                return 'bg-yellow-100 text-yellow-800';
+            case 'processing':
+                return 'bg-blue-100 text-blue-800';
+            case 'warehouse':
+                return 'bg-indigo-100 text-indigo-800';
+            case 'placed':
+                return 'bg-green-100 text-green-800';
+            case 'cancelled':
+                return 'bg-red-100 text-red-800';
+            case 'paid':
+                return 'bg-emerald-100 text-emerald-800';
+            case 'unpaid':
+                return 'bg-orange-100 text-orange-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    };
+
+    const fetchDashboardData = useCallback(() => {
+        dispatch(get_admin_dashboard_data({
+            sortBy: 'createdAt',
+            sortOrder: 'desc'
+        }));
+    }, [dispatch]);
 
     useEffect(() => {
-        dispatch(get_admin_dashboard_data());
-    }, [dispatch]);
+        fetchDashboardData();
+    }, [fetchDashboardData]);
 
     const chartOptions = {
         chart: {
@@ -162,50 +191,96 @@ const AdminDashboard = () => {
             </div>
 
             <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6'>
-                <div className='lg:col-span-2 bg-white rounded-lg shadow-sm p-4 overflow-x-auto'>
-                    <div className='flex justify-between items-center mb-4'>
-                        <h2 className='text-lg font-semibold text-gray-800'>Recent Orders</h2>
-                        <Link to="/admin/dashboard/orders" className='text-sm text-blue-600 hover:underline'>View All</Link>
-                    </div>
-                    <table className='w-full text-sm text-left text-gray-500'>
-                        <thead className='text-xs text-gray-700 uppercase bg-gray-50'>
-                            <tr>
-                                <th className='px-6 py-3'>Order Id</th>
-                                <th className='px-6 py-3'>Price</th>
-                                <th className='px-6 py-3'>Payment Status</th>
-                                <th className='px-6 py-3'>Order Status</th>
-                                <th className='px-6 py-3'>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {recentOrder && recentOrder.map((d, i) => (
-                                <tr key={i} className='bg-white border-b hover:bg-gray-50'>
-                                    <td className='px-6 py-4 font-medium text-gray-900'>#{d._id}</td>
-                                    <td className='px-6 py-4'>₱{d.price.toLocaleString('en-PH')}</td>
-                                    <td className='px-6 py-4'>
-                                        <span className={`px-2 py-1 rounded-full text-xs ${
-                                            d.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                                        }`}>
-                                            {d.payment_status}
-                                        </span>
-                                    </td>
-                                    <td className='px-6 py-4'>
-                                        <span className={`px-2 py-1 rounded-full text-xs ${
-                                            d.delivery_status === 'delivered' ? 'bg-green-100 text-green-800' :
-                                            d.delivery_status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                                            'bg-yellow-100 text-yellow-800'
-                                        }`}>
-                                            {d.delivery_status}
-                                        </span>
-                                    </td>
-                                    <td className='px-6 py-4'>
-                                        <Link to={`/admin/dashboard/order/details/${d._id}`} className='text-blue-600 hover:underline'>View</Link>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+            <div className='lg:col-span-2 bg-white rounded-lg shadow-sm p-4 overflow-x-auto'>
+            <div className='flex justify-between items-center mb-4'>
+        <div>
+            <h2 className='text-lg font-semibold text-gray-800'>Recent Orders</h2>
+            <p className='text-sm text-gray-500'>Latest transactions</p>
+        </div>
+        <Link 
+            to="/admin/dashboard/orders" 
+            className='inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-[#438206] hover:text-[#61BD12] transition duration-300 ease-in-out'
+        >
+            <span>View All</span>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+            </svg>
+        </Link>
+    </div>
+    <table className='w-full text-sm text-left text-gray-500'>
+        <thead className='text-xs text-gray-700 uppercase bg-gray-50 border-b'>
+            <tr>
+                <th className='px-6 py-3'>Order ID</th>
+                <th className='px-6 py-3'>Date</th>
+                <th className='px-6 py-3'>Price</th>
+                <th className='px-6 py-3'>Payment Status</th>
+                <th className='px-6 py-3'>Order Status</th>
+                <th className='px-6 py-3'>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {recentOrder && recentOrder.map((d, i) => {
+                const paymentStatusColor = getStatusColor(d.payment_status);
+                const deliveryStatusColor = getStatusColor(d.delivery_status);
+                
+                return (
+                    <tr key={i} className='bg-white border-b hover:bg-gray-50/50 transition duration-150 ease-in-out'>
+                        <td className='px-6 py-4'>
+                            <span className='font-medium text-gray-900'>#{d._id}</span>
+                        </td>
+                        <td className='px-6 py-4'>
+                            <div>
+                                <div className='text-gray-900'>
+                                    {new Intl.DateTimeFormat('en-US', {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        year: 'numeric'
+                                    }).format(new Date(d.createdAt))}
+                                </div>
+                                <div className='text-xs text-gray-500'>
+                                    {new Intl.DateTimeFormat('en-US', {
+                                        hour: 'numeric',
+                                        minute: 'numeric',
+                                        hour12: true
+                                    }).format(new Date(d.createdAt))}
+                                </div>
+                            </div>
+                        </td>
+                        <td className='px-6 py-4 font-medium text-gray-900'>
+                            ₱{d.price.toLocaleString('en-PH')}
+                        </td>
+                        <td className='px-6 py-4'>
+                            <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${paymentStatusColor}`}>
+                                {d.payment_status}
+                            </span>
+                        </td>
+                        <td className='px-6 py-4'>
+                            <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${deliveryStatusColor}`}>
+                                {d.delivery_status}
+                            </span>
+                        </td>
+                        <td className='px-6 py-4'>
+                            <Link 
+                                to={`/admin/dashboard/order/details/${d._id}`}
+                                className='inline-flex items-center gap-1.5 text-[#438206] hover:text-[#61BD12] transition duration-300 ease-in-out'
+                            >
+                                <LuEye size={16} />
+                                <span>View</span>
+                            </Link>
+                        </td>
+                    </tr>
+                );
+            })}
+            {(!recentOrder || recentOrder.length === 0) && (
+                <tr>
+                    <td colSpan="6" className='px-6 py-8 text-center text-gray-500'>
+                        No recent orders found
+                    </td>
+                </tr>
+            )}
+        </tbody>
+    </table>
+</div>
                 <RecentMessages messages={recentMessages} userInfo={userInfo} isAdmin={true} />
             </div>
         </div>

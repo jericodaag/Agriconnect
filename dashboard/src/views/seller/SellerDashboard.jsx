@@ -37,6 +37,17 @@ const SellerDashboard = () => {
             .catch(() => setIsLoading(false));
     }, [dispatch]);
 
+    const [sortedOrders, setSortedOrders] = useState([]);
+
+    useEffect(() => {
+        if (recentOrder && recentOrder.length > 0) {
+            const sorted = [...recentOrder].sort((a, b) => {
+                return new Date(b.createdAt) - new Date(a.createdAt);
+            });
+            setSortedOrders(sorted);
+        }
+    }, [recentOrder]);
+
     const chartOptions = {
         chart: {
             type: 'bar',
@@ -301,41 +312,41 @@ const SellerDashboard = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {recentOrder.map((d, i) => (
-                                <tr key={i} className='bg-white border-b hover:bg-gray-50'>
-                                    <td className='px-6 py-4 font-medium text-gray-900'>#{d._id}</td>
-                                    <td className='px-6 py-4'>₱{d.price.toLocaleString('en-PH')}</td>
-                                    <td className='px-6 py-4'>
-                                        <span className={`px-2 py-1 rounded-full text-xs ${
-                                            d.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                                        }`}>
-                                            {d.payment_status}
-                                        </span>
-                                    </td>
-                                    <td className='px-6 py-4'>
-                                        <span className={`px-2 py-1 rounded-full text-xs ${
-                                            d.payment_method === 'stripe' ? 'bg-indigo-100 text-indigo-800' : 'bg-green-100 text-green-800'
-                                        }`}>
-                                            {d.payment_method}
-                                        </span>
-                                    </td>
-                                    <td className='px-6 py-4'>
-                                        <span className={`px-2 py-1 rounded-full text-xs ${
-                                            d.delivery_status === 'delivered' ? 'bg-green-100 text-green-800' :
-                                            d.delivery_status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                                            d.delivery_status === 'delivered' ? 'bg-green-100 text-green-800' :
-                                            d.delivery_status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                                            'bg-yellow-100 text-yellow-800'
-                                        }`}>
-                                            {d.delivery_status}
-                                        </span>
-                                    </td>
-                                    <td className='px-6 py-4'>
-                                        <Link to={`/seller/dashboard/order/details/${d._id}`} className='text-blue-600 hover:underline'>View</Link>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
+                        {sortedOrders.map((d, i) => (
+                            <tr key={i} className='bg-white border-b hover:bg-gray-50'>
+                                <td className='px-6 py-4 font-medium text-gray-900'>#{d._id}</td>
+                                <td className='px-6 py-4'>₱{d.price.toLocaleString('en-PH')}</td>
+                                <td className='px-6 py-4'>
+                                    <span className={`px-2 py-1 rounded-full text-xs ${
+                                        d.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                                    }`}>
+                                        {d.payment_status}
+                                    </span>
+                                </td>
+                                <td className='px-6 py-4'>
+                                    <span className={`px-2 py-1 rounded-full text-xs ${
+                                        d.payment_method === 'stripe' ? 'bg-indigo-100 text-indigo-800' : 'bg-green-100 text-green-800'
+                                    }`}>
+                                        {d.payment_method}
+                                    </span>
+                                </td>
+                                <td className='px-6 py-4'>
+                                    <span className={`px-2 py-1 rounded-full text-xs ${
+                                        d.delivery_status === 'delivered' ? 'bg-green-100 text-green-800' :
+                                        d.delivery_status === 'shipped' ? 'bg-blue-100 text-blue-800' :
+                                        d.delivery_status === 'delivered' ? 'bg-green-100 text-green-800' :
+                                        d.delivery_status === 'shipped' ? 'bg-blue-100 text-blue-800' :
+                                        'bg-yellow-100 text-yellow-800'
+                                    }`}>
+                                        {d.delivery_status}
+                                    </span>
+                                </td>
+                                <td className='px-6 py-4'>
+                                    <Link to={`/seller/dashboard/order/details/${d._id}`} className='text-blue-600 hover:underline'>View</Link>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
                     </table>
                 </div>
                 <RecentMessages messages={recentMessages} userInfo={userInfo} isAdmin={false} />
