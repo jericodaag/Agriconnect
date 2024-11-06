@@ -1,5 +1,5 @@
 import React, { forwardRef, useEffect, useState } from 'react';
-import { HiCurrencyDollar, HiCash, HiClock, HiExclamationCircle } from "react-icons/hi";
+import { HiCurrencyDollar, HiCash, HiClock, HiExclamationCircle, HiTrendingUp } from "react-icons/hi";
 import { FaStripe } from "react-icons/fa";
 import { BsCashStack } from "react-icons/bs";
 import { FiArrowUpRight, FiArrowDownRight } from "react-icons/fi";
@@ -42,29 +42,34 @@ const Payments = () => {
     const [lastWithdrawalCode, setLastWithdrawalCode] = useState('');
 
     // Calculate available amounts for each payment method
-    const codAvailableAmount = salesData.cod.amount - 
+    const codAvailableAmount = Math.max(0, salesData.cod.amount - 
         pendingWithdrows
             .filter(w => w.payment_method === 'cod')
-            .reduce((sum, w) => sum + w.amount, 0);
+            .reduce((sum, w) => sum + w.amount, 0));
 
-    const stripeAvailableAmount = salesData.stripe.amount - 
+    const stripeAvailableAmount = Math.max(0, salesData.stripe.amount - 
         pendingWithdrows
             .filter(w => w.payment_method === 'stripe')
-            .reduce((sum, w) => sum + w.amount, 0);
+            .reduce((sum, w) => sum + w.amount, 0));
 
-    const sendRequest = (e) => {
-        e.preventDefault();
-        if (stripeAvailableAmount - amount > 10) {
-            dispatch(send_withdrowal_request({ 
-                amount, 
-                sellerId: userInfo._id,
-                payment_method: 'stripe'
-            }));
-            setAmount(0);
-        } else {
-            toast.error('Insufficient Stripe Balance');
-        }
-    };
+            const sendRequest = (e) => {
+                e.preventDefault();
+                // Add validation to prevent negative amounts
+                if (amount <= 0) {
+                    toast.error('Please enter a valid amount');
+                    return;
+                }
+                if (amount > stripeAvailableAmount) {
+                    toast.error('Insufficient Stripe Balance');
+                    return;
+                }
+                dispatch(send_withdrowal_request({ 
+                    amount, 
+                    sellerId: userInfo._id,
+                    payment_method: 'stripe'
+                }));
+                setAmount(0);
+            };
 
     const sendCodRequest = (e) => {
         e.preventDefault();
@@ -169,83 +174,122 @@ const Payments = () => {
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6'>
                     {/* Stripe Card */}
                     <div className='bg-white rounded-lg shadow-sm p-4'>
-                        <div className='flex items-center justify-between'>
-                            <div className='flex items-center'>
-                                <div className='bg-indigo-500 text-white p-3 rounded-full mr-4'>
-                                    <FaStripe size={24} />
-                                </div>
-                                <div>
-                                    <p className='text-sm text-gray-500'>Stripe Payments</p>
-                                    <h3 className='text-xl font-bold text-gray-800'>
-                                        ₱{salesData.stripe.amount.toLocaleString('en-PH')}
-                                    </h3>
-                                    <p className='text-xs text-gray-500'>
-                                        Available: ₱{stripeAvailableAmount.toLocaleString('en-PH')}
-                                    </p>
-                                    <p className='text-xs text-gray-500'>{salesData.stripe.count} orders</p>
-                                </div>
+                    <div className='flex items-center justify-between'>
+                        <div className='flex items-center'>
+                            <div className='bg-indigo-500 text-white p-3 rounded-full mr-4'>
+                                <FaStripe size={24} />
                             </div>
-                            <div className='text-right'>
-                                <p className='text-sm font-semibold text-indigo-600'>
-                                    {salesData.total ? 
-                                        ((salesData.stripe.amount / salesData.total) * 100).toFixed(1) 
-                                        : 0}%
+                            <div>
+                                <p className='text-sm text-gray-500'>Stripe Payments</p>
+                                <h3 className='text-xl font-bold text-gray-800'>
+                                    ₱{salesData.stripe.amount.toLocaleString('en-PH')}
+                                </h3>
+                                <p className='text-xs text-gray-500'>
+                                    Available: ₱{stripeAvailableAmount.toLocaleString('en-PH')}
                                 </p>
-                                <p className='text-xs text-gray-500'>of total sales</p>
-                                <form onSubmit={sendRequest} className='mt-2'>
-                                    <input
-                                        type="number"
-                                        min='0'
-                                        value={amount}
-                                        onChange={(e) => setAmount(e.target.value)}
-                                        className='w-full px-2 py-1 text-sm border rounded mb-2'
-                                        placeholder='Amount'
-                                    />
-                                    <button
-                                        disabled={loader}
-                                        className='w-full px-3 py-1 bg-indigo-500 text-white text-sm rounded'
-                                    >
-                                        {loader ? 'Processing...' : 'Withdraw'}
-                                    </button>
-                                </form>
+                                <p className='text-xs text-gray-500'>{salesData.stripe.count} orders</p>
+                                <p className='text-xs text-red-500 mt-1'>
+                                    Note: A ₱15 transfer fee applies to all withdrawals
+                                </p>
                             </div>
+                        </div>
+                        <div className='text-right'>
+                            <p className='text-sm font-semibold text-indigo-600'>
+                                {salesData.total ? 
+                                    ((salesData.stripe.amount / salesData.total) * 100).toFixed(1) 
+                                    : 0}%
+                            </p>
+                            <p className='text-xs text-gray-500'>of total sales</p>
+                            <form onSubmit={sendRequest} className='mt-2'>
+                                <input
+                                    type="number"
+                                    min='0'
+                                    max={stripeAvailableAmount} // Add max limit
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                    className='w-full px-2 py-1 text-sm border rounded mb-2'
+                                    placeholder='Amount'
+                                />
+                                <button
+                                    disabled={loader || amount <= 0 || amount > stripeAvailableAmount}
+                                    className='w-full px-3 py-1 bg-indigo-500 text-white text-sm rounded disabled:opacity-50 disabled:cursor-not-allowed'
+                                >
+                                    {loader ? 'Processing...' : 'Withdraw'}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div className='mt-3 p-2 bg-gray-50 rounded-lg'>
+                        <p className='text-xs text-gray-600'>
+                            Important: A transfer fee of ₱15 will be deducted from your withdrawal amount. 
+                            Please ensure your withdrawal amount is sufficient to cover the transfer fee.
+                        </p>
+                    </div>
+                </div>
+
+                    {/* COD Card */}
+                    <div className='bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300'>
+                    <div className='p-6'>
+                        <div className='flex items-start justify-between'>
+                            <div className='flex items-start space-x-4'>
+                                <div className='bg-gradient-to-r from-green-500 to-green-600 p-4 rounded-xl text-white shadow-sm'>
+                                    <BsCashStack size={28} />
+                                </div>
+                                <div className='space-y-3'>
+                                    <div>
+                                        <h3 className='text-sm font-medium text-green-600 mb-1'>COD Payments</h3>
+                                        <p className='text-2xl font-bold text-gray-800'>
+                                            ₱{salesData.cod.amount.toLocaleString('en-PH')}
+                                        </p>
+                                    </div>
+                                    
+                                    <div className='space-y-1.5'>
+                                        <div className='flex items-center text-sm text-gray-600'>
+                                            <HiCash className="mr-1.5 h-4 w-4" />
+                                            Available: ₱{codAvailableAmount.toLocaleString('en-PH')}
+                                        </div>
+                                        
+                                        <div className='flex items-center text-sm text-gray-600'>
+                                            <HiTrendingUp className="mr-1.5 h-4 w-4" />
+                                            {salesData.total ? 
+                                                ((salesData.cod.amount / salesData.total) * 100).toFixed(1) 
+                                                : 0}% of total sales
+                                        </div>
+                                        
+                                        <div className='flex items-center text-sm text-gray-600'>
+                                            <HiClock className="mr-1.5 h-4 w-4" />
+                                            {salesData.cod.count} orders
+                                        </div>
+                                    </div>
+
+                                    <p className='text-xs text-red-500'>
+                                        Note: A ₱15 transfer fee applies to all withdrawals
+                                    </p>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => setShowCodWithdraw(true)}
+                                disabled={codAvailableAmount <= 0}
+                                className='px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg
+                                        font-medium transition-colors duration-200 disabled:opacity-50 
+                                        disabled:cursor-not-allowed flex items-center space-x-1'
+                            >
+                                <BsCashStack className="h-4 w-4" />
+                                <span>Request Cash</span>
+                            </button>
                         </div>
                     </div>
 
-                    {/* COD Card */}
-                    <div className='bg-white rounded-lg shadow-sm p-4'>
-                        <div className='flex items-center justify-between'>
-                            <div className='flex items-center'>
-                                <div className='bg-green-500 text-white p-3 rounded-full mr-4'>
-                                    <BsCashStack size={24} />
-                                </div>
-                                <div>
-                                    <p className='text-sm text-gray-500'>COD Payments</p>
-                                    <h3 className='text-xl font-bold text-gray-800'>
-                                        ₱{salesData.cod.amount.toLocaleString('en-PH')}
-                                    </h3>
-                                    <p className='text-xs text-gray-500'>
-                                        Available: ₱{codAvailableAmount.toLocaleString('en-PH')}
-                                    </p>
-                                    <p className='text-xs text-gray-500'>{salesData.cod.count} orders</p>
-                                </div>
-                            </div>
-                            <div className='text-right'>
-                                <p className='text-sm font-semibold text-green-600'>
-                                    {salesData.total ? 
-                                        ((salesData.cod.amount / salesData.total) * 100).toFixed(1) 
-                                        : 0}%
-                                </p>
-                                <p className='text-xs text-gray-500'>of total sales</p>
-                                <button
-                                    onClick={() => setShowCodWithdraw(true)}
-                                    className='mt-2 px-3 py-1 bg-green-500 text-white text-sm rounded w-full'
-                                >
-                                    Request Cash
-                                </button>
-                            </div>
+                    <div className='bg-gray-50 px-6 py-4 rounded-b-lg border-t border-gray-100'>
+                        <div className='flex items-center text-sm text-gray-600'>
+                            <HiExclamationCircle className="h-4 w-4 mr-2 text-gray-500 flex-shrink-0" />
+                            <p>
+                                Minimum withdrawal amount is ₱100.
+                            </p>
                         </div>
                     </div>
+                </div>
                 </div>
 
                 {/* Withdrawal History */}
@@ -253,40 +297,155 @@ const Payments = () => {
                     {/* Pending Withdrawals */}
                     <div className='bg-white rounded-xl shadow-md p-6'>
                         <h2 className='text-xl font-semibold text-gray-800 mb-4'>Pending Requests</h2>
-                        <div className='bg-white border border-gray-200 rounded-lg overflow-hidden'>
-                            <div className='flex bg-gray-50 text-gray-500 text-xs uppercase tracking-wider font-semibold'>
-                                <div className='w-1/5 p-3'>No</div>
-                                <div className='w-1/5 p-3'>Amount</div>
-                                <div className='w-1/5 p-3'>Method</div>
-                                <div className='w-1/5 p-3'>Status</div>
-                                <div className='w-1/5 p-3'>Date</div>
+                        
+                        {/* Desktop View */}
+                        <div className='hidden md:block'>
+                            <div className='bg-white border border-gray-200 rounded-lg overflow-hidden'>
+                                <div className='flex bg-gray-50 text-gray-500 text-xs uppercase tracking-wider font-semibold'>
+                                    <div className='w-1/6 p-3'>No</div>
+                                    <div className='w-1/6 p-3'>Amount</div>
+                                    <div className='w-1/6 p-3'>Method</div>
+                                    <div className='w-1/6 p-3'>Status</div>
+                                    <div className='w-1/6 p-3'>Date</div>
+                                    <div className='w-1/6 p-3'>Action</div>
+                                </div>
+                                <List
+                                    className='List'
+                                    height={300}
+                                    itemCount={pendingWithdrows.length}
+                                    itemSize={64}
+                                    outerElementType={outerElementType}
+                                >
+                                    {({ index, style }) => {
+                                        const withdrawal = pendingWithdrows[index];
+                                        const isCOD = withdrawal?.payment_method === 'cod';
+                                        
+                                        return (
+                                            <div style={style} className='flex items-center text-sm border-b hover:bg-gray-50 transition-colors duration-200'>
+                                                <div className='w-1/6 p-3'>{index + 1}</div>
+                                                <div className='w-1/6 p-3'>₱{withdrawal?.amount.toLocaleString('en-PH')}</div>
+                                                <div className='w-1/6 p-3'>
+                                                    <Badge 
+                                                        variant={isCOD ? 'outline' : 'default'}
+                                                        className={isCOD ? 'bg-white-50' : ''}
+                                                    >
+                                                        {withdrawal?.payment_method}
+                                                    </Badge>
+                                                </div>
+                                                <div className='w-1/6 p-3'>
+                                                    <Badge variant="secondary" className="capitalize">
+                                                        {withdrawal?.status}
+                                                    </Badge>
+                                                </div>
+                                                <div className='w-1/6 p-3'>
+                                                    {moment(withdrawal?.createdAt).format('MMM D, YYYY')}
+                                                </div>
+                                                <div className='w-1/6 p-3'>
+                                                    {isCOD && withdrawal?.withdrawalCode && (
+                                                        <button
+                                                            onClick={() => downloadWithdrawalCode({
+                                                                withdrawalCode: withdrawal.withdrawalCode,
+                                                                amount: withdrawal.amount,
+                                                                createdAt: withdrawal.createdAt,
+                                                                _id: withdrawal._id
+                                                            })}
+                                                            className="inline-flex items-center px-3 py-1.5 text-sm text-green-600 
+                                                                    bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                                                            title="Download Withdrawal Code"
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" 
+                                                                className="h-4 w-4 mr-1.5" 
+                                                                fill="none" 
+                                                                viewBox="0 0 24 24" 
+                                                                stroke="currentColor"
+                                                            >
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                            </svg>
+                                                            Code
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    }}
+                                </List>
                             </div>
+                        </div>
+
+                        {/* Mobile View */}
+                        <div className='md:hidden'>
                             <List
                                 className='List'
-                                height={300}
+                                height={400}
                                 itemCount={pendingWithdrows.length}
-                                itemSize={40}
+                                itemSize={180} // Increased height for card layout
                                 outerElementType={outerElementType}
                             >
-                                {({ index, style }) => (
-                                    <div style={style} className='flex items-center text-sm border-b'>
-                                        <div className='w-1/5 p-3'>{index + 1}</div>
-                                        <div className='w-1/5 p-3'>₱{pendingWithdrows[index]?.amount.toLocaleString('en-PH')}</div>
-                                        <div className='w-1/5 p-3'>
-                                            <Badge variant={pendingWithdrows[index]?.payment_method === 'stripe' ? 'default' : 'outline'}>
-                                                {pendingWithdrows[index]?.payment_method}
-                                            </Badge>
+                                {({ index, style }) => {
+                                    const withdrawal = pendingWithdrows[index];
+                                    const isCOD = withdrawal?.payment_method === 'cod';
+                                    
+                                    return (
+                                        <div style={style} className='mb-3'>
+                                            <div className='bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200'>
+                                                <div className='flex justify-between items-start mb-3'>
+                                                    <div className='flex items-center space-x-2'>
+                                                        <span className='text-sm text-gray-500'>#{index + 1}</span>
+                                                        <Badge variant="secondary" className="capitalize">
+                                                            {withdrawal?.status}
+                                                        </Badge>
+                                                    </div>
+                                                    <Badge 
+                                                        variant={isCOD ? 'outline' : 'default'}
+                                                        className={isCOD ? 'bg-white-50' : ''}
+                                                    >
+                                                        {withdrawal?.payment_method}
+                                                    </Badge>
+                                                </div>
+                                                
+                                                <div className='space-y-2'>
+                                                    <div className='flex justify-between items-center'>
+                                                        <span className='text-sm text-gray-500'>Amount:</span>
+                                                        <span className='font-semibold'>₱{withdrawal?.amount.toLocaleString('en-PH')}</span>
+                                                    </div>
+                                                    
+                                                    <div className='flex justify-between items-center'>
+                                                        <span className='text-sm text-gray-500'>Date:</span>
+                                                        <span>{moment(withdrawal?.createdAt).format('MMM D, YYYY')}</span>
+                                                    </div>
+                                                    
+                                                    {isCOD && withdrawal?.withdrawalCode && (
+                                                        <div className='pt-2'>
+                                                            <button
+                                                                onClick={() => downloadWithdrawalCode({
+                                                                    withdrawalCode: withdrawal.withdrawalCode,
+                                                                    amount: withdrawal.amount,
+                                                                    createdAt: withdrawal.createdAt,
+                                                                    _id: withdrawal._id
+                                                                })}
+                                                                className="w-full inline-flex items-center justify-center px-4 py-2 
+                                                                        text-sm text-green-600 bg-green-50 hover:bg-green-100 
+                                                                        rounded-lg transition-colors duration-200"
+                                                            >
+                                                                <svg xmlns="http://www.w3.org/2000/svg" 
+                                                                    className="h-4 w-4 mr-2" 
+                                                                    fill="none" 
+                                                                    viewBox="0 0 24 24" 
+                                                                    stroke="currentColor"
+                                                                >
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                                                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                                </svg>
+                                                                Download Withdrawal Code
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className='w-1/5 p-3'>
-                                            <Badge variant="secondary">
-                                                {pendingWithdrows[index]?.status}
-                                            </Badge>
-                                        </div>
-                                        <div className='w-1/5 p-3'>
-                                            {moment(pendingWithdrows[index]?.createdAt).format('MMM D, YYYY')}
-                                        </div>
-                                    </div>
-                                )}
+                                    );
+                                }}
                             </List>
                         </div>
                     </div>
@@ -294,76 +453,158 @@ const Payments = () => {
                     {/* Successful Withdrawals */}
                     <div className='bg-white rounded-xl shadow-md p-6'>
                         <h2 className='text-xl font-semibold text-gray-800 mb-4'>Successful Withdrawals</h2>
-                        <div className='bg-white border border-gray-200 rounded-lg overflow-hidden'>
-                            <div className='flex bg-gray-50 text-gray-500 text-xs uppercase tracking-wider font-semibold'>
-                                <div className='w-1/6 p-3'>No</div>
-                                <div className='w-1/6 p-3'>Amount</div>
-                                <div className='w-1/6 p-3'>Method</div>
-                                <div className='w-1/6 p-3'>Status</div>
-                                <div className='w-1/6 p-3'>Date</div>
-                                <div className='w-1/6 p-3'>Action</div>
-                            </div>
-                            <List
-                            className='List'
-                            height={350}
-                            itemCount={successWithdrows.length}
-                            itemSize={40}
-                            outerElementType={outerElementType}
-                        >
-                            {({ index, style }) => {
-                                // Sort withdrawals by date, newest first
-                                const sortedWithdraws = [...successWithdrows].sort((a, b) => 
-                                    new Date(b.createdAt) - new Date(a.createdAt)
-                                );
-                                const withdraw = sortedWithdraws[index];
+                        
+                        {/* Desktop View */}
+                        <div className='hidden md:block'>
+                            <div className='bg-white border border-gray-200 rounded-lg overflow-hidden'>
+                                <div className='flex bg-gray-50 text-gray-500 text-xs uppercase tracking-wider font-semibold'>
+                                    <div className='w-1/6 p-3'>No</div>
+                                    <div className='w-1/6 p-3'>Amount</div>
+                                    <div className='w-1/6 p-3'>Method</div>
+                                    <div className='w-1/6 p-3'>Status</div>
+                                    <div className='w-1/6 p-3'>Date</div>
+                                    <div className='w-1/6 p-3'>Action</div>
+                                </div>
+                                <List
+                                    className='List'
+                                    height={350}
+                                    itemCount={successWithdrows.length}
+                                    itemSize={40}
+                                    outerElementType={outerElementType}
+                                >
+                                    {({ index, style }) => {
+                                        const sortedWithdraws = [...successWithdrows].sort((a, b) => 
+                                            new Date(b.createdAt) - new Date(a.createdAt)
+                                        );
+                                        const withdraw = sortedWithdraws[index];
 
-                                return (
-                                    <div style={style} className='flex items-center text-sm border-b hover:bg-gray-50'>
-                                        <div className='w-1/6 p-3'>{index + 1}</div>
-                                        <div className='w-1/6 p-3'>₱{withdraw?.amount.toLocaleString('en-PH')}</div>
-                                        <div className='w-1/6 p-3'>
-                                            <Badge variant={withdraw?.payment_method === 'stripe' ? 'default' : 'outline'}>
-                                                {withdraw?.payment_method}
-                                            </Badge>
+                                        return (
+                                            <div style={style} className='flex items-center text-sm border-b hover:bg-gray-50'>
+                                                <div className='w-1/6 p-3'>{index + 1}</div>
+                                                <div className='w-1/6 p-3'>₱{withdraw?.amount.toLocaleString('en-PH')}</div>
+                                                <div className='w-1/6 p-3'>
+                                                    <Badge variant={withdraw?.payment_method === 'stripe' ? 'default' : 'outline'}>
+                                                        {withdraw?.payment_method}
+                                                    </Badge>
+                                                </div>
+                                                <div className='w-1/6 p-3'>
+                                                    <Badge variant="success">
+                                                        {withdraw?.status}
+                                                    </Badge>
+                                                </div>
+                                                <div className='w-1/6 p-3'>
+                                                    {moment(withdraw?.createdAt).format('MMM D, YYYY')}
+                                                </div>
+                                                <div className='w-1/6 p-3 flex gap-2'>
+                                                    <button
+                                                        onClick={() => downloadReceipt(withdraw)}
+                                                        className="text-blue-600 hover:text-blue-800"
+                                                        title="Download Receipt"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                        </svg>
+                                                    </button>
+                                                    {withdraw?.payment_method === 'cod' && withdraw?.withdrawalCode && (
+                                                        <button
+                                                            onClick={() => downloadWithdrawalCode(withdraw)}
+                                                            className="text-green-600 hover:text-green-800"
+                                                            title="Download Withdrawal Code"
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 9l-3 3m0 0l-3-3m3 3V4" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19H5c-1.105 0-2-.895-2-2V7c0-1.105.895-2 2-2h14c1.105 0 2 .895 2 2v10c0 1.105-.895 2-2 2h-7z" />
+                                                            </svg>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    }}
+                                </List>
+                            </div>
+                        </div>
+
+                        {/* Mobile View */}
+                        <div className='md:hidden'>
+                            <List
+                                className='List'
+                                height={400}
+                                itemCount={successWithdrows.length}
+                                itemSize={160}
+                                outerElementType={outerElementType}
+                            >
+                                {({ index, style }) => {
+                                    const sortedWithdraws = [...successWithdrows].sort((a, b) => 
+                                        new Date(b.createdAt) - new Date(a.createdAt)
+                                    );
+                                    const withdraw = sortedWithdraws[index];
+                                    
+                                    return (
+                                        <div style={style} className='mb-3'>
+                                            <div className='bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200'>
+                                                <div className='flex justify-between items-start mb-3'>
+                                                    <div className='flex items-center space-x-2'>
+                                                        <span className='text-sm text-gray-500'>#{index + 1}</span>
+                                                        <Badge variant="success">
+                                                            {withdraw?.status}
+                                                        </Badge>
+                                                    </div>
+                                                    <Badge 
+                                                        variant={withdraw?.payment_method === 'stripe' ? 'default' : 'outline'}
+                                                    >
+                                                        {withdraw?.payment_method}
+                                                    </Badge>
+                                                </div>
+                                                
+                                                <div className='space-y-2 mb-3'>
+                                                    <div className='flex justify-between items-center'>
+                                                        <span className='text-sm text-gray-500'>Amount:</span>
+                                                        <span className='font-semibold'>₱{withdraw?.amount.toLocaleString('en-PH')}</span>
+                                                    </div>
+                                                    
+                                                    <div className='flex justify-between items-center'>
+                                                        <span className='text-sm text-gray-500'>Date:</span>
+                                                        <span>{moment(withdraw?.createdAt).format('MMM D, YYYY')}</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className='flex justify-end gap-2 pt-2 border-t border-gray-100'>
+                                                    <button
+                                                        onClick={() => downloadReceipt(withdraw)}
+                                                        className="inline-flex items-center px-3 py-1.5 text-sm text-blue-600 
+                                                                bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                                                        title="Download Receipt"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                        </svg>
+                                                        Receipt
+                                                    </button>
+                                                    
+                                                    {withdraw?.payment_method === 'cod' && withdraw?.withdrawalCode && (
+                                                        <button
+                                                            onClick={() => downloadWithdrawalCode(withdraw)}
+                                                            className="inline-flex items-center px-3 py-1.5 text-sm text-green-600 
+                                                                    bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                                                            title="Download Withdrawal Code"
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 9l-3 3m0 0l-3-3m3 3V4" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19H5c-1.105 0-2-.895-2-2V7c0-1.105.895-2 2-2h14c1.105 0 2 .895 2 2v10c0 1.105-.895 2-2 2h-7z" />
+                                                            </svg>
+                                                            Code
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className='w-1/6 p-3'>
-                                            <Badge variant="success">
-                                                {withdraw?.status}
-                                            </Badge>
-                                        </div>
-                                        <div className='w-1/6 p-3'>
-                                            {moment(withdraw?.createdAt).format('MMM D, YYYY')}
-                                        </div>
-                                        <div className='w-1/6 p-3 flex gap-2'>
-                                            <button
-                                                onClick={() => downloadReceipt(withdraw)}
-                                                className="text-blue-600 hover:text-blue-800"
-                                                title="Download Receipt"
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                                </svg>
-                                            </button>
-                                            {withdraw?.payment_method === 'cod' && withdraw?.withdrawalCode && (
-                                                <button
-                                                    onClick={() => downloadWithdrawalCode(withdraw)}
-                                                    className="text-green-600 hover:text-green-800"
-                                                    title="Download Withdrawal Code"
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 9l-3 3m0 0l-3-3m3 3V4" />
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19H5c-1.105 0-2-.895-2-2V7c0-1.105.895-2 2-2h14c1.105 0 2 .895 2 2v10c0 1.105-.895 2-2 2h-7z" />
-                                                    </svg>
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            }}
-                        </List>
+                                    );
+                                }}
+                            </List>
                         </div>
                     </div>
-                </div>
+                    </div>
 
                 {/* COD Withdrawal Modal */}
                 {showCodWithdraw && (

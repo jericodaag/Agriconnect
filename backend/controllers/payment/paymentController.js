@@ -15,6 +15,11 @@ class paymentController {
         const uid = uuidv4()
 
         try {
+            // Get the correct URLs based on environment
+            const baseURL = process.env.NODE_ENV === 'production' 
+                ? 'https://agriconnect-dashboard.onrender.com'
+                : 'http://localhost:3001';
+
             const stripeInfo = await stripeModel.findOne({ sellerId: id  })
 
             if (stripeInfo) {
@@ -23,8 +28,8 @@ class paymentController {
 
                 const accountLink = await stripe.accountLinks.create({
                     account: account.id,
-                    refresh_url: 'http://localhost:3001/refresh',
-                    return_url:  `http://localhost:3001/success?activeCode=${uid}`,
+                    refresh_url: `${baseURL}/refresh`,
+                    return_url: `${baseURL}/success?activeCode=${uid}`,
                     type: 'account_onboarding'
                 })
                 await stripeModel.create({
@@ -38,8 +43,8 @@ class paymentController {
 
                 const accountLink = await stripe.accountLinks.create({
                     account: account.id,
-                    refresh_url: 'http://localhost:3001/refresh',
-                    return_url:  `http://localhost:3001/success?activeCode=${uid}`,
+                    refresh_url: `${baseURL}/refresh`,
+                    return_url: `${baseURL}/success?activeCode=${uid}`,
                     type: 'account_onboarding'
                 })
                 await stripeModel.create({
@@ -50,10 +55,12 @@ class paymentController {
                 responseReturn(res,201,{url:accountLink.url })
             }
         } catch (error) {
-            console.log('stripe connect account error' + error.message)
+            console.log('stripe connect account error: ' + error.message)
+            responseReturn(res, 500, { error: error.message })
         }
     }
 
+    // Rest of your controller remains exactly the same
     active_stripe_connect_account = async (req, res) => {
         const {activeCode} = req.params 
         const {id} = req
