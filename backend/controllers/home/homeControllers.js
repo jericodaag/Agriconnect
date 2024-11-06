@@ -1,6 +1,7 @@
 const categoryModel = require('../../models/categoryModel')
 const productModel = require('../../models/productModel')
 const reviewModel = require('../../models/reviewModel')
+const customerOrder = require('../../models/customerOrder') // Add this line
 const { responseReturn } = require("../../utilities/response")
 const queryProducts = require('../../utilities/queryProducts')
 const moment = require('moment')
@@ -172,40 +173,75 @@ product_details = async (req, res) => {
 // end method 
 
 submit_review = async (req, res) => {
-     const {productId,rating,review,name} = req.body
+    const {productId, rating, review, name, userId} = req.body;
 
-     try {
-        await reviewModel.create({
+    try {
+        // Find order with the correct product structure
+        const order = await customerOrder.findOne({
+            customerId: userId,
+            payment_status: 'paid',
+            delivery_status: 'placed',
+            'products._id': productId  // Matches your actual structure
+        });
+
+        if (!order) {
+            return responseReturn(res, 403, {
+                error: "You need to purchase this product before leaving a review"
+            });
+        }
+
+        // Verify the product exists in the order
+        const productInOrder = order.products.find(p => p._id === productId);
+        if (!productInOrder) {
+            return responseReturn(res, 403, {
+                error: "Product not found in your orders"
+            });
+        }
+
+        // Check for existing review
+        const existingReview = await reviewModel.findOne({
+            userId,
+            productId
+        });
+
+        if (existingReview) {
+            return responseReturn(res, 403, {
+                error: "You have already reviewed this product"
+            });
+        }
+
+        // Create review
+        const newReview = await reviewModel.create({
             productId,
+            userId,
+            orderId: order._id,
             name,
             rating,
             review,
             date: moment(Date.now()).format('LL')
-        })
+        });
 
-        let rat = 0;
+        // Update product rating
         const reviews = await reviewModel.find({
             productId
-        })
-        for (let i = 0; i < reviews.length; i++) {
-            rat = rat + reviews[i].rating 
-        }
-        let productRating = 0
-        if (reviews.length !== 0) {
-            productRating = (rat / reviews.length).toFixed(1)
-        }
+        });
+        
+        let totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+        let productRating = reviews.length > 0 ? (totalRating / reviews.length).toFixed(1) : 0;
 
-        await productModel.findByIdAndUpdate(productId,{
-            rating : productRating
-        })
+        await productModel.findByIdAndUpdate(productId, {
+            rating: productRating
+        });
+        
         responseReturn(res, 201, {
             message: "Review Added Successfully"
-        })
-
-        
-     } catch (error) {
-        console.log(error.message)
-     }
+        });
+    } catch (error) {
+        console.log("Error in submit_review:", error);
+        responseReturn(res, 500, {
+            error: error.message || "Internal server error"
+        });
+    }
 }
 // end method 
 

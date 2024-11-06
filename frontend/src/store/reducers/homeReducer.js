@@ -74,13 +74,13 @@ export const product_details = createAsyncThunk(
 
 export const customer_review = createAsyncThunk(
     'review/customer_review',
-    async(info, { fulfillWithValue }) => {
+    async(info, { rejectWithValue, fulfillWithValue }) => {
         try {
-            const {data} = await api.post('/home/customer/submit-review',info)
-            //  console.log(data)
+            const {data} = await api.post('/home/customer/submit-review', info)
             return fulfillWithValue(data)
         } catch (error) {
-            console.log(error.respone)
+            // Handle the error properly
+            return rejectWithValue(error.response?.data || { error: 'An error occurred' })
         }
     }
 )
@@ -180,6 +180,11 @@ export const homeReducer = createSlice({
 
         .addCase(customer_review.fulfilled, (state, { payload }) => {
             state.successMessage = payload.message;
+            state.errorMessage = '';
+        })
+        .addCase(customer_review.rejected, (state, { payload }) => {
+            state.errorMessage = payload?.error || 'An error occurred';
+            state.successMessage = '';
         })
 
         .addCase(get_reviews.fulfilled, (state, { payload }) => {
