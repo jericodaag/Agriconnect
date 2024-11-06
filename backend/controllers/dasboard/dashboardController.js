@@ -63,7 +63,9 @@ class dashboardController {
             const totalOrder = await customerOrder.find({}).countDocuments()
             const totalSeller = await sellerModel.find({}).countDocuments()
             const messages = await adminSellerMessage.find({}).limit(3)
-            const recentOrders = await customerOrder.find({}).limit(5)
+            const recentOrders = await customerOrder.find({})
+            .sort({ createdAt: -1 })
+            .limit(5);
 
             const currentYear = new Date().getFullYear()
             const chartData = await customerOrder.aggregate([
