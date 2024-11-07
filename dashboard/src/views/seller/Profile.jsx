@@ -291,7 +291,7 @@ const Profile = () => {
         </div>
     );
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-purple-100 p-8">
+        <div className="min-h-screen bg-gray-50/50 p-8">
             <Toaster position="top-right" reverseOrder={false} />
             <div className="max-w-7xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden">
                 <div className="md:flex">

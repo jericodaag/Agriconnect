@@ -243,7 +243,9 @@ class dashboardController {
     
             const recentOrders = await authOrder.find({
                 sellerId: new ObjectId(id)
-            }).limit(5);
+            })
+            .sort({ createdAt: -1 })
+            .limit(5);
     
             const currentYear = new Date().getFullYear();
             const monthlyData = await authOrder.aggregate([

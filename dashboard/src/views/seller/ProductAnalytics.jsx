@@ -710,68 +710,161 @@ const ProductAnalytics = () => {
 };
 
 const MarketabilityTab = ({ marketability = [] }) => {
-    console.log('Marketability Data:', marketability); // Debug log
-    
     const [filterType, setFilterType] = useState('all');
     const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
-    // Process data for market share calculation
+    // Process data with emphasis on sales performance
     const processedMarketData = useMemo(() => {
         if (!marketability || !marketability.length) return [];
 
         const totalRevenue = marketability.reduce((sum, product) => 
             sum + ((product.salesCount || 0) * (product.price || 0)), 0);
 
-        return marketability.map(product => ({
-            name: product.name,
-            marketShare: totalRevenue ? ((product.salesCount * product.price) / totalRevenue) * 100 : 0,
-            salesVelocity: product.salesCount / Math.max(moment().diff(moment(product.createdAt), 'days'), 1)
-        }));
+        // Get maximum sales for normalization
+        const maxSales = Math.max(...marketability.map(p => p.salesCount || 0));
+
+        return marketability.map(product => {
+            // Calculate basic metrics
+            const revenue = (product.salesCount || 0) * (product.price || 0);
+            const marketShare = totalRevenue ? (revenue / totalRevenue) * 100 : 0;
+
+            // Calculate sales score (70% of total score)
+            const salesScore = maxSales ? ((product.salesCount || 0) / maxSales * 70) : 0;
+            
+            // Rating score (30% of total score)
+            const ratingScore = ((product.rating || 0) / 5 * 30);
+
+            // Calculate growth rate
+            const currentPeriodSales = product.recentSales || product.salesCount || 0;
+            const previousPeriodSales = product.previousSales || Math.max(product.salesCount - 5, 0);
+            const growthRate = previousPeriodSales ? 
+                ((currentPeriodSales - previousPeriodSales) / previousPeriodSales) * 100 : 0;
+
+            // Calculate final marketability score
+            const score = Math.round(salesScore + ratingScore);
+
+            return {
+                name: product.name,
+                revenue,
+                marketShare,
+                rating: product.rating || 0,
+                growthRate,
+                salesCount: product.salesCount || 0,
+                price: product.price || 0,
+                category: product.category || 'Uncategorized',
+                score,
+                // Add revenue per day for better performance tracking
+                revenuePerDay: revenue / Math.max(moment().diff(moment(product.createdAt), 'days'), 1)
+            };
+        });
     }, [marketability]);
 
-    // Performance metrics
+    // Apply filters with updated thresholds
+    const filteredData = useMemo(() => {
+        const data = [...processedMarketData];
+
+        switch (filterType) {
+            case 'growing':
+                return data
+                    .filter(product => 
+                        (product.score >= 60 && product.rating >= 3.5) || // High overall performance
+                        (product.growthRate > 10 && product.salesCount >= 5) || // Strong growth
+                        (product.salesCount >= 10 && product.rating >= 4.0) // Consistently good
+                    )
+                    .sort((a, b) => b.salesCount - a.salesCount);
+
+            case 'declining':
+                return data
+                    .filter(product => 
+                        (product.score < 60 && product.score >= 30) || // Average performance
+                        (product.growthRate < 0 && product.salesCount > 0) // Declining sales
+                    )
+                    .sort((a, b) => b.salesCount - a.salesCount);
+
+            case 'at risk':
+                return data
+                    .filter(product => 
+                        product.score < 30 || // Poor overall performance
+                        (product.salesCount < 5 && product.rating < 3.5) || // Low sales and rating
+                        product.growthRate < -20 // Sharp decline
+                    )
+                    .sort((a, b) => a.score - b.score);
+
+            default: // 'all'
+                return data.sort((a, b) => b.score - a.score);
+        }
+    }, [processedMarketData, filterType]);
+
+    // Calculate metrics with updated thresholds
     const metrics = useMemo(() => {
-        const totalProducts = marketability.length;
-        const starProducts = marketability.filter(p => p.salesCount >= 10).length;
-        const growingProducts = marketability.filter(p => p.salesCount > 0).length;
-        const atRiskProducts = marketability.filter(p => p.stock <= 10).length;
+        return {
+            totalProducts: processedMarketData.length,
+            highPerformance: processedMarketData.filter(p => 
+                p.score >= 60 && p.rating >= 3.5
+            ).length,
+            growingProducts: processedMarketData.filter(p => 
+                (p.growthRate > 10 && p.salesCount >= 5) ||
+                (p.salesCount >= 10 && p.rating >= 4.0)
+            ).length,
+            atRiskProducts: processedMarketData.filter(p => 
+                p.score < 30 || 
+                (p.salesCount < 5 && p.rating < 3.5) ||
+                p.growthRate < -20
+            ).length
+        };
+    }, [processedMarketData]);
 
-        return { totalProducts, starProducts, growingProducts, atRiskProducts };
-    }, [marketability]);
+    const getStatusInfo = (product) => {
+        if (product.score >= 70) {
+            return { text: 'Top Performance', color: 'text-green-600' };
+        }
+        if (product.score >= 60) {
+            return { text: 'High Performance', color: 'text-green-600' };
+        }
+        if (product.growthRate > 10) {
+            return { text: 'Fast Growing', color: 'text-blue-600' };
+        }
+        if (product.score < 30) {
+            return { text: 'Needs Improvement', color: 'text-red-600' };
+        }
+        if (product.growthRate < 0) {
+            return { text: 'Declining', color: 'text-yellow-600' };
+        }
+        return { text: 'Average', color: 'text-gray-600' };
+    };
 
-    // Component JSX remains the same as before
     return (
         <div className="space-y-6">
             {/* Performance Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white p-4 rounded-lg shadow">
-                    <h4 className="font-medium text-gray-700 mb-3">Star Products</h4>
+                    <h4 className="font-medium text-gray-700 mb-3">High Performance</h4>
                     <div className="flex items-center gap-3">
                         <div className="p-3 bg-green-100 rounded-full">
                             <TrendingUp className="h-6 w-6 text-green-600" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold">{metrics.starProducts}</p>
-                            <p className="text-sm text-gray-600">Market Leaders</p>
+                            <p className="text-2xl font-bold">{metrics.highPerformance}</p>
+                            <p className="text-sm text-gray-600">High Sales & Rating</p>
                         </div>
                     </div>
                 </div>
 
                 <div className="bg-white p-4 rounded-lg shadow">
-                    <h4 className="font-medium text-gray-700 mb-3">Growing Products</h4>
+                    <h4 className="font-medium text-gray-700 mb-3">Positive Trend</h4>
                     <div className="flex items-center gap-3">
                         <div className="p-3 bg-blue-100 rounded-full">
                             <TrendingUp className="h-6 w-6 text-blue-600" />
                         </div>
                         <div>
                             <p className="text-2xl font-bold">{metrics.growingProducts}</p>
-                            <p className="text-sm text-gray-600">Positive Growth</p>
+                            <p className="text-sm text-gray-600">Strong Growth</p>
                         </div>
                     </div>
                 </div>
 
                 <div className="bg-white p-4 rounded-lg shadow">
-                    <h4 className="font-medium text-gray-700 mb-3">At Risk</h4>
+                    <h4 className="font-medium text-gray-700 mb-3">Need Attention</h4>
                     <div className="flex items-center gap-3">
                         <div className="p-3 bg-red-100 rounded-full">
                             <AlertTriangle className="h-6 w-6 text-red-600" />
@@ -809,7 +902,7 @@ const MarketabilityTab = ({ marketability = [] }) => {
                     <ResponsiveContainer width="100%" height={400}>
                         <PieChart>
                             <Pie 
-                                data={processedMarketData} 
+                                data={filteredData} 
                                 dataKey="marketShare"
                                 nameKey="name"
                                 cx="50%"
@@ -819,7 +912,7 @@ const MarketabilityTab = ({ marketability = [] }) => {
                                     `${name}: ${marketShare.toFixed(1)}%`
                                 }
                             >
-                                {processedMarketData.map((_, index) => (
+                                {filteredData.map((_, index) => (
                                     <Cell key={index} fill={COLORS[index % COLORS.length]} />
                                 ))}
                             </Pie>
@@ -829,19 +922,38 @@ const MarketabilityTab = ({ marketability = [] }) => {
 
                     <div className="space-y-4">
                         <h4 className="font-medium text-gray-700">Market Performance Details</h4>
-                        {processedMarketData.map((product, index) => (
-                            <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                                <span className="font-medium">{product.name}</span>
-                                <div className="text-right">
-                                    <div className="text-sm font-medium text-gray-900">
-                                        {product.marketShare.toFixed(1)}%
+                        {filteredData.map((product, index) => {
+                            const status = getStatusInfo(product);
+                            return (
+                                <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                    <div className="flex-1">
+                                        <div className="font-medium">{product.name}</div>
+                                        <div className="text-sm text-gray-500">
+                                            Rating: {product.rating.toFixed(1)}★ · Revenue: ₱{product.revenue.toLocaleString()}
+                                        </div>
+                                        <div className={`text-xs ${status.color}`}>
+                                            {status.text}
+                                        </div>
                                     </div>
-                                    <div className="text-xs text-gray-500">
-                                        Sales: {product.salesVelocity.toFixed(1)}/day
+                                    <div className="text-right">
+                                        <div className="text-sm font-medium text-gray-900">
+                                            Score: {product.score}
+                                        </div>
+                                        <div className="text-xs text-gray-500">
+                                            Total Sales: {product.salesCount}
+                                        </div>
+                                        <div className={`text-xs ${
+                                            product.growthRate > 0 ? 'text-green-600' : 
+                                            product.growthRate < 0 ? 'text-red-600' : 
+                                            'text-gray-600'
+                                        }`}>
+                                            {product.growthRate > 0 ? '↑' : product.growthRate < 0 ? '↓' : '→'} 
+                                            {Math.abs(product.growthRate).toFixed(1)}%
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             </div>

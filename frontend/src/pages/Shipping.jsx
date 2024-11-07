@@ -297,7 +297,7 @@ const Shipping = () => {
                                                 <span>{state.phone} {state.address} {state.province} {state.city} {state.barangay}</span>
                                                 <span onClick={() => setRes(false)} className='text-indigo-500 cursor-pointer'> Change</span>
                                             </p>
-                                            <p className='text-slate-600 text-sm'>Email To agriconnect@gmail.com</p>
+                                            <p className='text-slate-600 text-sm'>Email To agriconnectshop@gmail.com</p>
                                         </div>
                                     )}
                                 </div>

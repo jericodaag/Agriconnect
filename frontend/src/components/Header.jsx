@@ -13,6 +13,7 @@ import { FaPhoneAlt } from "react-icons/fa";
 import { IoIosArrowDown } from "react-icons/io"; 
 import { useDispatch, useSelector } from 'react-redux';
 import { get_card_products, get_wishlist_products } from '../store/reducers/cardReducer';
+import { useRef } from 'react';
 
 const Header = () => {
     const dispatch = useDispatch();
@@ -42,6 +43,29 @@ const Header = () => {
         }
     };
 
+    const dropdownRef = useRef(null);
+    const isMobile = window.innerWidth <= 768;
+
+    // Calculate max height based on number of categories
+    const getMaxHeight = () => {
+        const itemHeight = 42; // height of each category item
+        const maxItems = isMobile ? 8 : 12; // increased number of visible items
+        const totalItems = Math.min(categorys.length, maxItems);
+        return Math.max(totalItems * itemHeight, 320); // minimum height of 320px
+      };
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setCategoryShow(true);  // Note: true means closed in your current setup
+      }
+    };
+  
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
     useEffect(() => {
         if (userInfo && userInfo.id) {
             dispatch(get_card_products(userInfo.id));
@@ -57,7 +81,7 @@ const Header = () => {
                         <ul className='flex justify-start items-center gap-8 font-semibold text-black'>
                             <li className='flex relative justify-center items-center gap-2 text-sm after:absolute after:h-[18px] after:w-[1px] after:bg-[#afafaf] after:-right-[16px]'>
                                 <span><MdEmail /></span>
-                                <span>agriconnect@gmail.com</span>
+                                <span>agriconnectshop@gmail.com</span>
                             </li>
                             <li className='flex relative justify-center items-center gap-2 text-sm '>
                                 <span><IoMdPhonePortrait /></span>
@@ -222,7 +246,7 @@ const Header = () => {
                         <ul className='flex flex-col justify-start items-start gap-3 text-[#1c1c1c]'>
                             <li className='flex justify-start items-center gap-2 text-sm'>
                                 <span><MdEmail /></span>
-                                <span>agriconnect@gmail.com</span>
+                                <span>agriconnectshop@gmail.com</span>
                             </li>
                         </ul> 
                     </div> 
@@ -231,27 +255,59 @@ const Header = () => {
 
             <div className='w-[85%] lg:w-[90%] mx-auto'>
                 <div className='flex w-full flex-wrap md-lg:gap-8'>
-                    <div className='w-3/12 md-lg:w-full'>
-                        <div className='bg-white relative'>
-                            <div onClick={() => setCategoryShow(!categoryShow)} className='h-[50px] bg-[#059473] text-white flex justify-center md-lg:justify-between md-lg:px-6 items-center gap-3 font-bold text-md cursor-pointer rounded-t-md'>
-                                <div className='flex justify-center items-center gap-3'>
-                                    <span><FaList/></span>
-                                    <span>All Category ({categorys.length})</span>
-                                </div>
-                                <span className='pt-1'><IoIosArrowDown /></span>
-                            </div>
-                            <div className={`${categoryShow ? 'h-0' : 'h-[400px]'} overflow-hidden transition-all md-lg:relative duration-500 absolute z-[99999] bg-[#dbf3ed] w-full border-x rounded-b-md`}>
-                                <ul className='py-2 text-slate-600 font-medium'>
-                                    {categorys.map((c, i) => (
-                                        <li key={i} className='flex justify-start items-center gap-2 px-[24px] py-[6px] hover:bg-[#059473] hover:text-white transition-colors duration-300'>
-                                            <img src={c.image} className='w-[30px] h-[30px] rounded-full overflow-hidden' alt={c.name} />
-                                            <Link to={`/products?category=${c.name}`} className='text-sm block'>{c.name}</Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
+                <div className='w-3/12 md-lg:w-full'>
+                <div className='bg-white relative' ref={dropdownRef}>
+                    <div 
+                    onClick={() => setCategoryShow(!categoryShow)} 
+                    className='h-[50px] bg-[#059473] text-white flex justify-center md-lg:justify-between md-lg:px-6 items-center gap-3 font-bold text-md cursor-pointer rounded-t-md'
+                    >
+                    <div className='flex justify-center items-center gap-3'>
+                        <span><FaList/></span>
+                        <span>All Category ({categorys.length})</span>
                     </div>
+                    <span className={`transition-transform duration-300 ${!categoryShow ? 'rotate-180' : ''}`}>
+                        <IoIosArrowDown />
+                    </span>
+                    </div>
+                    <div 
+                    className={`
+                        overflow-hidden 
+                        transition-all 
+                        md-lg:relative 
+                        duration-300 
+                        absolute 
+                        z-[99] 
+                        bg-[#dbf3ed] 
+                        w-full 
+                        border-x 
+                        rounded-b-md
+                        shadow-lg
+                    `}
+                    style={{
+                        maxHeight: categoryShow ? '0' : '400px',
+                        visibility: categoryShow ? 'hidden' : 'visible',
+                    }}
+                    >
+                    <ul className='py-2 text-slate-600 font-medium overflow-y-auto h-[400px]'>
+                        {categorys.map((c, i) => (
+                        <li 
+                            key={i} 
+                            className='flex justify-start items-center gap-2 px-[24px] py-[6px] hover:bg-[#059473] hover:text-white transition-colors duration-300'
+                            onClick={() => setCategoryShow(true)}
+                        >
+                            <img src={c.image} className='w-[30px] h-[30px] rounded-full overflow-hidden' alt={c.name} />
+                            <Link 
+                            to={`/products?category=${c.name}`} 
+                            className='text-sm block w-full'
+                            >
+                            {c.name}
+                            </Link>
+                        </li>
+                        ))}
+                    </ul>
+                    </div>
+                </div>
+                </div>
                     <div className='w-9/12 pl-8 md-lg:pl-0 md-lg:w-full'>
                         <div className='flex flex-wrap w-full justify-between items-center md-lg:gap-6'>
                             <div className='w-8/12 md-lg:w-full'>

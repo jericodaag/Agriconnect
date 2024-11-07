@@ -48,6 +48,27 @@ const SellerDashboard = () => {
         }
     }, [recentOrder]);
 
+    const getStatusColor = (status) => {
+        switch(status.toLowerCase()) {
+            case 'pending':
+                return 'bg-yellow-100 text-yellow-800';
+            case 'processing':
+                return 'bg-blue-100 text-blue-800';
+            case 'warehouse':
+                return 'bg-indigo-100 text-indigo-800';
+            case 'placed':
+                return 'bg-green-100 text-green-800';
+            case 'cancelled':
+                return 'bg-red-100 text-red-800';
+            case 'paid':
+                return 'bg-emerald-100 text-emerald-800';
+            case 'unpaid':
+                return 'bg-orange-100 text-orange-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    };
+
     const chartOptions = {
         chart: {
             type: 'bar',
@@ -312,41 +333,40 @@ const SellerDashboard = () => {
                             </tr>
                         </thead>
                         <tbody>
-                        {sortedOrders.map((d, i) => (
-                            <tr key={i} className='bg-white border-b hover:bg-gray-50'>
-                                <td className='px-6 py-4 font-medium text-gray-900'>#{d._id}</td>
-                                <td className='px-6 py-4'>₱{d.price.toLocaleString('en-PH')}</td>
-                                <td className='px-6 py-4'>
-                                    <span className={`px-2 py-1 rounded-full text-xs ${
-                                        d.payment_status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                                    }`}>
-                                        {d.payment_status}
-                                    </span>
-                                </td>
-                                <td className='px-6 py-4'>
-                                    <span className={`px-2 py-1 rounded-full text-xs ${
-                                        d.payment_method === 'stripe' ? 'bg-indigo-100 text-indigo-800' : 'bg-green-100 text-green-800'
-                                    }`}>
-                                        {d.payment_method}
-                                    </span>
-                                </td>
-                                <td className='px-6 py-4'>
-                                    <span className={`px-2 py-1 rounded-full text-xs ${
-                                        d.delivery_status === 'delivered' ? 'bg-green-100 text-green-800' :
-                                        d.delivery_status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                                        d.delivery_status === 'delivered' ? 'bg-green-100 text-green-800' :
-                                        d.delivery_status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                                        'bg-yellow-100 text-yellow-800'
-                                    }`}>
-                                        {d.delivery_status}
-                                    </span>
-                                </td>
-                                <td className='px-6 py-4'>
-                                    <Link to={`/seller/dashboard/order/details/${d._id}`} className='text-blue-600 hover:underline'>View</Link>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
+                            {sortedOrders.map((d, i) => (
+                                <tr key={i} className='bg-white border-b hover:bg-gray-50'>
+                                    <td className='px-6 py-4 font-medium text-gray-900'>#{d._id}</td>
+                                    <td className='px-6 py-4'>₱{d.price.toLocaleString('en-PH')}</td>
+                                    <td className='px-6 py-4'>
+                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(d.payment_status)}`}>
+                                            {d.payment_status}
+                                        </span>
+                                    </td>
+                                    <td className='px-6 py-4'>
+                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                            d.payment_method === 'stripe' ? 'bg-indigo-100 text-indigo-800' : 'bg-green-100 text-green-800'
+                                        }`}>
+                                            {d.payment_method}
+                                        </span>
+                                    </td>
+                                    <td className='px-6 py-4'>
+                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(d.delivery_status)}`}>
+                                            {d.delivery_status}
+                                        </span>
+                                    </td>
+                                    <td className='px-6 py-4'>
+                                        <Link to={`/seller/dashboard/order/details/${d._id}`} className='text-blue-600 hover:underline'>View</Link>
+                                    </td>
+                                </tr>
+                            ))}
+                            {sortedOrders.length === 0 && (
+                                <tr>
+                                    <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                                        No orders found
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
                     </table>
                 </div>
                 <RecentMessages messages={recentMessages} userInfo={userInfo} isAdmin={false} />

@@ -26,19 +26,20 @@ const AddProduct = () => {
         bestBefore: ""
     })
 
-    const inputHandle = (e) => {
-        setState({
-            ...state,
-            [e.target.name]: e.target.value
-        })
-    }
-
     const [cateShow, setCateShow] = useState(false)
     const [category, setCategory] = useState('')
     const [allCategory, setAllCategory] = useState([])
     const [searchValue, setSearchValue] = useState('')
     const [images, setImages] = useState([])
     const [imageShow, setImageShow] = useState([])
+
+    // ... [keeping all your existing handlers and effects]
+    const inputHandle = (e) => {
+        setState({
+            ...state,
+            [e.target.name]: e.target.value
+        })
+    }
 
     useEffect(() => {
         dispatch(get_category({
@@ -144,133 +145,133 @@ const AddProduct = () => {
     }, [categorys])
 
     return (
-        <div className="bg-[#F7F7FC] min-h-screen p-6">
-            <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-[#438206]">Add Product</h1>
-                    <Link to='/seller/dashboard/products' className="bg-[#F98821] hover:bg-[#e67d1e] text-white font-semibold py-2 px-4 rounded transition duration-300 ease-in-out">
-                        All Products
-                    </Link>
+        <div className="min-h-screen bg-gray-50/50 p-6">
+            <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100">
+                <div className="p-6 border-b border-gray-100">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h1 className="text-2xl font-semibold text-gray-800">Add Product</h1>
+                            <p className="text-sm text-gray-500 mt-1">Fill in the details to add a new product</p>
+                        </div>
+                        <Link to='/seller/dashboard/products' className="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-sm font-medium rounded-lg transition-colors duration-300">
+                            View All Products
+                        </Link>
+                    </div>
                 </div>
-                <form onSubmit={add} className="space-y-6">
+
+                <form onSubmit={add} className="p-6 space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-[#438206]">Product Name</label>
+                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
                             <input
-                                className="mt-1 block w-full px-3 py-2 bg-white border border-[#61BD12] rounded-md text-sm shadow-sm placeholder-gray-400
-                                           focus:outline-none focus:border-[#438206] focus:ring-1 focus:ring-[#438206]"
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors duration-300"
                                 onChange={inputHandle}
                                 value={state.name}
                                 type="text"
                                 name='name'
                                 id='name'
-                                placeholder='Product Name'
+                                placeholder='Enter product name'
                             />
                         </div>
                         <div>
-                            <label htmlFor="brand" className="block text-sm font-medium text-[#438206]">Brand</label>
+                            <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
                             <input
-                                className="mt-1 block w-full px-3 py-2 bg-white border border-[#61BD12] rounded-md text-sm shadow-sm placeholder-gray-400
-                                        focus:outline-none focus:border-[#438206] focus:ring-1 focus:ring-[#438206]"
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors duration-300"
                                 onChange={inputHandle}
                                 value={state.brand}
                                 type="text"
                                 name='brand'
                                 id='brand'
-                                placeholder='Brand Name'
+                                placeholder='Enter brand name'
                             />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="relative">
-                            <label htmlFor="category" className="block text-sm font-medium text-[#438206]">Category</label>
-                            <div className="mt-1 relative">
+                            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                            <div className="relative">
                                 <input
                                     readOnly
                                     onClick={() => setCateShow(!cateShow)}
-                                    className="block w-full px-3 py-2 bg-white border border-[#61BD12] rounded-md text-sm shadow-sm placeholder-gray-400
-                                            focus:outline-none focus:border-[#438206] focus:ring-1 focus:ring-[#438206] cursor-pointer"
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors duration-300 cursor-pointer"
                                     value={category}
-                                    placeholder='--select category--'
+                                    placeholder='Select category'
                                 />
-                                <FaChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#438206]" />
+                                <FaChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                             </div>
                             {cateShow && (
-                                <div className="absolute z-10 w-full mt-1 bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                                    <div className="sticky top-0 z-10 bg-white">
+                                <div className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg max-h-60 overflow-auto border border-gray-100">
+                                    <div className="sticky top-0 bg-white px-2 py-2">
                                         <input
                                             value={searchValue}
                                             onChange={categorySearch}
-                                            className="block w-full px-3 py-2 bg-white border-b border-[#61BD12] text-sm placeholder-gray-400
-                                                    focus:outline-none focus:border-[#438206] focus:ring-1 focus:ring-[#438206]"
-                                            placeholder="Search category..."
+                                            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                            placeholder="Search categories..."
                                         />
                                     </div>
-                                    {allCategory.map((c, i) => (
-                                        <div
-                                            key={i}
-                                            onClick={() => {
-                                                setCateShow(false);
-                                                setCategory(c.name);
-                                                setSearchValue('');
-                                                setAllCategory(categorys);
-                                            }}
-                                            className={`cursor-pointer select-none relative py-2 pl-3 pr-9 ${category === c.name ? 'bg-[#61BD12] text-white' : 'text-gray-900 hover:bg-[#F7F7FC]'}`}
-                                        >
-                                            {c.name}
-                                        </div>
-                                    ))}
+                                    <div className="py-2">
+                                        {allCategory.map((c, i) => (
+                                            <div
+                                                key={i}
+                                                onClick={() => {
+                                                    setCateShow(false);
+                                                    setCategory(c.name);
+                                                    setSearchValue('');
+                                                    setAllCategory(categorys);
+                                                }}
+                                                className={`px-4 py-2 cursor-pointer ${category === c.name ? 'bg-indigo-50 text-indigo-600' : 'hover:bg-gray-50 text-gray-700'}`}
+                                            >
+                                                {c.name}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </div>
                         <div>
-                            <label htmlFor="stock" className="block text-sm font-medium text-[#438206]">Stock</label>
+                            <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
                             <input
-                                className="mt-1 block w-full px-3 py-2 bg-white border border-[#61BD12] rounded-md text-sm shadow-sm placeholder-gray-400
-                                        focus:outline-none focus:border-[#438206] focus:ring-1 focus:ring-[#438206]"
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors duration-300"
                                 onChange={inputHandle}
                                 value={state.stock}
                                 type="number"
                                 name='stock'
                                 id='stock'
-                                placeholder='Stock'
+                                placeholder='Enter stock quantity'
                             />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                            <label htmlFor="price" className="block text-sm font-medium text-[#438206]">Price</label>
+                            <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">Price</label>
                             <input
-                                className="mt-1 block w-full px-3 py-2 bg-white border border-[#61BD12] rounded-md text-sm shadow-sm placeholder-gray-400
-                                        focus:outline-none focus:border-[#438206] focus:ring-1 focus:ring-[#438206]"
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors duration-300"
                                 onChange={inputHandle}
                                 value={state.price}
                                 type="number"
                                 name='price'
                                 id='price'
-                                placeholder='Price'
+                                placeholder='Enter price'
                             />
                         </div>
                         <div>
-                            <label htmlFor="discount" className="block text-sm font-medium text-[#438206]">Discount (%)</label>
+                            <label htmlFor="discount" className="block text-sm font-medium text-gray-700 mb-1">Discount (%)</label>
                             <input
-                                className="mt-1 block w-full px-3 py-2 bg-white border border-[#61BD12] rounded-md text-sm shadow-sm placeholder-gray-400
-                                        focus:outline-none focus:border-[#438206] focus:ring-1 focus:ring-[#438206]"
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors duration-300"
                                 onChange={inputHandle}
                                 value={state.discount}
                                 type="number"
                                 name='discount'
                                 id='discount'
-                                placeholder='Discount percentage'
+                                placeholder='Enter discount percentage'
                             />
                         </div>
                         <div>
-                            <label htmlFor="unit" className="block text-sm font-medium text-[#438206]">Unit</label>
+                            <label htmlFor="unit" className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
                             <select
-                                className="mt-1 block w-full px-3 py-2 bg-white border border-[#61BD12] rounded-md text-sm shadow-sm placeholder-gray-400
-                                        focus:outline-none focus:border-[#438206] focus:ring-1 focus:ring-[#438206]"
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors duration-300"
                                 onChange={inputHandle}
                                 value={state.unit}
                                 name='unit'
@@ -286,10 +287,9 @@ const AddProduct = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label htmlFor="harvestDate" className="block text-sm font-medium text-[#438206]">Harvest Date</label>
+                            <label htmlFor="harvestDate" className="block text-sm font-medium text-gray-700 mb-1">Harvest Date</label>
                             <input
-                                className="mt-1 block w-full px-3 py-2 bg-white border border-[#61BD12] rounded-md text-sm shadow-sm placeholder-gray-400
-                                        focus:outline-none focus:border-[#438206] focus:ring-1 focus:ring-[#438206]"
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors duration-300"
                                 onChange={inputHandle}
                                 value={state.harvestDate}
                                 type="date"
@@ -298,10 +298,9 @@ const AddProduct = () => {
                             />
                         </div>
                         <div>
-                            <label htmlFor="bestBefore" className="block text-sm font-medium text-[#438206]">Best Before Date</label>
+                            <label htmlFor="bestBefore" className="block text-sm font-medium text-gray-700 mb-1">Best Before Date</label>
                             <input
-                                className="mt-1 block w-full px-3 py-2 bg-white border border-[#61BD12] rounded-md text-sm shadow-sm placeholder-gray-400
-                                        focus:outline-none focus:border-[#438206] focus:ring-1 focus:ring-[#438206]"
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors duration-300"
                                 onChange={inputHandle}
                                 value={state.bestBefore}
                                 type="date"
@@ -312,59 +311,104 @@ const AddProduct = () => {
                     </div>
 
                     <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-[#438206]">Description</label>
+                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                         <textarea
-                            className="mt-1 block w-full px-3 py-2 bg-white border border-[#61BD12] rounded-md text-sm shadow-sm placeholder-gray-400
-                                    focus:outline-none focus:border-[#438206] focus:ring-1 focus:ring-[#438206]"
+                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors duration-300"
                             onChange={inputHandle}
                             value={state.description}
                             name='description'
                             id='description'
                             rows="4"
-                            placeholder='Product description'
+                            placeholder='Enter product description'
                         ></textarea>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-[#438206] mb-2">Product Images</label>
+                    <label className="block text-sm font-medium text-gray-700">Product Images</label>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {imageShow.map((img, i) => (
-                                <div key={i} className="relative group">
-                                <img src={img.url} alt="" className="w-full h-32 object-cover rounded-lg" />
-                                <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                    <label htmlFor={`file-${i}`} className="text-white cursor-pointer mr-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                        </svg>
-                                    </label>
-                                    <button onClick={() => removeImage(i)} className="text-white">
-                                        <IoMdCloseCircle className="h-6 w-6" />
-                                    </button>
+                                <div key={i} className="relative group bg-gray-50 rounded-lg p-2 border border-gray-200">
+                                    <img 
+                                        src={img.url} 
+                                        alt="" 
+                                        className="w-full h-40 object-cover rounded-lg"
+                                    />
+                                    <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-lg flex items-center justify-center gap-2">
+                                        <label 
+                                            htmlFor={`image-${i}`} 
+                                            className="p-2 bg-white bg-opacity-25 rounded-full cursor-pointer hover:bg-opacity-40 transition-all duration-200"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                            </svg>
+                                        </label>
+                                        <button 
+                                            type="button"
+                                            onClick={() => removeImage(i)}
+                                            className="p-2 bg-white bg-opacity-25 rounded-full hover:bg-opacity-40 transition-all duration-200"
+                                        >
+                                            <IoMdCloseCircle className="h-5 w-5 text-white" />
+                                        </button>
+                                    </div>
+                                    <input 
+                                        onChange={(e) => changeImage(e.target.files[0], i)} 
+                                        type="file" 
+                                        id={`image-${i}`} 
+                                        className="hidden" 
+                                        accept="image/*"
+                                    />
                                 </div>
-                                <input onChange={(e) => changeImage(e.target.files[0], i)} type="file" id={`file-${i}`} className="hidden" />
+                            ))}
+                            
+                            {/* Image Upload Button */}
+                            <div className="relative">
+                                <label className="block h-40 rounded-lg border-2 border-dashed border-gray-300 hover:border-indigo-500 transition-colors duration-300 cursor-pointer bg-gray-50">
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                        <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center mb-2">
+                                            <IoMdImages className="h-6 w-6 text-indigo-600" />
+                                        </div>
+                                        <span className="text-sm font-medium text-gray-600">Add Images</span>
+                                        <span className="text-xs text-gray-400 mt-1">Drop files or click</span>
+                                    </div>
+                                    <input 
+                                        type="file" 
+                                        onChange={imageHandle} 
+                                        className="hidden" 
+                                        multiple 
+                                        accept="image/*"
+                                    />
+                                </label>
                             </div>
-                        ))}
-                        <label className="flex flex-col items-center justify-center h-32 border-2 border-[#61BD12] border-dashed rounded-lg cursor-pointer hover:bg-[#F7F7FC] transition-colors duration-300">
-                            <IoMdImages className="h-8 w-8 text-[#438206]" />
-                            <span className="mt-2 text-sm text-[#438206]">Add Image</span>
-                            <input type="file" onChange={imageHandle} multiple className="hidden" />
-                        </label>
+                        </div>
+                        <p className="text-xs text-gray-500">Upload clear, high-quality images of your products</p>
                     </div>
-                </div>
 
-                <div>
-                    <button
-                        disabled={loader}
-                        type="submit"
-                        className="w-full bg-[#438206] text-white py-2 px-4 rounded-md hover:bg-[#61BD12] transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#61BD12]"
-                    >
-                        {loader ? <PropagateLoader color='#fff' cssOverride={overrideStyle} /> : 'Add Product'}
+                    {/* Submit Button */}
+                    <div className="border-t border-gray-100 pt-6">
+                        <button
+                            disabled={loader}
+                            type="submit"
+                            className="w-full inline-flex justify-center items-center px-6 py-3 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300"
+                        >
+                            {loader ? (
+                                <div className="flex items-center space-x-2">
+                                    <PropagateLoader color='#fff' cssOverride={overrideStyle} />
+                                    <span>Adding Product...</span>
+                                </div>
+                            ) : (
+                                <>
+                                    <span>Add Product</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clipRule="evenodd" />
+                                    </svg>
+                                </>
+                            )}
                     </button>
-                </div>
-            </form>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
-);
+    );
 };
 
 export default AddProduct;
