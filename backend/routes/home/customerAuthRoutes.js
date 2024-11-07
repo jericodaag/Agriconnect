@@ -1,9 +1,13 @@
-const customerAuthController = require('../../controllers/home/customerAuthController')
-const router = require('express').Router()
+const customerAuthController = require('../../controllers/home/customerAuthController');
+const router = require('express').Router();
 
-router.post('/customer/customer-register',customerAuthController.customer_register)
-router.post('/customer/customer-login',customerAuthController.customer_login)
+// Authentication routes
+router.post('/customer/customer-register', customerAuthController.customer_register);
+router.post('/customer/customer-login', customerAuthController.customer_login);
+router.get('/customer/logout', customerAuthController.customer_logout); // Changed back to GET
 
-router.get('/customer/logout',customerAuthController.customer_logout)
+// Password reset routes
+router.post('/customer/forgot-password', customerAuthController.forgot_password);
+router.post('/customer/reset-password', customerAuthController.reset_password);
 
-module.exports = router 
+module.exports = router;

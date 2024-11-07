@@ -42,6 +42,31 @@ const decodeToken = (token) => {
 }
 // End Method 
 
+export const forgot_password = createAsyncThunk(
+    'auth/forgot_password',
+    async (email, { rejectWithValue, fulfillWithValue }) => {
+        try {
+            const { data } = await api.post('/customer/forgot-password', { email });
+            return fulfillWithValue(data);
+        } catch (error) {
+            return rejectWithValue(error.response.data);
+        }
+    }
+);
+
+export const reset_password = createAsyncThunk(
+    'auth/reset_password',
+    async (info, { rejectWithValue, fulfillWithValue }) => {
+        try {
+            const { data } = await api.post('/customer/reset-password', info);
+            return fulfillWithValue(data);
+        } catch (error) {
+            return rejectWithValue(error.response.data);
+        }
+    }
+);
+// end method
+
 
 
 export const authReducer = createSlice({
@@ -92,6 +117,29 @@ export const authReducer = createSlice({
             state.loader = false;
             state.userInfo = userInfo
         })
+        .addCase(forgot_password.pending, (state) => {
+            state.loader = true;
+        })
+        .addCase(forgot_password.rejected, (state, { payload }) => {
+            state.loader = false;
+            state.errorMessage = payload.error;
+        })
+        .addCase(forgot_password.fulfilled, (state, { payload }) => {
+            state.loader = false;
+            state.successMessage = payload.message;
+        })
+        
+        .addCase(reset_password.pending, (state) => {
+            state.loader = true;
+        })
+        .addCase(reset_password.rejected, (state, { payload }) => {
+            state.loader = false;
+            state.errorMessage = payload.error;
+        })
+        .addCase(reset_password.fulfilled, (state, { payload }) => {
+            state.loader = false;
+            state.successMessage = payload.message;
+        });
     }
 })
 export const {messageClear,user_reset} = authReducer.actions

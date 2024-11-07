@@ -1,21 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-    FaTimes, 
-    FaFileContract, 
-    FaUserShield, 
-    FaListAlt, 
-    FaHandshake, 
-    FaMoneyBillWave,
-    FaCheckCircle, 
-    FaExclamationTriangle, 
-    FaBalanceScale,
     FaUser,
     FaEnvelope,
     FaLock,
     FaStore,
     FaMapMarkerAlt,
-    FaIdCard
+    FaIdCard,
+    FaTimes
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import { PropagateLoader } from 'react-spinners';
@@ -30,6 +22,7 @@ const Register = () => {
     
     const [showTerms, setShowTerms] = useState(false);
     const [termsAccepted, setTermsAccepted] = useState(false);
+    const [focusedInput, setFocusedInput] = useState(null);
     
     const [state, setState] = useState({
         name: "",
@@ -44,7 +37,6 @@ const Register = () => {
     });
 
     const [previewImage, setPreviewImage] = useState(null);
-    const [focusedInput, setFocusedInput] = useState(null);
 
     const inputHandle = (e) => {
         setState({
@@ -99,459 +91,352 @@ const Register = () => {
         'Postal ID'
     ];
 
-    const TermsAndConditions = () => (
-        <div className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-center items-center p-4 ${showTerms ? '' : 'hidden'}`}>
-            <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl">
-                {/* Enhanced Header */}
-                <div className="p-6 bg-gradient-to-r from-blue-600 to-blue-800 flex justify-between items-center">
-                    <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-white/20 rounded-lg">
-                            <FaFileContract className="w-6 h-6 text-white" />
-                        </div>
-                        <h2 className="text-2xl font-bold text-white">Terms and Conditions</h2>
-                    </div>
-                    <button 
-                        onClick={() => setShowTerms(false)}
-                        className="p-2 hover:bg-white/20 rounded-lg transition-colors duration-200"
-                    >
-                        <FaTimes className="w-6 h-6 text-white" />
-                    </button>
-                </div>
-    
-                {/* Terms Content */}
-                <div className="p-6 overflow-y-auto max-h-[60vh]">
-                    <div className="space-y-8">
-                        {/* Introduction */}
-                        <section className="p-6 rounded-xl transition-all duration-300 hover:bg-blue-50">
-                            <div className="flex items-start space-x-4">
-                                <div className="p-3 bg-white rounded-lg shadow-sm">
-                                    <FaUserShield className="w-6 h-6 text-blue-500" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-semibold mb-3 text-gray-800">1. Introduction</h3>
-                                    <p className="text-gray-600">Welcome to AgriConnect, an agricultural e-commerce platform. By registering as a seller, you agree to be bound by these terms and conditions.</p>
-                                </div>
-                            </div>
-                        </section>
-    
-                        {/* Seller Eligibility */}
-                        <section className="p-6 rounded-xl transition-all duration-300 hover:bg-blue-50">
-                            <div className="flex items-start space-x-4">
-                                <div className="p-3 bg-white rounded-lg shadow-sm">
-                                    <FaCheckCircle className="w-6 h-6 text-green-500" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-semibold mb-3 text-gray-800">2. Seller Eligibility</h3>
-                                    <ul className="space-y-2">
-                                        {['Must be at least 18 years old',
-                                          'Must be a legitimate agricultural product seller or farmer',
-                                          'Must provide valid government-issued identification',
-                                          'Must have the legal right to sell agricultural products'
-                                        ].map((item, index) => (
-                                            <li key={index} className="flex items-center space-x-2 text-gray-600">
-                                                <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                                                <span>{item}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </div>
-                        </section>
-    
-                        {/* Product Guidelines */}
-                        <section className="p-6 rounded-xl hover:bg-purple-50 transition-all duration-300">
-                            <div className="flex items-start space-x-4">
-                                <div className="p-3 bg-white rounded-lg shadow-sm">
-                                    <FaListAlt className="w-6 h-6 text-purple-500" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-semibold mb-3 text-gray-800">3. Product Guidelines</h3>
-                                    <ul className="space-y-2">
-                                        {['Only agricultural and farm-related products may be sold',
-                                          'All products must comply with Philippine agricultural standards',
-                                          'Products must be accurately described and photographed',
-                                          'Sellers must maintain product quality and freshness',
-                                          'Prohibited items include illegal substances and harmful chemicals'
-                                        ].map((item, index) => (
-                                            <li key={index} className="flex items-center space-x-2 text-gray-600">
-                                                <span className="w-1.5 h-1.5 bg-purple-500 rounded-full" />
-                                                <span>{item}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </div>
-                        </section>
-    
-                        {/* Seller Responsibilities */}
-                        <section className="p-6 rounded-xl hover:bg-orange-50 transition-all duration-300">
-                            <div className="flex items-start space-x-4">
-                                <div className="p-3 bg-white rounded-lg shadow-sm">
-                                    <FaHandshake className="w-6 h-6 text-orange-500" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-semibold mb-3 text-gray-800">4. Seller Responsibilities</h3>
-                                    <ul className="space-y-2">
-                                        {['Maintain accurate inventory information',
-                                          'Process orders within 24 hours',
-                                          'Provide fair and transparent pricing',
-                                          'Ensure proper packaging and handling of products',
-                                          'Respond to customer inquiries promptly'
-                                        ].map((item, index) => (
-                                            <li key={index} className="flex items-center space-x-2 text-gray-600">
-                                                <span className="w-1.5 h-1.5 bg-orange-500 rounded-full" />
-                                                <span>{item}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </div>
-                        </section>
-    
-                        {/* Commission and Payments */}
-                        <section className="p-6 rounded-xl hover:bg-indigo-50 transition-all duration-300">
-                            <div className="flex items-start space-x-4">
-                                <div className="p-3 bg-white rounded-lg shadow-sm">
-                                    <FaMoneyBillWave className="w-6 h-6 text-indigo-500" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-semibold mb-3 text-gray-800">5. Commission and Payments</h3>
-                                    <ul className="space-y-2">
-                                        {['AgriConnect charges a 5% commission on each sale',
-                                          'Payments are processed within 3-5 business days',
-                                          'Sellers must maintain valid payment information',
-                                          'All transactions must be processed through the platform'
-                                        ].map((item, index) => (
-                                            <li key={index} className="flex items-center space-x-2 text-gray-600">
-                                                <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
-                                                <span>{item}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </div>
-                        </section>
-    
-                        {/* Account Suspension */}
-                        <section className="p-6 rounded-xl hover:bg-red-50 transition-all duration-300">
-                            <div className="flex items-start space-x-4">
-                                <div className="p-3 bg-white rounded-lg shadow-sm">
-                                    <FaExclamationTriangle className="w-6 h-6 text-red-500" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-semibold mb-3 text-gray-800">6. Account Suspension</h3>
-                                    <p className="text-gray-600 mb-2">AgriConnect reserves the right to suspend or terminate accounts for:</p>
-                                    <ul className="space-y-2">
-                                        {['Violation of terms and conditions',
-                                          'Selling prohibited items',
-                                          'Poor customer service',
-                                          'Fraudulent activities'
-                                        ].map((item, index) => (
-                                            <li key={index} className="flex items-center space-x-2 text-gray-600">
-                                                <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
-                                                <span>{item}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </div>
-                        </section>
-    
-                        {/* Dispute Resolution */}
-                        <section className="p-6 rounded-xl hover:bg-teal-50 transition-all duration-300">
-                            <div className="flex items-start space-x-4">
-                                <div className="p-3 bg-white rounded-lg shadow-sm">
-                                    <FaBalanceScale className="w-6 h-6 text-teal-500" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-semibold mb-3 text-gray-800">7. Dispute Resolution</h3>
-                                    <ul className="space-y-2">
-                                        {['Commitment to resolve customer complaints',
-                                          'Participation in platform\'s dispute resolution process',
-                                          'Adherence to refund policies',
-                                          'Cooperation with investigation procedures'
-                                        ].map((item, index) => (
-                                            <li key={index} className="flex items-center space-x-2 text-gray-600">
-                                                <span className="w-1.5 h-1.5 bg-teal-500 rounded-full" />
-                                                <span>{item}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </div>
-                        </section>
-                    </div>
-                </div>
-    
-                {/* Enhanced Accept Button */}
-                <div className="sticky bottom-0 p-6 bg-white border-t border-gray-200">
-                    <button
-                        onClick={() => {
-                            setTermsAccepted(true);
-                            setShowTerms(false);
-                        }}
-                        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl px-6 py-4 font-semibold text-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    >
-                        I Accept the Terms and Conditions
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-
     return (
-        <div className='min-h-screen bg-gradient-to-br from-green-400 to-blue-500 flex justify-center items-center px-6 py-12 sm:px-8'>
-            <div className='w-full max-w-4xl'>
-                <div className='bg-white rounded-2xl shadow-2xl overflow-hidden'>
-                    <div className='p-8 sm:p-10'>
-                        <div className='text-center mb-10'>
-                            <h2 className='text-4xl font-bold text-gray-800 mb-3'>Create Account</h2>
-                            <p className='text-gray-600 text-lg'>Join AgriConnect and start your journey</p>
-                        </div>
-
-                        <form onSubmit={submit} className='grid grid-cols-1 md:grid-cols-2 gap-8'>
-                            {/* Left Column - Personal & Shop Info */}
-                            <div className='space-y-6'>
-                                {/* Personal Information */}
-                                <div className='space-y-6'>
-                                    <div className="relative">
-                                        <div className='absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none'>
-                                            <FaUser className={`h-5 w-5 transition-colors duration-200 ${focusedInput === 'name' ? 'text-blue-500' : 'text-gray-400'}`} />
-                                        </div>
-                                        <input
-                                            onChange={inputHandle}
-                                            value={state.name}
-                                            onFocus={() => setFocusedInput('name')}
-                                            onBlur={() => setFocusedInput(null)}
-                                            className='w-full pl-12 pr-4 py-4 rounded-lg bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:bg-white focus:outline-none transition-all duration-200 text-base'
-                                            type="text"
-                                            name='name'
-                                            placeholder='Full Name'
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="relative">
-                                        <div className='absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none'>
-                                            <FaEnvelope className={`h-5 w-5 transition-colors duration-200 ${focusedInput === 'email' ? 'text-blue-500' : 'text-gray-400'}`} />
-                                        </div>
-                                        <input
-                                            onChange={inputHandle}
-                                            value={state.email}
-                                            onFocus={() => setFocusedInput('email')}
-                                            onBlur={() => setFocusedInput(null)}
-                                            className='w-full pl-12 pr-4 py-4 rounded-lg bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:bg-white focus:outline-none transition-all duration-200 text-base'
-                                            type="email"
-                                            name='email'
-                                            placeholder='Email Address'
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="relative">
-                                        <div className='absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none'>
-                                            <FaLock className={`h-5 w-5 transition-colors duration-200 ${focusedInput === 'password' ? 'text-blue-500' : 'text-gray-400'}`} />
-                                        </div>
-                                        <input
-                                            onChange={inputHandle}
-                                            value={state.password}
-                                            onFocus={() => setFocusedInput('password')}
-                                            onBlur={() => setFocusedInput(null)}
-                                            className='w-full pl-12 pr-4 py-4 rounded-lg bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:bg-white focus:outline-none transition-all duration-200 text-base'
-                                            type="password"
-                                            name='password'
-                                            placeholder='Password'
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Shop Information */}
-                                <div className='space-y-6'>
-                                    <div className="relative">
-                                        <div className='absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none'>
-                                            <FaStore className={`h-5 w-5 transition-colors duration-200 ${focusedInput === 'shopName' ? 'text-blue-500' : 'text-gray-400'}`} />
-                                        </div>
-                                        <input
-                                            onChange={inputHandle}
-                                            value={state.shopName}
-                                            onFocus={() => setFocusedInput('shopName')}
-                                            onBlur={() => setFocusedInput(null)}
-                                            className='w-full pl-12 pr-4 py-4 rounded-lg bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:bg-white focus:outline-none transition-all duration-200 text-base'
-                                            type="text"
-                                            name='shopName'
-                                            placeholder='Shop Name'
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className='grid grid-cols-2 gap-4'>
-                                        <div className="relative">
-                                            <div className='absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none'>
-                                                <FaMapMarkerAlt className={`h-5 w-5 transition-colors duration-200 ${focusedInput === 'division' ? 'text-blue-500' : 'text-gray-400'}`} />
-                                            </div>
-                                            <input
-                                                onChange={inputHandle}
-                                                value={state.division}
-                                                onFocus={() => setFocusedInput('division')}
-                                                onBlur={() => setFocusedInput(null)}
-                                                className='w-full pl-12 pr-4 py-4 rounded-lg bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:bg-white focus:outline-none transition-all duration-200 text-base'
-                                                type="text"
-                                                name='division'
-                                                placeholder='Division'
-                                                required
-                                            />
-                                        </div>
-
-                                        <div className="relative">
-                                            <div className='absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none'>
-                                                <FaMapMarkerAlt className={`h-5 w-5 transition-colors duration-200 ${focusedInput === 'district' ? 'text-blue-500' : 'text-gray-400'}`} />
-                                            </div>
-                                            <input
-                                                onChange={inputHandle}
-                                                value={state.district}
-                                                onFocus={() => setFocusedInput('district')}
-                                                onBlur={() => setFocusedInput(null)}
-                                                className='w-full pl-12 pr-4 py-4 rounded-lg bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:bg-white focus:outline-none transition-all duration-200 text-base'
-                                                type="text"
-                                                name='district'
-                                                placeholder='District'
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Right Column - ID Verification */}
-                            <div className='space-y-6'>
-                                <div className='space-y-6'>
-                                    <div className="relative">
-                                        <div className='absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none'>
-                                            <FaIdCard className={`h-5 w-5 transition-colors duration-200 ${focusedInput === 'idType' ? 'text-blue-500' : 'text-gray-400'}`} />
-                                        </div>
-                                        <select
-                                            onChange={inputHandle}
-                                            value={state.idType}
-                                            name="idType"
-                                            onFocus={() => setFocusedInput('idType')}
-                                            onBlur={() => setFocusedInput(null)}
-                                            className='w-full pl-12 pr-4 py-4 rounded-lg bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:bg-white focus:outline-none transition-all duration-200 text-base'
-                                            required
-                                        >
-                                            <option value="">Select ID Type</option>
-                                            {idTypes.map(type => (
-                                                <option key={type} value={type}>{type}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div className="relative">
-                                        <div className='absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none'>
-                                            <FaIdCard className={`h-5 w-5 transition-colors duration-200 ${focusedInput === 'idNumber' ? 'text-blue-500' : 'text-gray-400'}`} />
-                                        </div>
-                                        <input
-                                            onChange={inputHandle}
-                                            value={state.idNumber}
-                                            onFocus={() => setFocusedInput('idNumber')}
-                                            onBlur={() => setFocusedInput(null)}
-                                            className='w-full pl-12 pr-4 py-4 rounded-lg bg-gray-50 border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:bg-white focus:outline-none transition-all duration-200 text-base'
-                                            type="text"
-                                            name='idNumber'
-                                            placeholder='ID Number'
-                                            required
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Upload ID Image
-                                    </label>
-                                    <div className="flex items-center justify-center w-full">
-                                        <label className="flex flex-col w-full h-48 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-all duration-300">
-                                            <div className="flex flex-col items-center justify-center pt-7">
-                                                {previewImage ? (
-                                                    <img
-                                                        src={previewImage}
-                                                        alt="ID Preview"
-                                                        className="w-auto h-32 object-contain mb-2"
-                                                    />
-                                                ) : (
-                                                    <>
-                                                        <svg className="w-12 h-12 text-blue-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                                        </svg>
-                                                        <p className="text-sm text-gray-600">Drag and drop or click to select</p>
-                                                        <p className="text-xs text-gray-500 mt-1">Support: JPG, PNG, GIF (Max 5MB)</p>
-                                                    </>
-                                                )}
-                                            </div>
-                                            <input
-                                                type="file"
-                                                className="opacity-0"
-                                                name="idImage"
-                                                accept="image/*"
-                                                onChange={handleImageChange}
-                                                required
-                                            />
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div className='space-y-6'>
-                                    <div className='flex items-center'>
-                                        <input
-                                            className='w-4 h-4 border-2 rounded text-blue-500 focus:ring-blue-500 focus:ring-offset-0'
-                                            type="checkbox"
-                                            name="terms"
-                                            id="terms"
-                                            checked={termsAccepted}
-                                            onChange={() => setShowTerms(true)}
-                                            required
-                                        />
-                                        <label htmlFor="terms" className='ml-2 text-sm text-gray-600'>
-                                            I agree to the{' '}
-                                            <button 
-                                                type="button"
-                                                onClick={() => setShowTerms(true)}
-                                                className='text-blue-500 hover:text-blue-700 transition-colors duration-200 hover:underline'
-                                            >
-                                                Terms and Conditions
-                                            </button>
-                                        </label>
-                                    </div>
-
-                                    <button
-                                        disabled={loader}
-                                        className='w-full bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-4 py-4 font-semibold text-lg shadow-lg transition-all duration-300 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
-                                    >
-                                        {loader ? <PropagateLoader color='#fff' cssOverride={overrideStyle} /> : 'Create Account'}
-                                    </button>
-
-                                    {/* Sign In Link */}
-                                    <div className='text-center'>
-                                        <p className='text-gray-600 text-base'>
-                                            Already have an account?{' '}
-                                            <Link
-                                                to="/login"
-                                                className='text-blue-500 hover:text-blue-700 font-semibold transition-colors duration-200 hover:underline'
-                                            >
-                                                Sign In
-                                            </Link>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
+        <div className='min-h-screen flex flex-col-reverse md:flex-row'>
+            {/* Left Side - Image (hidden on mobile) */}
+            <div className='hidden md:block md:w-2/5 relative'>
+                <div className='absolute inset-0 bg-black/30'></div>
+                <img 
+                    src="/images/register.jpg" 
+                    alt="Fresh Produce"
+                    className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 flex items-center p-8">
+                    <div className="max-w-lg">
+                        <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">Join AgriConnect Today</h2>
+                        <p className="text-white/90 text-sm leading-relaxed">
+                            Transform your agricultural business by joining our growing community
+                            of farmers and sellers. Connect directly with customers and expand
+                            your market reach.
+                        </p>
                     </div>
                 </div>
             </div>
 
-            {/* Terms and Conditions Modal */}
-            <TermsAndConditions />
-        </div>
-    );
+            {/* Right Side - Form */}
+            <div className='w-full md:w-3/5 p-4 md:p-6 lg:p-8 overflow-y-auto'>
+                <div className='max-w-2xl mx-auto'>
+                    <div className='text-center mb-6'>
+                        <h2 className='text-2xl md:text-3xl font-bold text-gray-800'>Create Seller Account</h2>
+                        <p className='text-sm text-gray-600 mt-1'>Join AgriConnect and start selling your products</p>
+                    </div>
+
+                    <form onSubmit={submit} className='space-y-6'>
+                        {/* Personal Information */}
+                        <div className='space-y-4'>
+                            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Personal Information</h3>
+                            <div className='grid gap-4 md:grid-cols-2'>
+                                <div className="relative">
+                                    <div className='absolute inset-y-0 left-0 pl-3 flex items-center'>
+                                        <FaUser className={`h-4 w-4 ${focusedInput === 'name' ? 'text-[#059473]' : 'text-gray-400'}`} />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        placeholder="Full Name"
+                                        value={state.name}
+                                        onChange={inputHandle}
+                                        onFocus={() => setFocusedInput('name')}
+                                        onBlur={() => setFocusedInput(null)}
+                                        className='w-full pl-10 pr-4 py-2.5 text-sm border rounded-lg focus:ring-1 focus:ring-[#059473] focus:border-[#059473] bg-white'
+                                        required
+                                    />
+                                </div>
+
+                                <div className="relative">
+                                    <div className='absolute inset-y-0 left-0 pl-3 flex items-center'>
+                                        <FaEnvelope className={`h-4 w-4 ${focusedInput === 'email' ? 'text-[#059473]' : 'text-gray-400'}`} />
+                                    </div>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        placeholder="Email Address"
+                                        value={state.email}
+                                        onChange={inputHandle}
+                                        onFocus={() => setFocusedInput('email')}
+                                        onBlur={() => setFocusedInput(null)}
+                                        className='w-full pl-10 pr-4 py-2.5 text-sm border rounded-lg focus:ring-1 focus:ring-[#059473] focus:border-[#059473] bg-white'
+                                        required
+                                    />
+                                </div>
+
+                                <div className="relative">
+                                    <div className='absolute inset-y-0 left-0 pl-3 flex items-center'>
+                                        <FaLock className={`h-4 w-4 ${focusedInput === 'password' ? 'text-[#059473]' : 'text-gray-400'}`} />
+                                    </div>
+                                    <input
+                                        type="password"
+                                        name="password"
+                                        placeholder="Password"
+                                        value={state.password}
+                                        onChange={inputHandle}
+                                        onFocus={() => setFocusedInput('password')}
+                                        onBlur={() => setFocusedInput(null)}
+                                        className='w-full pl-10 pr-4 py-2.5 text-sm border rounded-lg focus:ring-1 focus:ring-[#059473] focus:border-[#059473] bg-white'
+                                        required
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Shop Information */}
+                        <div className='space-y-4'>
+                            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Shop Information</h3>
+                            <div className='grid gap-4 md:grid-cols-2'>
+                                <div className="relative">
+                                    <div className='absolute inset-y-0 left-0 pl-3 flex items-center'>
+                                        <FaStore className={`h-4 w-4 ${focusedInput === 'shopName' ? 'text-[#059473]' : 'text-gray-400'}`} />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        name="shopName"
+                                        placeholder="Shop Name"
+                                        value={state.shopName}
+                                        onChange={inputHandle}
+                                        onFocus={() => setFocusedInput('shopName')}
+                                        onBlur={() => setFocusedInput(null)}
+                                        className='w-full pl-10 pr-4 py-2.5 text-sm border rounded-lg focus:ring-1 focus:ring-[#059473] focus:border-[#059473] bg-white'
+                                        required
+                                    />
+                                </div>
+
+                                <div className="relative">
+                                    <div className='absolute inset-y-0 left-0 pl-3 flex items-center'>
+                                        <FaMapMarkerAlt className={`h-4 w-4 ${focusedInput === 'district' ? 'text-[#059473]' : 'text-gray-400'}`} />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        name="district"
+                                        placeholder="District"
+                                        value={state.district}
+                                        onChange={inputHandle}
+                                        onFocus={() => setFocusedInput('district')}
+                                        onBlur={() => setFocusedInput(null)}
+                                        className='w-full pl-10 pr-4 py-2.5 text-sm border rounded-lg focus:ring-1 focus:ring-[#059473] focus:border-[#059473] bg-white'
+                                        required
+                                    />
+                                </div>
+
+                                <div className="relative">
+                                    <div className='absolute inset-y-0 left-0 pl-3 flex items-center'>
+                                        <FaMapMarkerAlt className={`h-4 w-4 ${focusedInput === 'division' ? 'text-[#059473]' : 'text-gray-400'}`} />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        name="division"
+                                        placeholder="Division"
+                                        value={state.division}
+                                        onChange={inputHandle}
+                                        onFocus={() => setFocusedInput('division')}
+                                        onBlur={() => setFocusedInput(null)}
+                                        className='w-full pl-10 pr-4 py-2.5 text-sm border rounded-lg focus:ring-1 focus:ring-[#059473] focus:border-[#059473] bg-white'
+                                        required
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ID Verification */}
+                        <div className='space-y-4'>
+                            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">ID Verification</h3>
+                            <div className='grid gap-4 md:grid-cols-2'>
+                                <div className="relative">
+                                    <div className='absolute inset-y-0 left-0 pl-3 flex items-center'>
+                                        <FaIdCard className={`h-4 w-4 ${focusedInput === 'idType' ? 'text-[#059473]' : 'text-gray-400'}`} />
+                                    </div>
+                                    <select
+                                        name="idType"
+                                        value={state.idType}
+                                        onChange={inputHandle}
+                                        onFocus={() => setFocusedInput('idType')}
+                                        onBlur={() => setFocusedInput(null)}
+                                        className='w-full pl-10 pr-4 py-2.5 text-sm border rounded-lg focus:ring-1 focus:ring-[#059473] focus:border-[#059473] bg-white'
+                                        required
+                                    >
+                                        <option value="">Select ID Type</option>
+                                        {idTypes.map(type => (
+                                            <option key={type} value={type}>{type}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="relative">
+                                    <div className='absolute inset-y-0 left-0 pl-3 flex items-center'>
+                                        <FaIdCard className={`h-4 w-4 ${focusedInput === 'idNumber' ? 'text-[#059473]' : 'text-gray-400'}`} />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        name="idNumber"
+                                        placeholder="ID Number"
+                                        value={state.idNumber}
+                                        onChange={inputHandle}
+                                        onFocus={() => setFocusedInput('idNumber')}
+                                        onBlur={() => setFocusedInput(null)}
+                                        className='w-full pl-10 pr-4 py-2.5 text-sm border rounded-lg focus:ring-1 focus:ring-[#059473] focus:border-[#059473] bg-white'
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            {/* ID Image Upload */}
+                            <div className="mt-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Upload ID Image</label>
+                                <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-[#059473] transition-colors">
+                                    <input
+                                        type="file"
+                                        name="idImage"
+                                        onChange={handleImageChange}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        accept="image/*"
+                                        required
+                                    />
+                                    <div className="text-center">
+                                        {previewImage ? (
+                                            <img
+                                                src={previewImage}
+                                                alt="ID Preview"
+                                                className="mx-auto h-32 object-contain mb-2"
+                                            />
+                                        ) : (
+                                            <>
+                                                <FaIdCard className="mx-auto h-8 w-8 text-gray-400" />
+                                                <p className="mt-1 text-sm text-gray-500">
+                                                    Click or drag file to upload
+                                                </p>
+                                                <p className="text-xs text-gray-400">
+                                                    Supports: JPG, PNG (Max 5MB)
+                                                </p>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Terms and Register Button */}
+                        <div className='space-y-4'>
+                            <label className='flex items-center space-x-2 text-sm'>
+                                <input
+                                    type="checkbox"
+                                    checked={termsAccepted}
+                                    onChange={() => setShowTerms(true)}
+                                    className="w-4 h-4 rounded border-gray-300 text-[#059473] focus:ring-[#059473]"
+                                    required
+                                />
+                                <span className='text-gray-600'>
+                                    I agree to the{' '}
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowTerms(true)}
+                                        className='text-[#059473] hover:text-[#048066] font-medium'
+                                    >
+                                        Terms and Conditions
+                                    </button>
+                                </span>
+                            </label>
+
+                            <button
+                                type="submit"
+                                disabled={loader || !termsAccepted}
+                                className='w-full py-2.5 bg-[#059473] text-white text-sm font-medium rounded-lg hover:bg-[#048066] transition-colors duration-200 disabled:opacity-50'
+                            >
+                                {loader ? <PropagateLoader size={8} color="#ffffff" /> : 'Create Seller Account'}
+                            </button>
+
+                            <p className='text-center text-sm text-gray-600'>
+                                Already have an account?{' '}
+                                <Link to="/login" className='text-[#059473] hover:text-[#048066] font-medium'>
+                                    Sign in
+                                </Link>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+
+        {/* Terms and Conditions Modal */}
+        {showTerms && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-lg w-full max-w-2xl flex flex-col max-h-[90vh]">
+                    {/* Header */}
+                    <div className="p-4 bg-[#059473] flex justify-between items-center rounded-t-lg">
+                        <h3 className="text-lg font-semibold text-white">Terms and Conditions</h3>
+                        <button
+                            onClick={() => setShowTerms(false)}
+                            className="text-white hover:bg-white/20 p-1.5 rounded-lg transition-colors"
+                        >
+                            <FaTimes className="w-4 h-4" />
+                        </button>
+                    </div>
+
+                    {/* Content - Scrollable */}
+                    <div className="p-4 overflow-y-auto flex-1" style={{ maxHeight: 'calc(70vh - 120px)' }}>
+                        <div className="space-y-4">
+                            <div>
+                                <h4 className="text-lg font-semibold mb-2">1. Seller Eligibility</h4>
+                                <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600">
+                                    <li>Must be at least 18 years of age</li>
+                                    <li>Must be a legitimate agricultural product seller or farmer</li>
+                                    <li>Must provide valid government-issued identification</li>
+                                    <li>Must have the legal right to sell agricultural products</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <h4 className="text-lg font-semibold mb-2">2. Product Guidelines</h4>
+                                <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600">
+                                    <li>Only agricultural and farm-related products may be sold</li>
+                                    <li>Products must comply with local agricultural standards</li>
+                                    <li>Accurate product descriptions and images required</li>
+                                    <li>Sellers must maintain product quality and freshness</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <h4 className="text-lg font-semibold mb-2">3. Seller Responsibilities</h4>
+                                <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600">
+                                    <li>Maintain accurate inventory information</li>
+                                    <li>Process orders within 24 hours</li>
+                                    <li>Provide fair and transparent pricing</li>
+                                    <li>Ensure proper packaging and handling</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <h4 className="text-lg font-semibold mb-2">4. Platform Fees & Payments</h4>
+                                <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600">
+                                    <li>Platform fee structure clearly defined</li>
+                                    <li>Payment processing timelines specified</li>
+                                    <li>Refund and cancellation policies</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer - Fixed at bottom */}
+                    <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg mt-auto">
+                        <button
+                            onClick={() => {
+                                setTermsAccepted(true);
+                                setShowTerms(false);
+                            }}
+                            className="w-full bg-[#059473] hover:bg-[#048066] text-white rounded-lg py-2.5 text-sm font-medium transition-colors"
+                        >
+                            Accept Terms & Conditions
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+        {/* Loading Overlay */}
+        {loader && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <PropagateLoader color="#059473" />
+            </div>
+        )}
+    </div>
+);
 };
 
 export default Register;

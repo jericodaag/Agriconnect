@@ -96,6 +96,11 @@ const Login = () => {
                                     onChange={inputHandle}
                                 />
                             </div>
+                            <div className="text-right mt-2">
+                                <Link to="/forgot-password" className="text-sm font-medium text-[#059473] hover:text-[#048066]">
+                                    Forgot Password?
+                                </Link>
+                            </div>
                         </div>
                         <div>
                             <button type="submit" className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#059473] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#059473]">

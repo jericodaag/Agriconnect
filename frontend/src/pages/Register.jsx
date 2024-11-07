@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { customer_register } from '../store/reducers/authReducer';
-import { useNavigate } from 'react-router-dom';
+import { customer_register, messageClear } from '../store/reducers/authReducer';
+import { useNavigate, Link } from 'react-router-dom'; // Changed from 'a' to Link
 import toast, { Toaster } from 'react-hot-toast';
 
 const Register = () => {
@@ -33,14 +33,16 @@ const Register = () => {
         if (successMessage) {
             toast.success(successMessage);
             setState({ name: '', email: '', password: '' });
+            dispatch(messageClear());
         }
         if (errorMessage) {
             toast.error(errorMessage);
+            dispatch(messageClear());
         }
         if (userInfo) {
             navigate('/');
         }
-    }, [successMessage, errorMessage, userInfo, navigate]);
+    }, [successMessage, errorMessage, userInfo, navigate, dispatch]);
 
     const inputHandle = (e) => {
         setState({
@@ -181,7 +183,26 @@ const Register = () => {
 
     return (
         <div style={styles.container}>
-            <Toaster position="top-center" reverseOrder={false} />
+            <Toaster 
+                position="top-right"
+                toastOptions={{
+                    duration: 3000,
+                    style: {
+                        background: '#333',
+                        color: '#fff',
+                    },
+                    success: {
+                        style: {
+                            background: '#059473',
+                        },
+                    },
+                    error: {
+                        style: {
+                            background: '#ff3c52',
+                        },
+                    },
+                }}
+            />
             <div style={styles.content}>
                 <div style={styles.card}>
                     {!isMobile && <div style={styles.imageSection} />}
@@ -256,10 +277,8 @@ const Register = () => {
                                 {loader ? 'Registering...' : 'Register'}
                             </button>
                         </form>
-                        {errorMessage && <p style={{...styles.message, color: 'red'}}>{errorMessage}</p>}
-                        {successMessage && <p style={{...styles.message, color: 'green'}}>{successMessage}</p>}
                         <p style={styles.loginLink}>
-                            Already have an account? <a href="/login" style={styles.loginLinkText}>Sign in</a>
+                            Already have an account? <Link to="/login" style={styles.loginLinkText}>Sign in</Link>
                         </p>
                     </div>
                 </div>
@@ -275,6 +294,7 @@ const Register = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    zIndex: 1000,
                 }}
                 onClick={() => setShowTerms(false)}
                 >
