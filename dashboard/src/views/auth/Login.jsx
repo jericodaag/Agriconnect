@@ -46,7 +46,6 @@ const Login = () => {
                     </div>
 
                     <form onSubmit={submit} className='space-y-6'>
-                        {/* Keep your existing input fields, just update styling */}
                         <div className="space-y-4">
                             <div className="relative">
                                 <div className='absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none'>
@@ -106,6 +105,25 @@ const Login = () => {
                                 Sign up
                             </Link>
                         </p>
+
+                        {/* Divider */}
+                        <div className="relative">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-200"></div>
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="px-2 bg-white text-gray-500">Or login as</span>
+                            </div>
+                        </div>
+
+                        <a 
+                                href="http://localhost:3001/admin/login" 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className='flex items-center justify-center px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all duration-200 text-sm text-gray-600 hover:text-[#059473] group'
+                            >
+                                Admin
+                            </a>
                     </form>
                 </div>
             </div>
