@@ -2,7 +2,6 @@ import React, { forwardRef, useEffect, useState } from 'react';
 import { HiCurrencyDollar, HiCash, HiClock, HiExclamationCircle, HiTrendingUp } from "react-icons/hi";
 import { FaStripe } from "react-icons/fa";
 import { BsCashStack } from "react-icons/bs";
-import { FiArrowUpRight, FiArrowDownRight } from "react-icons/fi";
 import { useDispatch, useSelector } from 'react-redux';
 import { FixedSizeList as List } from 'react-window';
 import { get_seller_payment_details, messageClear, send_withdrowal_request } from '../../store/Reducers/PaymentReducer';
@@ -14,6 +13,60 @@ import { downloadReceipt, downloadWithdrawalCode } from '../../utils/receiptGene
 const outerElementType = forwardRef((props, ref) => (
     <div ref={ref} onWheel={({ deltaY }) => console.log('handleOnWheel', deltaY)} {...props} />
 ));
+
+const PaymentMethodCard = ({ 
+    title, 
+    grossAmount, 
+    commission, 
+    withdrawnAmount,
+    availableAmount, 
+    count, 
+    percentage, 
+    icon, 
+    color, 
+    children,
+    note 
+}) => (
+    <div className='bg-white rounded-lg shadow-sm p-4'>
+        <div className='flex items-center justify-between'>
+            <div className='flex items-center'>
+                <div className={`${color} text-white p-3 rounded-full mr-4`}>
+                    {icon}
+                </div>
+                <div>
+                    <p className='text-sm text-gray-500'>{title}</p>
+                    <h3 className='text-xl font-bold text-gray-800'>
+                        ₱{grossAmount.toLocaleString('en-PH')}
+                    </h3>
+                    <div className='space-y-1'>
+                        <p className='text-xs text-gray-500'>
+                            Gross: ₱{((grossAmount / 0.97).toFixed(2)).toLocaleString('en-PH')}
+                        </p>
+                        <p className='text-xs text-red-500'>
+                            Commission (-3%): ₱{((grossAmount / 0.97 * 0.03).toFixed(2)).toLocaleString('en-PH')}
+                        </p>
+                        <p className='text-xs text-green-500'>
+                            Available: ₱{availableAmount.toLocaleString('en-PH')}
+                        </p>
+                        <p className='text-xs text-indigo-500'>
+                            Withdrawn: ₱{withdrawnAmount.toLocaleString('en-PH')}
+                        </p>
+                        <p className='text-xs text-gray-500'>{count} orders</p>
+                    </div>
+                    {note && <p className='text-xs text-red-500 mt-1'>{note}</p>}
+                </div>
+            </div>
+            <div className='text-right space-y-2'>
+                <p className='text-sm font-semibold text-indigo-600'>
+                    {percentage.toFixed(1)}%
+                </p>
+                <p className='text-xs text-gray-500'>of total sales</p>
+                {children}
+            </div>
+        </div>
+    </div>
+);
+
 
 const Payments = () => {
     const dispatch = useDispatch();
@@ -42,34 +95,65 @@ const Payments = () => {
     const [lastWithdrawalCode, setLastWithdrawalCode] = useState('');
 
     // Calculate available amounts for each payment method
-    const codAvailableAmount = Math.max(0, salesData.cod.amount - 
+    const codAvailableAmount = Math.max(0, salesData.cod.amount * 0.97 - 
         pendingWithdrows
             .filter(w => w.payment_method === 'cod')
             .reduce((sum, w) => sum + w.amount, 0));
 
-    const stripeAvailableAmount = Math.max(0, salesData.stripe.amount - 
+    const stripeAvailableAmount = Math.max(0, salesData.stripe.amount * 0.97 - 
         pendingWithdrows
             .filter(w => w.payment_method === 'stripe')
             .reduce((sum, w) => sum + w.amount, 0));
 
-            const sendRequest = (e) => {
-                e.preventDefault();
-                // Add validation to prevent negative amounts
-                if (amount <= 0) {
-                    toast.error('Please enter a valid amount');
-                    return;
+            const mainStats = [
+                { 
+                    title: 'Gross Sales', 
+                    amount: totalAmount, 
+                    description: 'Total revenue before commission',
+                    icon: HiCurrencyDollar, 
+                    color: 'bg-blue-500'
+                },
+                { 
+                    title: 'Platform Commission', 
+                    amount: totalAmount * 0.03,
+                    description: '3% platform fee',
+                    icon: HiExclamationCircle, 
+                    color: 'bg-red-500',
+                    isNegative: true
+                },
+                { 
+                    title: 'Net Earnings', 
+                    amount: totalAmount * 0.97,
+                    description: 'Your earnings after fees',
+                    icon: HiCash, 
+                    color: 'bg-green-500'
+                },
+                { 
+                    title: 'Withdrawn Amount', 
+                    amount: withdrowAmount,
+                    description: 'Total amount withdrawn',
+                    icon: HiClock, 
+                    color: 'bg-indigo-500'
                 }
-                if (amount > stripeAvailableAmount) {
-                    toast.error('Insufficient Stripe Balance');
-                    return;
-                }
-                dispatch(send_withdrowal_request({ 
-                    amount, 
-                    sellerId: userInfo._id,
-                    payment_method: 'stripe'
-                }));
-                setAmount(0);
-            };
+            ];
+
+    const sendRequest = (e) => {
+        e.preventDefault();
+        if (amount <= 0) {
+            toast.error('Please enter a valid amount');
+            return;
+        }
+        if (amount > stripeAvailableAmount) {
+            toast.error('Insufficient Stripe Balance');
+            return;
+        }
+        dispatch(send_withdrowal_request({ 
+            amount, 
+            sellerId: userInfo._id,
+            payment_method: 'stripe'
+        }));
+        setAmount(0);
+    };
 
     const sendCodRequest = (e) => {
         e.preventDefault();
@@ -99,9 +183,7 @@ const Payments = () => {
 
     useEffect(() => {
         if (successMessage) {
-            // Check if message contains withdrawal code
             if (successMessage.includes('withdrawal code')) {
-                // Extract and save the code
                 const code = successMessage.split('withdrawal code is: ')[1];
                 setLastWithdrawalCode(code);
             }
@@ -125,174 +207,145 @@ const Payments = () => {
                 
                 {/* Main Stats */}
                 <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
-                    {[
-                        { 
-                            title: 'Total Revenue', 
-                            amount: totalAmount, 
-                            icon: HiCurrencyDollar, 
-                            color: 'bg-blue-500', 
-                            trend: <FiArrowUpRight className="text-green-500" /> 
-                        },
-                        { 
-                            title: 'Available Balance', 
-                            amount: availableAmount, 
-                            icon: HiCash, 
-                            color: 'bg-green-500', 
-                            trend: <FiArrowUpRight className="text-green-500" /> 
-                        },
-                        { 
-                            title: 'Withdrawn Amount', 
-                            amount: withdrowAmount, 
-                            icon: HiClock, 
-                            color: 'bg-yellow-500', 
-                            trend: <FiArrowDownRight className="text-red-500" /> 
-                        },
-                        { 
-                            title: 'Pending Amount', 
-                            amount: pendingAmount, 
-                            icon: HiExclamationCircle, 
-                            color: 'bg-red-500', 
-                            trend: <FiArrowUpRight className="text-green-500" /> 
-                        },
-                    ].map((item, index) => (
+                    {mainStats.map((item, index) => (
                         <div key={index} className='bg-white rounded-xl shadow-md overflow-hidden'>
                             <div className={`${item.color} p-4`}>
                                 <item.icon className="h-8 w-8 text-white" />
                             </div>
                             <div className='p-4'>
                                 <p className='text-sm text-gray-500 mb-1'>{item.title}</p>
-                                <div className='flex items-center justify-between'>
-                                    <h3 className='text-2xl font-bold text-gray-700'>₱{item.amount.toLocaleString('en-PH')}</h3>
-                                    {item.trend}
+                                <div className='space-y-1'>
+                                    <div className='flex items-center justify-between'>
+                                        <h3 className={`text-2xl font-bold ${
+                                            item.isNegative ? 'text-red-600' : 'text-gray-700'
+                                        }`}>
+                                            {item.isNegative ? '- ' : ''}
+                                            ₱{item.amount.toLocaleString('en-PH')}
+                                        </h3>
+                                    </div>
+                                    <p className='text-xs text-gray-500'>{item.description}</p>
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
 
-                {/* Payment Method Stats */}
+                {/* Payment Methods */}
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6'>
                     {/* Stripe Card */}
-                    <div className='bg-white rounded-lg shadow-sm p-4'>
-                    <div className='flex items-center justify-between'>
-                        <div className='flex items-center'>
-                            <div className='bg-indigo-500 text-white p-3 rounded-full mr-4'>
-                                <FaStripe size={24} />
-                            </div>
-                            <div>
-                                <p className='text-sm text-gray-500'>Stripe Payments</p>
-                                <h3 className='text-xl font-bold text-gray-800'>
-                                    ₱{salesData.stripe.amount.toLocaleString('en-PH')}
-                                </h3>
-                                <p className='text-xs text-gray-500'>
-                                    Available: ₱{stripeAvailableAmount.toLocaleString('en-PH')}
+                    <PaymentMethodCard 
+                    title="Stripe Earnings"
+                    grossAmount={salesData.stripe.amount * 0.97}
+                    commission={salesData.stripe.amount * 0.03}
+                    withdrawnAmount={salesData.stripe.withdrawn || 0} // Add withdrawn amount
+                    availableAmount={stripeAvailableAmount}
+                    count={salesData.stripe.count}
+                    percentage={(salesData.stripe.amount / (salesData.total || 1)) * 100}
+                    icon={<FaStripe size={24} />}
+                    color="bg-indigo-500"
+                    note="A ₱15 transfer fee applies to all withdrawals"
+                >
+                    <form onSubmit={sendRequest} className='mt-2'>
+                        <input
+                            type="number"
+                            min='0'
+                            max={stripeAvailableAmount}
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            className='w-full px-2 py-1 text-sm border rounded mb-2'
+                            placeholder='Amount'
+                        />
+                        <button
+                            disabled={loader || amount <= 0 || amount > stripeAvailableAmount}
+                            className='w-full px-3 py-1 bg-indigo-500 text-white text-sm rounded 
+                                    disabled:opacity-50 disabled:cursor-not-allowed'
+                        >
+                            {loader ? 'Processing...' : 'Withdraw'}
+                        </button>
+                    </form>
+                </PaymentMethodCard>
+
+                {/* COD Card */}
+                <PaymentMethodCard 
+                    title="COD Earnings"
+                    grossAmount={salesData.cod.amount * 0.97}
+                    commission={salesData.cod.amount * 0.03}
+                    withdrawnAmount={salesData.cod.withdrawn || 0} // Add withdrawn amount
+                    availableAmount={codAvailableAmount}
+                    count={salesData.cod.count}
+                    percentage={(salesData.cod.amount / (salesData.total || 1)) * 100}
+                    icon={<BsCashStack size={24} />}
+                    color="bg-green-500"
+                >
+                    <button
+                        onClick={() => setShowCodWithdraw(true)}
+                        disabled={codAvailableAmount <= 0}
+                        className='px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm 
+                                rounded-lg font-medium transition-colors duration-200 
+                                disabled:opacity-50 disabled:cursor-not-allowed 
+                                flex items-center space-x-1'
+                    >
+                        <BsCashStack className="h-4 w-4" />
+                        <span>Request Cash</span>
+                    </button>
+                </PaymentMethodCard>
+            </div>
+
+                <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+                    <h2 className="text-lg font-semibold text-gray-800 mb-4">Financial Summary</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="p-4 bg-gray-50 rounded-lg">
+                            <p className="text-sm text-gray-600">Total Withdrawn</p>
+                            <p className="text-xl font-bold text-indigo-600">₱{withdrowAmount.toLocaleString('en-PH')}</p>
+                            <div className="mt-1 space-y-1">
+                                <p className="text-xs text-gray-500">
+                                    Stripe: ₱{(salesData.stripe.withdrawn || 0).toLocaleString('en-PH')}
                                 </p>
-                                <p className='text-xs text-gray-500'>{salesData.stripe.count} orders</p>
-                                <p className='text-xs text-red-500 mt-1'>
-                                    Note: A ₱15 transfer fee applies to all withdrawals
+                                <p className="text-xs text-gray-500">
+                                    COD: ₱{(salesData.cod.withdrawn || 0).toLocaleString('en-PH')}
                                 </p>
                             </div>
                         </div>
-                        <div className='text-right'>
-                            <p className='text-sm font-semibold text-indigo-600'>
-                                {salesData.total ? 
-                                    ((salesData.stripe.amount / salesData.total) * 100).toFixed(1) 
-                                    : 0}%
-                            </p>
-                            <p className='text-xs text-gray-500'>of total sales</p>
-                            <form onSubmit={sendRequest} className='mt-2'>
-                                <input
-                                    type="number"
-                                    min='0'
-                                    max={stripeAvailableAmount} // Add max limit
-                                    value={amount}
-                                    onChange={(e) => setAmount(e.target.value)}
-                                    className='w-full px-2 py-1 text-sm border rounded mb-2'
-                                    placeholder='Amount'
-                                />
-                                <button
-                                    disabled={loader || amount <= 0 || amount > stripeAvailableAmount}
-                                    className='w-full px-3 py-1 bg-indigo-500 text-white text-sm rounded disabled:opacity-50 disabled:cursor-not-allowed'
-                                >
-                                    {loader ? 'Processing...' : 'Withdraw'}
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                    <div className='mt-3 p-2 bg-gray-50 rounded-lg'>
-                        <p className='text-xs text-gray-600'>
-                            Important: A transfer fee of ₱15 will be deducted from your withdrawal amount. 
-                            Please ensure your withdrawal amount is sufficient to cover the transfer fee.
-                        </p>
-                    </div>
-                </div>
-
-                    {/* COD Card */}
-                    <div className='bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300'>
-                    <div className='p-6'>
-                        <div className='flex items-start justify-between'>
-                            <div className='flex items-start space-x-4'>
-                                <div className='bg-gradient-to-r from-green-500 to-green-600 p-4 rounded-xl text-white shadow-sm'>
-                                    <BsCashStack size={28} />
-                                </div>
-                                <div className='space-y-3'>
-                                    <div>
-                                        <h3 className='text-sm font-medium text-green-600 mb-1'>COD Payments</h3>
-                                        <p className='text-2xl font-bold text-gray-800'>
-                                            ₱{salesData.cod.amount.toLocaleString('en-PH')}
-                                        </p>
-                                    </div>
-                                    
-                                    <div className='space-y-1.5'>
-                                        <div className='flex items-center text-sm text-gray-600'>
-                                            <HiCash className="mr-1.5 h-4 w-4" />
-                                            Available: ₱{codAvailableAmount.toLocaleString('en-PH')}
-                                        </div>
-                                        
-                                        <div className='flex items-center text-sm text-gray-600'>
-                                            <HiTrendingUp className="mr-1.5 h-4 w-4" />
-                                            {salesData.total ? 
-                                                ((salesData.cod.amount / salesData.total) * 100).toFixed(1) 
-                                                : 0}% of total sales
-                                        </div>
-                                        
-                                        <div className='flex items-center text-sm text-gray-600'>
-                                            <HiClock className="mr-1.5 h-4 w-4" />
-                                            {salesData.cod.count} orders
-                                        </div>
-                                    </div>
-
-                                    <p className='text-xs text-red-500'>
-                                        Note: A ₱15 transfer fee applies to all withdrawals
-                                    </p>
-                                </div>
+                        <div className="p-4 bg-gray-50 rounded-lg">
+                            <p className="text-sm text-gray-600">Pending Withdrawals</p>
+                            <p className="text-xl font-bold text-yellow-600">₱{pendingAmount.toLocaleString('en-PH')}</p>
+                            <div className="mt-1 space-y-1">
+                                <p className="text-xs text-gray-500">
+                                    Stripe: ₱{(salesData.stripe.pending || 0).toLocaleString('en-PH')}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                    COD: ₱{(salesData.cod.pending || 0).toLocaleString('en-PH')}
+                                </p>
                             </div>
-
-                            <button
-                                onClick={() => setShowCodWithdraw(true)}
-                                disabled={codAvailableAmount <= 0}
-                                className='px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg
-                                        font-medium transition-colors duration-200 disabled:opacity-50 
-                                        disabled:cursor-not-allowed flex items-center space-x-1'
-                            >
-                                <BsCashStack className="h-4 w-4" />
-                                <span>Request Cash</span>
-                            </button>
                         </div>
-                    </div>
-
-                    <div className='bg-gray-50 px-6 py-4 rounded-b-lg border-t border-gray-100'>
-                        <div className='flex items-center text-sm text-gray-600'>
-                            <HiExclamationCircle className="h-4 w-4 mr-2 text-gray-500 flex-shrink-0" />
-                            <p>
-                                Minimum withdrawal amount is ₱100.
-                            </p>
+                        <div className="p-4 bg-gray-50 rounded-lg">
+                            <p className="text-sm text-gray-600">Available Balance</p>
+                            <p className="text-xl font-bold text-green-600">₱{availableAmount.toLocaleString('en-PH')}</p>
+                            <div className="mt-1 space-y-1">
+                                <p className="text-xs text-gray-500">
+                                    Stripe: ₱{stripeAvailableAmount.toLocaleString('en-PH')}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                    COD: ₱{codAvailableAmount.toLocaleString('en-PH')}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="p-4 bg-gray-50 rounded-lg">
+                            <p className="text-sm text-gray-600">Total Commission Paid</p>
+                            <p className="text-xl font-bold text-red-600">₱{(totalAmount * 0.03).toLocaleString('en-PH')}</p>
+                            <div className="mt-1 space-y-1">
+                                <p className="text-xs text-gray-500">
+                                    Stripe: ₱{(salesData.stripe.amount * 0.03).toLocaleString('en-PH')}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                    COD: ₱{(salesData.cod.amount * 0.03).toLocaleString('en-PH')}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
-                </div>
 
-                {/* Withdrawal History */}
+                {/* Keep your existing Withdrawal History section */}
                 <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
                     {/* Pending Withdrawals */}
                     <div className='bg-white rounded-xl shadow-md p-6'>
@@ -321,7 +374,7 @@ const Payments = () => {
                                         const isCOD = withdrawal?.payment_method === 'cod';
                                         
                                         return (
-                                            <div style={style} className='flex items-center text-sm border-b hover:bg-gray-50 transition-colors duration-200'>
+                                            <div style={style} className='flex items-center text-sm border-b hover:bg-gray-50'>
                                                 <div className='w-1/6 p-3'>{index + 1}</div>
                                                 <div className='w-1/6 p-3'>₱{withdrawal?.amount.toLocaleString('en-PH')}</div>
                                                 <div className='w-1/6 p-3'>

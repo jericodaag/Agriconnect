@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import api from "../../api/api"; 
- 
+
+// Async thunks remain the same
 export const get_seller_payment_details = createAsyncThunk(
     'payment/get_seller_payment_details',
     async (sellerId, { rejectWithValue, fulfillWithValue }) => {
@@ -71,18 +72,43 @@ export const confirm_payment_request = createAsyncThunk(
 export const PaymentReducer = createSlice({
     name: 'payment',
     initialState: {
-        totalAmount: 0,
-        pendingAmount: 0,
-        withdrowAmount: 0,
-        availableAmount: 0,
-        pendingWithdrows: [],
-        successWithdrows: [],
-        withdrawalHistory: [],
+        // Financial Overview
+        totalAmount: 0,          // Gross sales
+        netAmount: 0,            // Total after commission (97% of gross)
+        commission: 0,           // Total platform fee (3% of gross)
+        pendingAmount: 0,        // Total pending withdrawals
+        withdrowAmount: 0,       // Total completed withdrawals
+        availableAmount: 0,      // Current available for withdrawal
+
+        // Withdrawal Records
+        pendingWithdrows: [],    // Pending withdrawal requests
+        successWithdrows: [],    // Completed withdrawals
+        withdrawalHistory: [],   // Complete withdrawal history
+
+        // Sales Data by Payment Method
         salesData: {
-            total: 0,
-            stripe: { amount: 0, count: 0 },
-            cod: { amount: 0, count: 0 }
+            total: 0,            // Total gross sales across all methods
+            stripe: {
+                gross: 0,        // Total stripe sales before commission
+                amount: 0,       // Available for withdrawal
+                netAmount: 0,    // After commission
+                commission: 0,   // Platform fee
+                count: 0,        // Number of orders
+                withdrawn: 0,    // Total withdrawn
+                pending: 0       // Pending withdrawals
+            },
+            cod: {
+                gross: 0,        // Total COD sales before commission
+                amount: 0,       // Available for withdrawal
+                netAmount: 0,    // After commission
+                commission: 0,   // Platform fee
+                count: 0,        // Number of orders
+                withdrawn: 0,    // Total withdrawn
+                pending: 0       // Pending withdrawals
+            }
         },
+
+        // UI States
         successMessage: '',
         errorMessage: '',
         loader: false
@@ -100,13 +126,41 @@ export const PaymentReducer = createSlice({
             })
             .addCase(get_seller_payment_details.fulfilled, (state, { payload }) => {
                 state.loader = false;
+
+                // Update main financial totals
                 state.totalAmount = payload.totalAmount;
+                state.netAmount = payload.netAmount;
+                state.commission = payload.commission;
                 state.pendingAmount = payload.pendingAmount;
                 state.withdrowAmount = payload.withdrowAmount;
                 state.availableAmount = payload.availableAmount;
+
+                // Update withdrawal records
                 state.pendingWithdrows = payload.pendingWithdrows;
                 state.successWithdrows = payload.successWithdrows;
-                state.salesData = payload.salesData;
+
+                // Update detailed sales data
+                state.salesData = {
+                    total: payload.salesData.total,
+                    stripe: {
+                        gross: payload.salesData.stripe.total || 0,
+                        amount: payload.salesData.stripe.amount || 0,
+                        netAmount: payload.salesData.stripe.netAmount || 0,
+                        commission: payload.salesData.stripe.commission || 0,
+                        count: payload.salesData.stripe.count || 0,
+                        withdrawn: payload.salesData.stripe.withdrawn || 0,
+                        pending: payload.salesData.stripe.pending || 0
+                    },
+                    cod: {
+                        gross: payload.salesData.cod.total || 0,
+                        amount: payload.salesData.cod.amount || 0,
+                        netAmount: payload.salesData.cod.netAmount || 0,
+                        commission: payload.salesData.cod.commission || 0,
+                        count: payload.salesData.cod.count || 0,
+                        withdrawn: payload.salesData.cod.withdrawn || 0,
+                        pending: payload.salesData.cod.pending || 0
+                    }
+                };
             })
             .addCase(get_seller_payment_details.rejected, (state, { payload }) => {
                 state.loader = false;
@@ -116,10 +170,6 @@ export const PaymentReducer = createSlice({
             .addCase(send_withdrowal_request.pending, (state) => {
                 state.loader = true;
             })
-            .addCase(send_withdrowal_request.rejected, (state, { payload }) => {
-                state.loader = false;  
-                state.errorMessage = payload.message; 
-            })
             .addCase(send_withdrowal_request.fulfilled, (state, { payload }) => {
                 state.loader = false;
                 state.successMessage = payload.message;
@@ -127,22 +177,27 @@ export const PaymentReducer = createSlice({
                 
                 const withdrawalAmount = payload.withdrawal.amount;
                 
-                // Update available amount and salesData based on payment method
+                // Update available amounts
+                state.availableAmount -= withdrawalAmount;
                 if (payload.withdrawal.payment_method === 'stripe') {
-                    state.availableAmount -= withdrawalAmount;
-                    state.salesData.stripe.amount = state.salesData.stripe.amount - withdrawalAmount;
+                    state.salesData.stripe.amount -= withdrawalAmount;
+                    state.salesData.stripe.pending += withdrawalAmount;
                 } else if (payload.withdrawal.payment_method === 'cod') {
-                    state.availableAmount -= withdrawalAmount;
-                    state.salesData.cod.amount = state.salesData.cod.amount - withdrawalAmount;
+                    state.salesData.cod.amount -= withdrawalAmount;
+                    state.salesData.cod.pending += withdrawalAmount;
                 }
                 
                 // Update pending amount
                 state.pendingAmount = state.pendingWithdrows.reduce((sum, w) => sum + w.amount, 0);
 
-                // If withdrawal code exists, add it to success message
+                // Add withdrawal code to message if present
                 if (payload.withdrawal.withdrawalCode) {
                     state.successMessage = `Withdrawal request submitted. Your withdrawal code is: ${payload.withdrawal.withdrawalCode}`;
                 }
+            })
+            .addCase(send_withdrowal_request.rejected, (state, { payload }) => {
+                state.loader = false;
+                state.errorMessage = payload.message;
             })
 
             .addCase(get_payment_request.fulfilled, (state, { payload }) => {
@@ -156,26 +211,33 @@ export const PaymentReducer = createSlice({
             .addCase(confirm_payment_request.pending, (state) => {
                 state.loader = true;
             })
-            .addCase(confirm_payment_request.rejected, (state, { payload }) => {
-                state.loader = false;
-                state.errorMessage = payload.message; 
-            })
             .addCase(confirm_payment_request.fulfilled, (state, { payload }) => {
                 const temp = state.pendingWithdrows.filter(r => r._id !== payload.payment._id);
                 state.loader = false;
                 state.successMessage = payload.message;
                 state.pendingWithdrows = temp;
                 
-                // Update withdrawal amount
+                // Update withdrawal tracking
                 state.withdrowAmount += payload.payment.amount;
+                state.pendingAmount = temp.reduce((sum, w) => sum + w.amount, 0);
                 
-                // Update pending amount
-                state.pendingAmount = state.pendingWithdrows.reduce((sum, w) => sum + w.amount, 0);
+                // Update per payment method tracking
+                if (payload.payment.payment_method === 'stripe') {
+                    state.salesData.stripe.withdrawn += payload.payment.amount;
+                    state.salesData.stripe.pending -= payload.payment.amount;
+                } else if (payload.payment.payment_method === 'cod') {
+                    state.salesData.cod.withdrawn += payload.payment.amount;
+                    state.salesData.cod.pending -= payload.payment.amount;
+                }
                 
-                // Add to withdrawal history
+                // Update withdrawal history
                 if (state.withdrawalHistory) {
                     state.withdrawalHistory = [payload.payment, ...state.withdrawalHistory];
                 }
+            })
+            .addCase(confirm_payment_request.rejected, (state, { payload }) => {
+                state.loader = false;
+                state.errorMessage = payload.message;
             })
     }
 });

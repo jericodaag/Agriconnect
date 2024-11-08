@@ -93,7 +93,7 @@ class paymentController {
         const {sellerId} = req.params
         
         try {
-            // Get all stripe payments
+            // Get all stripe payments with gross amounts
             const stripeSales = await authOrder.aggregate([
                 {
                     $match: { 
@@ -111,7 +111,7 @@ class paymentController {
                 }
             ]);
     
-            // Get all COD payments
+            // Get all COD payments with gross amounts
             const codSales = await authOrder.aggregate([
                 {
                     $match: { 
@@ -129,19 +129,33 @@ class paymentController {
                 }
             ]);
     
-            // Get pending withdrawals
+            // Get pending and successful withdrawals
             const pendingWithdrows = await withdrowRequest.find({
                 sellerId,
                 status: 'pending'
             });
     
-            // Get successful withdrawals
             const successWithdrows = await withdrowRequest.find({
                 sellerId,
                 status: 'success'
             });
     
-            // Calculate withdrawn amounts by payment method
+            // Calculate gross amounts
+            const stripeTotalAmount = stripeSales[0]?.amount || 0;
+            const codTotalAmount = codSales[0]?.amount || 0;
+            const totalAmount = stripeTotalAmount + codTotalAmount;
+    
+            // Calculate commission amounts (3%)
+            const stripeCommission = stripeTotalAmount * 0.03;
+            const codCommission = codTotalAmount * 0.03;
+            const totalCommission = totalAmount * 0.03;
+    
+            // Calculate net amounts (97%)
+            const stripeNetAmount = stripeTotalAmount * 0.97;
+            const codNetAmount = codTotalAmount * 0.97;
+            const totalNetAmount = totalAmount * 0.97;
+    
+            // Calculate withdrawn and pending amounts
             const stripeWithdrawn = successWithdrows
                 .filter(w => w.payment_method === 'stripe')
                 .reduce((sum, w) => sum + w.amount, 0);
@@ -150,7 +164,6 @@ class paymentController {
                 .filter(w => w.payment_method === 'cod')
                 .reduce((sum, w) => sum + w.amount, 0);
     
-            // Calculate pending amounts by payment method
             const stripePending = pendingWithdrows
                 .filter(w => w.payment_method === 'stripe')
                 .reduce((sum, w) => sum + w.amount, 0);
@@ -159,42 +172,39 @@ class paymentController {
                 .filter(w => w.payment_method === 'cod')
                 .reduce((sum, w) => sum + w.amount, 0);
     
-            // Get total amounts
-            const stripeTotalAmount = stripeSales[0]?.amount || 0;
-            const codTotalAmount = codSales[0]?.amount || 0;
-    
-            // Calculate available amounts after withdrawals and pending
-            const stripeAvailable = stripeTotalAmount - stripeWithdrawn - stripePending;
-            const codAvailable = codTotalAmount - codWithdrawn - codPending;
+            // Calculate available amounts (net amount - withdrawn - pending)
+            const stripeAvailable = stripeNetAmount - stripeWithdrawn - stripePending;
+            const codAvailable = codNetAmount - codWithdrawn - codPending;
     
             const salesData = {
-                total: stripeTotalAmount + codTotalAmount,
+                total: totalAmount,
                 stripe: { 
-                    amount: stripeAvailable, // Use available amount instead of total
+                    amount: stripeAvailable,
+                    total: stripeTotalAmount,
+                    netAmount: stripeNetAmount,
+                    commission: stripeCommission,
                     count: stripeSales[0]?.count || 0,
-                    total: stripeTotalAmount, // Keep track of original total
                     withdrawn: stripeWithdrawn,
                     pending: stripePending
                 },
                 cod: { 
-                    amount: codAvailable, // Use available amount instead of total
+                    amount: codAvailable,
+                    total: codTotalAmount,
+                    netAmount: codNetAmount,
+                    commission: codCommission,
                     count: codSales[0]?.count || 0,
-                    total: codTotalAmount, // Keep track of original total
                     withdrawn: codWithdrawn,
                     pending: codPending
                 }
             };
     
-            const totalAmount = salesData.total;
-            const pendingAmount = stripePending + codPending;
-            const withdrowAmount = stripeWithdrawn + codWithdrawn;
-            const availableAmount = stripeAvailable + codAvailable;
-    
             responseReturn(res, 200, {
                 totalAmount,
-                pendingAmount,
-                withdrowAmount,
-                availableAmount,
+                netAmount: totalNetAmount,
+                commission: totalCommission,
+                pendingAmount: stripePending + codPending,
+                withdrowAmount: stripeWithdrawn + codWithdrawn,
+                availableAmount: stripeAvailable + codAvailable,
                 pendingWithdrows,
                 successWithdrows,
                 salesData

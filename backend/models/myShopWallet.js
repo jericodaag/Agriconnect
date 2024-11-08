@@ -5,6 +5,15 @@ const myShopWalletSchema = new Schema({
         type: Number,
         required: true
     },
+    type: {
+        type: String,
+        enum: ['commission', 'other'],
+        default: 'other'
+    },
+    orderId: {
+        type: Schema.ObjectId,
+        ref: 'customerOrders'
+    },
     month: {
         type: String,
         required: true

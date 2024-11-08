@@ -37,6 +37,16 @@ const authSchema = new Schema({
         type: String,
         required: true,
         enum: ['stripe', 'cod']  // Add validation
+    },
+    commission: {
+        type: Number,
+        required: true,
+        default: 0
+    },
+    netAmount: {
+        type: Number,
+        required: true,
+        default: 0
     }
 },{ timestamps: true })
 

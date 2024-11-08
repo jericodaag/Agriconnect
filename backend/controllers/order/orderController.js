@@ -31,79 +31,94 @@ class orderController {
     }
 
     place_order = async (req, res) => {
-        const { price, products, shipping_fee, shippingInfo, userId, payment_method } = req.body
-        let authorOrderData = []
-        let cardId = []
-        const tempDate = moment(Date.now()).format('LLL')
-        let customerOrderProduct = []
-    
-        // First loop to gather customer order products
-        for (let i = 0; i < products.length; i++) {
-            const pro = products[i].products
-            for (let j = 0; j < pro.length; j++) {
-                const tempCusPro = pro[j].productInfo;
-                const productPrice = tempCusPro.price; // Get original price
-                tempCusPro.quantity = pro[j].quantity;
-                // Calculate total for this product
-                tempCusPro.totalPrice = productPrice * pro[j].quantity;
-                customerOrderProduct.push(tempCusPro);
-                if (pro[j]._id) {
-                    cardId.push(pro[j]._id);
-                } 
-            } 
-        }
+        const { price, products, shipping_fee, shippingInfo, userId, payment_method } = req.body;
+        let authorOrderData = []; // Add this array
+        let customerOrderProduct = []; // Add this array to store customer order products
+        let cardId = []; // Add this array
+        const tempDate = moment(Date.now()).format('LLL');
+        
+        // Calculate commission (3%)
+        const calculateCommission = (amount) => {
+            return parseFloat((amount * 0.03).toFixed(2));
+        };
     
         try {
+            // First, prepare the customer order products
+            for (let i = 0; i < products.length; i++) {
+                const pro = products[i].products;
+                for (let j = 0; j < pro.length; j++) {
+                    const tempCusPro = pro[j].productInfo;
+                    const productPrice = tempCusPro.price;
+                    tempCusPro.quantity = pro[j].quantity;
+                    tempCusPro.totalPrice = productPrice * pro[j].quantity;
+                    customerOrderProduct.push(tempCusPro);
+                    if (pro[j]._id) {
+                        cardId.push(pro[j]._id);
+                    }
+                }
+            }
+    
             const payment_status = payment_method === 'cod' ? 'unpaid' : 'pending';
             
+            // Calculate commission for the total order
+            const totalPrice = price + shipping_fee;
+            const commission = calculateCommission(totalPrice);
+            const sellerAmount = totalPrice - commission;
+    
             // Create customer order
             const order = await customerOrder.create({
                 customerId: userId,
                 shippingInfo,
                 products: customerOrderProduct,
-                price: price + shipping_fee,
+                price: totalPrice,
+                commission: commission,
                 payment_status,
                 delivery_status: 'pending',
                 date: tempDate,
                 payment_method
-            })
+            });
     
-            // Process seller orders with correct price calculation
+            // Process seller orders with commission
             for (let i = 0; i < products.length; i++) {
-                const pro = products[i].products
-                const sellerId = products[i].sellerId
-                let storePor = []
-                let sellerOrderPrice = 0
+                const pro = products[i].products;
+                const sellerId = products[i].sellerId;
+                let storePor = [];
+                let sellerOrderPrice = 0;
     
                 for (let j = 0; j < pro.length; j++) {
-                    const tempPro = pro[j].productInfo
-                    const quantity = pro[j].quantity
-                    const productPrice = tempPro.price
+                    const tempPro = pro[j].productInfo;
+                    const quantity = pro[j].quantity;
+                    const productPrice = tempPro.price;
                     
-                    // Calculate correct price for this product
-                    const productTotal = productPrice * quantity
-                    sellerOrderPrice += productTotal
+                    const productTotal = productPrice * quantity;
+                    sellerOrderPrice += productTotal;
     
-                    tempPro.quantity = quantity
-                    tempPro.totalPrice = productTotal
-                    storePor.push(tempPro)
+                    tempPro.quantity = quantity;
+                    tempPro.totalPrice = productTotal;
+                    storePor.push(tempPro);
                 }
+    
+                // Calculate commission for this seller's portion
+                const sellerCommission = calculateCommission(sellerOrderPrice);
+                const sellerNetAmount = sellerOrderPrice - sellerCommission;
     
                 authorOrderData.push({
                     orderId: order.id,
                     sellerId,
                     products: storePor,
-                    price: sellerOrderPrice, // Use the correctly calculated price
+                    price: sellerOrderPrice,
+                    netAmount: sellerNetAmount,
+                    commission: sellerCommission,
                     payment_status,
                     shippingInfo: 'Agriconnect Warehouse',
                     delivery_status: 'pending',
                     date: tempDate,
                     payment_method
-                })
+                });
             }
     
             // Insert seller orders
-            await authOrderModel.insertMany(authorOrderData)
+            await authOrderModel.insertMany(authorOrderData);
 
         // Delete cart items
         for (let k = 0; k < cardId.length; k++) {
@@ -281,26 +296,9 @@ class orderController {
         const { delivery_status, payment_status } = req.body;
     
         try {
-            // Get the original order to check if payment status is changing from unpaid to paid
             const originalOrder = await customerOrder.findById(orderId);
             const isPaymentStatusChangingToPaid = originalOrder.payment_status === 'unpaid' && payment_status === 'paid';
     
-            // Update main order
-            await customerOrder.findByIdAndUpdate(orderId, {
-                delivery_status,
-                payment_status
-            });
-    
-            // Update related authorOrders
-            await authOrderModel.updateMany(
-                { orderId: new ObjectId(orderId) },
-                {
-                    delivery_status,
-                    payment_status
-                }
-            );
-    
-            // If payment status is changing from unpaid to paid, create wallet entries
             if (isPaymentStatusChangingToPaid) {
                 const cuOrder = await customerOrder.findById(orderId);
                 const auOrder = await authOrderModel.find({
@@ -310,24 +308,64 @@ class orderController {
                 const time = moment(Date.now()).format('l');
                 const splitTime = time.split('/');
     
-                // Create myShopWallet entry with payment method
+                // Create admin commission wallet entry
                 await myShopWallet.create({
-                    amount: cuOrder.price,
+                    amount: cuOrder.commission, // Store commission amount
+                    type: 'commission',
                     month: splitTime[0],
                     year: splitTime[2],
-                    payment_method: cuOrder.payment_method
+                    payment_method: cuOrder.payment_method,
+                    orderId: orderId
                 });
     
-                // Create entries in sellerWallet for each seller
+                // Create entries in sellerWallet with all required fields
                 for (let i = 0; i < auOrder.length; i++) {
+                    const sellerOrder = auOrder[i];
+                    const grossAmount = sellerOrder.price;
+                    const commission = grossAmount * 0.03; // 3% commission
+                    const netAmount = grossAmount - commission; // 97% of gross amount
+    
                     await sellerWallet.create({
-                        sellerId: auOrder[i].sellerId.toString(),
-                        amount: auOrder[i].price,
+                        sellerId: sellerOrder.sellerId.toString(),
+                        amount: netAmount,
+                        commission: commission,
+                        grossAmount: grossAmount,
+                        netAmount: netAmount, // Explicitly set netAmount
                         month: splitTime[0],
                         year: splitTime[2],
-                        payment_method: auOrder[i].payment_method
+                        payment_method: sellerOrder.payment_method
                     });
                 }
+    
+                // Update the order status
+                await customerOrder.findByIdAndUpdate(orderId, {
+                    payment_status,
+                    delivery_status,
+                    updatedAt: new Date()
+                });
+    
+                await authOrderModel.updateMany(
+                    { orderId: new ObjectId(orderId) },
+                    {
+                        payment_status,
+                        delivery_status,
+                        updatedAt: new Date()
+                    }
+                );
+            } else {
+                // If only updating delivery status
+                await customerOrder.findByIdAndUpdate(orderId, {
+                    delivery_status,
+                    updatedAt: new Date()
+                });
+    
+                await authOrderModel.updateMany(
+                    { orderId: new ObjectId(orderId) },
+                    {
+                        delivery_status,
+                        updatedAt: new Date()
+                    }
+                );
             }
     
             responseReturn(res, 200, { message: 'Order status updated successfully' });
@@ -335,7 +373,7 @@ class orderController {
             console.log('admin status update error:', error.message);
             responseReturn(res, 500, { message: 'Internal server error' });
         }
-    };
+    }
 
     get_seller_orders = async (req, res) => {
         const {sellerId} = req.params
