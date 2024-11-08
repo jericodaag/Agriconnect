@@ -22,7 +22,7 @@ const Footer = () => {
                         <img className='w-[190px] h-[70px]' src="http://localhost:3000/images/logo.png" alt="logo" />
                         <ul className='flex flex-col gap-2 text-slate-600'>
                             <li>Address : MacArthur Highway, Claro M. Recto, Angeles City , Pampanga , Philippines</li>
-                            <li>Phone : +63 927-041-6057</li>
+                            <li>Phone : +63 917-562-6766</li>
                             <li>Email : agriconnectshop@gmail.com</li>
                         </ul> 
                     </div> 

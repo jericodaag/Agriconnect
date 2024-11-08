@@ -85,7 +85,7 @@ const Header = () => {
                             </li>
                             <li className='flex relative justify-center items-center gap-2 text-sm '>
                                 <span><IoMdPhonePortrait /></span>
-                                <span>+(63) 927 041 6057</span>
+                                <span>+(63) 917-562-6766</span>
                             </li> 
                         </ul>
                         <div>
@@ -137,23 +137,25 @@ const Header = () => {
                         <div className='md:lg:w-full w-9/12'>
                             <div className='flex justify-between md-lg:justify-center items-center flex-wrap pl-8'>
                                 <ul className='flex justify-start items-start gap-8 text-sm font-bold uppercase md-lg:hidden'>
-                                    <li>
-                                        <Link to='/' className={`p-2 block ${pathname === '/' ? 'text-[#059473]' : 'text-slate-600'}`}>
-                                            Home
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link to='/shops' className={`p-2 block ${pathname === '/shops' ? 'text-[#059473]' : 'text-slate-600'}`}>Shop</Link>
-                                    </li>
-                                    <li>
-                                        <Link to='/blog' className={`p-2 block ${pathname === '/blog' ? 'text-[#059473]' : 'text-slate-600'}`}>Blog</Link>
-                                    </li>
-                                    <li>
-                                        <Link to='/about' className={`p-2 block ${pathname === '/about' ? 'text-[#059473]' : 'text-slate-600'}`}>About Us</Link>
-                                    </li>
-                                    <li>
-                                        <Link to='/contact' className={`p-2 block ${pathname === '/contact' ? 'text-[#059473]' : 'text-slate-600'}`}>Contact Us</Link>
-                                    </li>
+                                <li>
+                                    <Link to='/' className={`p-2 block ${pathname === '/' ? 'text-[#059473]' : 'text-slate-600'}`}>
+                                        Home
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to='/shops' className={`p-2 block ${pathname === '/shops' ? 'text-[#059473]' : 'text-slate-600'}`}>
+                                        Shop
+                                    </Link>
+                                </li>
+                                <li>
+                                    <span className="p-2 block text-slate-400 cursor-not-allowed">Blog</span>
+                                </li>
+                                <li>
+                                    <span className="p-2 block text-slate-400 cursor-not-allowed">About Us</span>
+                                </li>
+                                <li>
+                                    <span className="p-2 block text-slate-400 cursor-not-allowed">Contact Us</span>
+                                </li>
                                 </ul>
                                 <div className='flex md-lg:hidden justify-center items-center gap-5'>
                                     <div className='flex justify-center gap-5'>
@@ -239,7 +241,7 @@ const Header = () => {
                                 <span><FaPhoneAlt /></span>
                             </div>
                             <div className='flex justify-end flex-col gap-1'>
-                                <h2 className='text-sm font-medium text-slate-700'>+63 927-041-6057</h2>
+                                <h2 className='text-sm font-medium text-slate-700'>+(63) 917-562-6766</h2>
                                 <span className='text-xs'>Support 24/7</span> 
                             </div>
                         </div>
@@ -348,7 +350,7 @@ const Header = () => {
                                         <span><FaPhoneAlt className="text-[#059473]" /></span>
                                     </div>
                                     <div className='flex justify-end flex-col gap-1'>
-                                        <h2 className='text-sm font-medium text-slate-700'>+63 927-041-6057</h2>
+                                        <h2 className='text-sm font-medium text-slate-700'>+(63) 917-562-6766</h2>
                                         <span className='text-xs'>Support 24/7</span> 
                                     </div>
                                 </div>
