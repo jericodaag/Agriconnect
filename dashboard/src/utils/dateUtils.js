@@ -16,6 +16,6 @@ export const getFreshnessStatus = (daysSinceHarvest) => {
     } else if (daysSinceHarvest <= 14) {
         return { status: 'Still Good', color: 'text-yellow-600' };
     } else {
-        return { status: 'May be Perished', color: 'text-red-600' };
+        return { status: 'Expired', color: 'text-red-600' };
     }
 };
