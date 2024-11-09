@@ -24,6 +24,7 @@ const Profile = () => {
     const [activeTab, setActiveTab] = useState('profile');
     const dispatch = useDispatch();
     const { userInfo, successMessage, errorMessage } = useSelector(state => state.auth);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
     const [shopInfo, setShopInfo] = useState({
         shopName: userInfo?.shopInfo?.shopName || '',
@@ -38,7 +39,6 @@ const Profile = () => {
         new_password: ''
     });
 
-    // ID Renewal State
     const [showRenewalForm, setShowRenewalForm] = useState(false);
     const [renewalData, setRenewalData] = useState({
         idType: '',
@@ -47,6 +47,15 @@ const Profile = () => {
         reason: ''
     });
     const [renewalPreview, setRenewalPreview] = useState(null);
+
+    // Handle window resize
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 768);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         if (successMessage) {
@@ -169,6 +178,54 @@ const Profile = () => {
         return colors[status] || 'bg-gray-500 text-white';
     };
 
+    const ProfileImageSection = () => (
+        <div className="text-center">
+            <div className="relative inline-block">
+                {/* Profile Image Container */}
+                <div className={`relative inline-block ${!isMobile && 'group'}`}>
+                    {userInfo?.image ? (
+                        <img 
+                            src={userInfo.image} 
+                            alt={userInfo.name} 
+                            className="w-40 h-40 rounded-full object-cover border-4 border-white shadow-lg transition-transform duration-300 group-hover:scale-105" 
+                        />
+                    ) : (
+                        <FaUserCircle className="w-40 h-40 text-gray-300" />
+                    )}
+                    
+                    {/* Camera Icon Button - Desktop (Hover) / Mobile (Always Visible) */}
+                    <label 
+                        htmlFor="profile-image" 
+                        className={`absolute bottom-2 right-2 bg-white p-2 rounded-full cursor-pointer shadow-lg transition-all duration-300
+                            ${isMobile 
+                                ? 'opacity-100' // Always visible on mobile
+                                : 'opacity-0 group-hover:opacity-100'} // Visible on hover for desktop
+                            hover:bg-indigo-100 active:bg-indigo-200
+                            flex items-center justify-center
+                            ${isMobile && 'transform scale-110'}`}
+                    >
+                        <FaCamera className="text-indigo-600 text-xl" />
+                    </label>
+                    <input 
+                        id="profile-image" 
+                        type="file" 
+                        className="hidden" 
+                        onChange={add_image} 
+                        accept="image/*"
+                        capture={isMobile ? "environment" : undefined}
+                    />
+                </div>
+
+                {/* Mobile-only caption */}
+                {isMobile && (
+                    <p className="text-xs text-indigo-200 mt-2">
+                        Tap the camera icon to change profile photo
+                    </p>
+                )}
+            </div>
+        </div>
+    );
+
     const InfoItem = ({ icon, label, value }) => (
         <div className="flex items-center space-x-3 mb-4">
             <div className="text-indigo-500 w-8">{icon}</div>
@@ -180,8 +237,8 @@ const Profile = () => {
     );
 
     const renderIDRenewalForm = () => (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-xl m-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 w-full max-w-xl max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-semibold">Renew ID Verification</h3>
                     <button 
@@ -259,6 +316,7 @@ const Profile = () => {
                                             className="sr-only"
                                             onChange={handleRenewalImageChange}
                                             accept="image/*"
+                                            capture={isMobile ? "environment" : undefined}
                                             required
                                         />
                                     </label>
@@ -290,27 +348,16 @@ const Profile = () => {
             </div>
         </div>
     );
+
     return (
-        <div className="min-h-screen bg-gray-50/50 p-8">
+        <div className="min-h-screen bg-gray-50/50 p-4 md:p-8">
             <Toaster position="top-right" reverseOrder={false} />
             <div className="max-w-7xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden">
                 <div className="md:flex">
                     {/* Left Sidebar */}
-                    <div className="md:w-1/3 bg-gradient-to-b from-indigo-600 to-purple-700 p-8 text-white">
-                        <div className="text-center">
-                            <div className="relative inline-block group">
-                                {userInfo?.image ? (
-                                    <img src={userInfo.image} alt={userInfo.name} className="w-40 h-40 rounded-full object-cover border-4 border-white shadow-lg transition-transform duration-300 group-hover:scale-105" />
-                                ) : (
-                                    <FaUserCircle className="w-40 h-40 text-gray-300" />
-                                )}
-                                <label htmlFor="profile-image" className="absolute bottom-2 right-2 bg-white p-2 rounded-full cursor-pointer shadow-lg transition-all duration-300 opacity-0 group-hover:opacity-100 hover:bg-indigo-100">
-                                    <FaCamera className="text-indigo-600 text-xl" />
-                                </label>
-                                <input id="profile-image" type="file" className="hidden" onChange={add_image} accept="image/*" />
-                            </div>
-                        </div>
-                        <h2 className="mt-6 text-3xl font-bold text-center">{userInfo.name}</h2>
+                    <div className="md:w-1/3 bg-gradient-to-b from-indigo-600 to-purple-700 p-6 md:p-8 text-white">
+                        <ProfileImageSection />
+                        <h2 className="mt-6 text-2xl md:text-3xl font-bold text-center">{userInfo.name}</h2>
                         <p className="text-center text-indigo-200 mb-6">{userInfo.email}</p>
                         <div className="space-y-4">
                             <div className="flex justify-between items-center bg-indigo-700 bg-opacity-40 p-4 rounded-lg">
@@ -359,30 +406,32 @@ const Profile = () => {
                     </div>
 
                     {/* Main Content Area */}
-                    <div className="md:w-2/3 p-8">
-                        <div className="flex mb-8 border-b">
-                            {['profile', 'shop', 'password'].map((tab) => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setActiveTab(tab)}
-                                    className={`pb-4 px-6 font-semibold transition-colors duration-200 ${
-                                        activeTab === tab 
-                                            ? 'text-indigo-600 border-b-2 border-indigo-600' 
-                                            : 'text-gray-500 hover:text-indigo-600'
-                                    }`}
-                                >
-                                    {tab.charAt(0).toUpperCase() + tab.slice(1)} {tab !== 'password' ? 'Info' : 'Change'}
-                                </button>
-                            ))}
+                    <div className="md:w-2/3 p-6 md:p-8">
+                        {/* Tab Navigation - Mobile Scrollable */}
+                        <div className="overflow-x-auto -mx-6 px-6 mb-6 md:overflow-visible md:px-0 md:mx-0">
+                            <div className="flex border-b min-w-max md:min-w-0">
+                                {['profile', 'shop', 'password'].map((tab) => (
+                                    <button
+                                        key={tab}
+                                        onClick={() => setActiveTab(tab)}
+                                        className={`pb-4 px-4 md:px-6 font-semibold whitespace-nowrap transition-colors duration-200 ${
+                                            activeTab === tab 
+                                                ? 'text-indigo-600 border-b-2 border-indigo-600' 
+                                                : 'text-gray-500 hover:text-indigo-600'
+                                        }`}
+                                    >
+                                        {tab.charAt(0).toUpperCase() + tab.slice(1)} {tab !== 'password' ? 'Info' : 'Change'}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
                         {/* Profile Tab */}
                         {activeTab === 'profile' && (
                             <div className="space-y-6">
-                                {/* Personal Information */}
                                 <div>
-                                    <h3 className="text-2xl font-semibold text-gray-800 mb-4">Personal Information</h3>
-                                    <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
+                                    <h3 className="text-xl md:text-2xl font-semibold text-gray-800 mb-4">Personal Information</h3>
+                                    <div className="bg-gray-50 p-4 md:p-6 rounded-lg shadow-sm">
                                         <InfoItem icon={<FaUserCircle size={20} />} label="Name" value={userInfo.name} />
                                         <InfoItem icon={<FaEnvelope size={20} />} label="Email" value={userInfo.email} />
                                         <InfoItem icon={<FaPhone size={20} />} label="Phone" value={userInfo.phone} />
@@ -391,10 +440,10 @@ const Profile = () => {
                                     </div>
                                 </div>
 
-                                {/* ID Verification */}
+                                {/* ID Verification Section */}
                                 <div>
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h3 className="text-2xl font-semibold text-gray-800">ID Verification</h3>
+                                    <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+                                        <h3 className="text-xl md:text-2xl font-semibold text-gray-800">ID Verification</h3>
                                         {userInfo.identityVerification && 
                                          userInfo.identityVerification.verificationStatus !== 'pending' &&
                                          userInfo.identityVerification.verificationStatus !== 'pending_renewal' && (
@@ -407,10 +456,10 @@ const Profile = () => {
                                             </button>
                                         )}
                                     </div>
-                                    <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
+                                    <div className="bg-gray-50 p-4 md:p-6 rounded-lg shadow-sm">
                                         {userInfo.identityVerification ? (
                                             <>
-                                                <div className="grid md:grid-cols-2 gap-6 mb-6">
+                                                <div className="grid md:grid-cols-2 gap-4 md:gap-6 mb-6">
                                                     <InfoItem 
                                                         icon={<FaIdCard size={20} />} 
                                                         label="ID Type" 
@@ -460,7 +509,9 @@ const Profile = () => {
                                                             />
                                                             <button
                                                                 onClick={() => handleDownloadId(userInfo.identityVerification.idImage)}
-                                                                className="absolute bottom-2 right-2 bg-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-50"
+                                                                className={`${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
+                                                                    absolute bottom-2 right-2 bg-white p-2 rounded-full shadow-lg 
+                                                                    transition-opacity duration-200 hover:bg-gray-50`}
                                                             >
                                                                 <FaDownload className="text-gray-600" />
                                                             </button>
@@ -485,67 +536,70 @@ const Profile = () => {
                         {/* Shop Tab */}
                         {activeTab === 'shop' && (
                             <div className="space-y-6">
-                                <h3 className="text-2xl font-semibold text-gray-800 mb-4">Shop Information</h3>
+                                <h3 className="text-xl md:text-2xl font-semibold text-gray-800 mb-4">Shop Information</h3>
                                 {userInfo.shopInfo && Object.keys(userInfo.shopInfo).some(key => userInfo.shopInfo[key]) && (
-                                    <div className="bg-gray-50 p-6 rounded-lg shadow-sm mb-6">
+                                    <div className="bg-gray-50 p-4 md:p-6 rounded-lg shadow-sm mb-6">
                                         <InfoItem icon={<FaStore size={20} />} label="Shop Name" value={userInfo.shopInfo.shopName} />
                                         <InfoItem icon={<FaMapMarkerAlt size={20} />} label="Division" value={userInfo.shopInfo.division} />
                                         <InfoItem icon={<FaMapMarkerAlt size={20} />} label="District" value={userInfo.shopInfo.district} />
                                         <InfoItem icon={<FaMapMarkerAlt size={20} />} label="Sub District" value={userInfo.shopInfo.sub_district} />
                                     </div>
                                 )}
-                                <form onSubmit={submitShopInfo} className="bg-gray-50 p-6 rounded-lg shadow-sm">
-                                    <div className="mb-4">
-                                        <label htmlFor="shopName" className="block text-sm font-medium text-gray-700 mb-1">Shop Name</label>
-                                        <input
-                                            type="text"
-                                            id="shopName"
-                                            name="shopName"
-                                            value={shopInfo.shopName}
-                                            onChange={shopInfoInputHandle}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                            required
-                                        />
-                                    </div>
-                                    <div className="mb-4">
-                                        <label htmlFor="division" className="block text-sm font-medium text-gray-700 mb-1">Division</label>
-                                        <input
-                                            type="text"
-                                            id="division"
-                                            name="division"
-                                            value={shopInfo.division}
-                                            onChange={shopInfoInputHandle}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                            required
-                                        />
-                                    </div>
-                                    <div className="mb-4">
-                                        <label htmlFor="district" className="block text-sm font-medium text-gray-700 mb-1">District</label>
-                                        <input
-                                            type="text"
-                                            id="district"
-                                            name="district"
-                                            value={shopInfo.district}
-                                            onChange={shopInfoInputHandle}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                            required
-                                        />
-                                    </div>
-                                    <div className="mb-4">
-                                        <label htmlFor="sub_district" className="block text-sm font-medium text-gray-700 mb-1">Sub District</label>
-                                        <input
-                                            type="text"
-                                            id="sub_district"
-                                            name="sub_district"
-                                            value={shopInfo.sub_district}
-                                            onChange={shopInfoInputHandle}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                            required
-                                        />
+                                <form onSubmit={submitShopInfo} className="bg-gray-50 p-4 md:p-6 rounded-lg shadow-sm">
+                                    <div className="space-y-4">
+                                        {/* Shop Form Fields */}
+                                        <div>
+                                            <label htmlFor="shopName" className="block text-sm font-medium text-gray-700 mb-1">Shop Name</label>
+                                            <input
+                                                type="text"
+                                                id="shopName"
+                                                name="shopName"
+                                                value={shopInfo.shopName}
+                                                onChange={shopInfoInputHandle}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label htmlFor="division" className="block text-sm font-medium text-gray-700 mb-1">Division</label>
+                                            <input
+                                                type="text"
+                                                id="division"
+                                                name="division"
+                                                value={shopInfo.division}
+                                                onChange={shopInfoInputHandle}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label htmlFor="district" className="block text-sm font-medium text-gray-700 mb-1">District</label>
+                                            <input
+                                                type="text"
+                                                id="district"
+                                                name="district"
+                                                value={shopInfo.district}
+                                                onChange={shopInfoInputHandle}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label htmlFor="sub_district" className="block text-sm font-medium text-gray-700 mb-1">Sub District</label>
+                                            <input
+                                                type="text"
+                                                id="sub_district"
+                                                name="sub_district"
+                                                value={shopInfo.sub_district}
+                                                onChange={shopInfoInputHandle}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                required
+                                            />
+                                        </div>
                                     </div>
                                     <button
                                         type="submit"
-                                        className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                        className="w-full mt-6 bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                     >
                                         Update Shop Information
                                     </button>
@@ -556,10 +610,10 @@ const Profile = () => {
                         {/* Password Tab */}
                         {activeTab === 'password' && (
                             <div className="space-y-6">
-                                <h3 className="text-2xl font-semibold text-gray-800 mb-4">Change Password</h3>
-                                <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-                                    <form onSubmit={changePassword}>
-                                        <div className="mb-4">
+                                <h3 className="text-xl md:text-2xl font-semibold text-gray-800 mb-4">Change Password</h3>
+                                <div className="bg-gray-50 p-4 md:p-6 rounded-lg shadow-sm">
+                                    <form onSubmit={changePassword} className="space-y-4">
+                                        <div>
                                             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                                             <input
                                                 type="email"
@@ -568,51 +622,50 @@ const Profile = () => {
                                                 value={passwordState.email}
                                                 onChange={passwordInputHandle}
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                                required
-                                            />
+                                                required/>
+                                                </div>
+                                                <div>
+                                                    <label htmlFor="old_password" className="block text-sm font-medium text-gray-700 mb-1">Old Password</label>
+                                                    <input
+                                                        type="password"
+                                                        id="old_password"
+                                                        name="old_password"
+                                                        value={passwordState.old_password}
+                                                        onChange={passwordInputHandle}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                        required
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label htmlFor="new_password" className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                                                    <input
+                                                        type="password"
+                                                        id="new_password"
+                                                        name="new_password"
+                                                        value={passwordState.new_password}
+                                                        onChange={passwordInputHandle}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                                        required
+                                                    />
+                                                </div>
+                                                <button
+                                                    type="submit"
+                                                    className="w-full mt-6 bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                >
+                                                    Change Password
+                                                </button>
+                                            </form>
                                         </div>
-                                        <div className="mb-4">
-                                            <label htmlFor="old_password" className="block text-sm font-medium text-gray-700 mb-1">Old Password</label>
-                                            <input
-                                                type="password"
-                                                id="old_password"
-                                                name="old_password"
-                                                value={passwordState.old_password}
-                                                onChange={passwordInputHandle}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                                required
-                                            />
-                                        </div>
-                                        <div className="mb-4">
-                                            <label htmlFor="new_password" className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                                            <input
-                                                type="password"
-                                                id="new_password"
-                                                name="new_password"
-                                                value={passwordState.new_password}
-                                                onChange={passwordInputHandle}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                                required
-                                            />
-                                        </div>
-                                        <button
-                                            type="submit"
-                                            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                        >
-                                            Change Password
-                                        </button>
-                                    </form>
-                                </div>
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </div>
                     </div>
+        
+                    {/* ID Renewal Modal */}
+                    {showRenewalForm && renderIDRenewalForm()}
                 </div>
-            </div>
-
-            {/* ID Renewal Modal */}
-            {showRenewalForm && renderIDRenewalForm()}
-        </div>
-    );
-};
-
-export default Profile;
+            );
+        };
+        
+        export default Profile;
