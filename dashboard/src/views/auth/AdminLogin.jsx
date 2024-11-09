@@ -94,9 +94,12 @@ const AdminLogin = () => {
                         </form>
                     </div>
                 </div>
-                <div className='text-center mt-6'>
+                <div className='text-center mt-6 space-y-2'>
                     <p className='text-gray-600'>
-                        Not an admin? <a href="http://localhost:3000" className='font-medium text-[#61BD12] hover:underline'>Return to main site</a>
+                        Are you a customer? <a href="http://localhost:3000" className='font-medium text-[#61BD12] hover:underline'>Go to main page</a>
+                    </p>
+                    <p className='text-gray-600'>
+                        Are you a seller? <a href="http://localhost:3001/login" className='font-medium text-[#61BD12] hover:underline'>Go to seller login</a>
                     </p>
                 </div>
             </div>

@@ -310,7 +310,7 @@ class orderController {
     
                 // Create admin commission wallet entry
                 await myShopWallet.create({
-                    amount: cuOrder.commission, // Store commission amount
+                    amount: cuOrder.commission,
                     type: 'commission',
                     month: splitTime[0],
                     year: splitTime[2],
@@ -318,7 +318,7 @@ class orderController {
                     orderId: orderId
                 });
     
-                // Create entries in sellerWallet with all required fields
+                // Create seller wallet entries with all required fields
                 for (let i = 0; i < auOrder.length; i++) {
                     const sellerOrder = auOrder[i];
                     const grossAmount = sellerOrder.price;
@@ -457,27 +457,41 @@ class orderController {
                 delivery_status: 'pending'
             })
             const cuOrder = await customerOrder.findById(orderId)
-
+    
             const auOrder = await authOrderModel.find({
                 orderId: new ObjectId(orderId)
             })
              
             const time = moment(Date.now()).format('l')
             const splitTime = time.split('/')
-
+    
+            // Create admin commission wallet entry
             await myShopWallet.create({
-                amount: cuOrder.price,
+                amount: cuOrder.commission,
+                type: 'commission',
                 month: splitTime[0],
-                year: splitTime[2]
+                year: splitTime[2],
+                payment_method: cuOrder.payment_method,
+                orderId: orderId
             })
-
+    
+            // Create seller wallet entries with all required fields
             for (let i = 0; i < auOrder.length; i++) {
-                 await sellerWallet.create({
-                    sellerId: auOrder[i].sellerId.toString(),
-                    amount: auOrder[i].price,
+                const sellerOrder = auOrder[i];
+                const grossAmount = sellerOrder.price;
+                const commission = grossAmount * 0.03; // 3% commission
+                const netAmount = grossAmount - commission; // 97% of gross amount
+    
+                await sellerWallet.create({
+                    sellerId: sellerOrder.sellerId.toString(),
+                    amount: netAmount,
+                    commission: commission,
+                    grossAmount: grossAmount,
+                    netAmount: netAmount,
                     month: splitTime[0],
-                    year: splitTime[2]
-                 }) 
+                    year: splitTime[2],
+                    payment_method: sellerOrder.payment_method
+                })
             }
             responseReturn(res, 200, {message: 'Order confirmed and payment processed successfully'}) 
         } catch (error) {
