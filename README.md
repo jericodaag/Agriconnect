@@ -1,7 +1,8 @@
 # AgriConnect 🌾
 
 <div align="center">
-  <img src="frontend/public/agriconnect-logo.png" alt="AgriConnect Logo" width="200"/>
+  <img src="![Agriconnect Logo](https://github.com/user-attachments/assets/73b89f4f-465a-4850-b061-d539154b6239)
+" width="200"/>
   <h3>A Web and Mobile E-commerce Platform for Agricultural Products</h3>
   <p>Connecting farmers, cooperatives, and consumers in Mabalacat City, Pampanga</p>
 </div>
