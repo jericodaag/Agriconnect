@@ -1,46 +1,3 @@
-# AgriConnect 🌾
-
-<div align="center">
-  <img src="![Agriconnect Logo](https://github.com/user-attachments/assets/73b89f4f-465a-4850-b061-d539154b6239)
-" width="200"/>
-  <h3>A Web and Mobile E-commerce Platform for Agricultural Products</h3>
-  <p>Connecting farmers, cooperatives, and consumers in Mabalacat City, Pampanga</p>
-</div>
-
-## 🌟 Overview
-AgriConnect is a comprehensive e-commerce solution developed to bridge the gap between small-scale farmers and consumers through agricultural cooperatives. The platform features real-time product tracking, secure payment processing, and an innovative freshness monitoring system.
-
-## ✨ Key Features
-
-### For Farmers & Cooperatives
-- 📊 Advanced analytics dashboard
-- 🔄 Real-time inventory management
-- 📈 Product freshness tracking system
-- 💰 Secure payment processing (Stripe/COD)
-- 💬 Real-time chat with customers
-- 📱 Mobile-responsive interface
-
-### For Consumers
-- 🛒 Easy product browsing and filtering
-- 🔍 Product freshness information
-- 💳 Secure payment options
-- 📦 Order tracking
-- ⭐ Product review system
-- 💬 Direct communication with sellers
-
-## 🛠️ Tech Stack
-- **Frontend:** React.js, Tailwind CSS
-- **Backend:** Node.js, Express.js
-- **Database:** MongoDB
-- **Real-time Communication:** Socket.IO
-- **Payment Integration:** Stripe
-- **Deployment:** Render
-
-## 📱 Screenshots
-
-<div align="center">
-  <details>
-    <summary>📸 View Screenshots</summary>
 ![Screenshot 2024-11-23 140054](https://github.com/user-attachments/assets/3c6ab739-cc66-4e39-a056-362b80e6cbe9)
 ![Screenshot 2024-11-23 140103](https://github.com/user-attachments/assets/c6f492e7-ebe5-4508-a2c5-09ca3c430b7e)
 ![Screenshot 2024-11-23 140114](https://github.com/user-attachments/assets/a2b1542e-732f-4a6d-bddb-ab1be71be58d)
@@ -68,12 +25,3 @@ AgriConnect is a comprehensive e-commerce solution developed to bridge the gap b
 ![Screenshot 2024-11-23 140641](https://github.com/user-attachments/assets/0ca272d0-a334-4238-a7c8-9a90a0588394)
 ![Screenshot 2024-11-23 140646](https://github.com/user-attachments/assets/a5aefa3d-0b13-4a1e-a8ba-80aafe0aac95)
 ![Screenshot 2024-11-23 141427](https://github.com/user-attachments/assets/85b5243d-8116-4c21-add7-cb4b45dc4f54)
-  </details>
-</div>
-
-## 🚀 Getting Started
-
-### Prerequisites
-```bash
-Node.js v16 or higher
-MongoDB
