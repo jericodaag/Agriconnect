@@ -1,5 +1,4 @@
-![Screenshot 2024-11-23 141143](https://github.com/user-attachments/assets/48db1373-5363-476f-afed-fb62c1853450)# AgriConnect 🌾
-
+# AgriConnect 🌾
 <div align="center">
   <h3>A Web and Mobile E-commerce Platform for Agricultural Products</h3>
   <p>Connecting farmers, cooperatives, and consumers in Mabalacat City, Pampanga</p>
