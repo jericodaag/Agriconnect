@@ -62,7 +62,7 @@ AgriConnect is a comprehensive e-commerce solution developed to bridge the gap b
 ![Screenshot 2024-11-23 140229](https://github.com/user-attachments/assets/68402f5e-f3d6-408b-b384-18ea1910f704)
 <p><em>Order Management System</em></p>
 
-![Screenshot 2024-11-23 140303](https://github.com/user-attachments/assets/81e45db2-bf93-4e38-8bcf-5b4347531bd8)
+![Screenshot 2024-11-23 140255](https://github.com/user-attachments/assets/0fa2ec82-acd9-419a-9673-6db174cf6c5e)
 <p><em>Category Management</em></p>
 
 ![Screenshot 2024-11-23 140146](https://github.com/user-attachments/assets/4d417bc4-c6d4-4c31-96d7-08e38469231e)
