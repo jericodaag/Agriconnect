@@ -429,43 +429,61 @@ class orderController {
     }
 
     create_payment = async (req, res) => {
-        const { price } = req.body
+        const { price } = req.body;
         try {
+            // Ensure price is treated as a number and multiplied correctly
+            const amount = Math.round(parseFloat(price) * 100);
+            
+            // Create payment intent with proper amount and PHP currency
             const payment = await stripe.paymentIntents.create({
-                amount: price * 100,
-                currency: 'usd',
+                amount: amount,
+                currency: 'php',
                 automatic_payment_methods: {
                     enabled: true
                 }
-            })
-            responseReturn(res, 200, { clientSecret: payment.client_secret })
+            });
+
+            // Log for debugging
+            console.log('Creating payment intent:', {
+                originalPrice: price,
+                convertedAmount: amount,
+                currency: 'php'
+            });
+
+            responseReturn(res, 200, { clientSecret: payment.client_secret });
         } catch (error) {
-            console.log(error.message)
-            responseReturn(res, 500, {message: 'Payment creation failed'})
+            console.error('Payment creation error:', error.message);
+            responseReturn(res, 500, { message: 'Payment creation failed' });
         }
     }
 
+    // Modify order_confirm to handle PHP currency correctly
     order_confirm = async (req, res) => {
-        const {orderId} = req.params
+        const { orderId } = req.params;
         try {
+            // Update order status
             await customerOrder.findByIdAndUpdate(orderId, { 
                 payment_status: 'paid',
                 delivery_status: 'pending'
-            })
-            await authOrderModel.updateMany({ orderId: new ObjectId(orderId)}, {
-                payment_status: 'paid',
-                delivery_status: 'pending'
-            })
-            const cuOrder = await customerOrder.findById(orderId)
-    
+            });
+
+            await authOrderModel.updateMany(
+                { orderId: new ObjectId(orderId) }, 
+                {
+                    payment_status: 'paid',
+                    delivery_status: 'pending'
+                }
+            );
+
+            const cuOrder = await customerOrder.findById(orderId);
             const auOrder = await authOrderModel.find({
                 orderId: new ObjectId(orderId)
-            })
+            });
              
-            const time = moment(Date.now()).format('l')
-            const splitTime = time.split('/')
-    
-            // Create admin commission wallet entry
+            const time = moment(Date.now()).format('l');
+            const splitTime = time.split('/');
+
+            // Create admin commission wallet entry with original PHP amount
             await myShopWallet.create({
                 amount: cuOrder.commission,
                 type: 'commission',
@@ -473,15 +491,15 @@ class orderController {
                 year: splitTime[2],
                 payment_method: cuOrder.payment_method,
                 orderId: orderId
-            })
-    
-            // Create seller wallet entries with all required fields
+            });
+
+            // Process seller wallet entries with PHP amounts
             for (let i = 0; i < auOrder.length; i++) {
                 const sellerOrder = auOrder[i];
                 const grossAmount = sellerOrder.price;
-                const commission = grossAmount * 0.03; // 3% commission
-                const netAmount = grossAmount - commission; // 97% of gross amount
-    
+                const commission = grossAmount * 0.03;
+                const netAmount = grossAmount - commission;
+
                 await sellerWallet.create({
                     sellerId: sellerOrder.sellerId.toString(),
                     amount: netAmount,
@@ -490,13 +508,18 @@ class orderController {
                     netAmount: netAmount,
                     month: splitTime[0],
                     year: splitTime[2],
-                    payment_method: sellerOrder.payment_method
-                })
+                    payment_method: sellerOrder.payment_method,
+                    currency: 'php'  // explicitly set currency
+                });
             }
-            responseReturn(res, 200, {message: 'Order confirmed and payment processed successfully'}) 
+
+            responseReturn(res, 200, { 
+                message: 'Order confirmed and payment processed successfully',
+                orderId: orderId
+            });
         } catch (error) {
-            console.log(error.message)
-            responseReturn(res, 500, {message: 'Error confirming order'}) 
+            console.error('Order confirmation error:', error.message);
+            responseReturn(res, 500, { message: 'Error confirming order' });
         }
     }
 

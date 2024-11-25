@@ -31,11 +31,9 @@ const OrderConfirmation = () => {
                 await axios.get(`http://localhost:5000/api/order/confirm/${orderId}`, {
                     withCredentials: true
                 });
-
                 setStatus('success');
                 localStorage.removeItem('orderId');
                 localStorage.removeItem('orderAmount');
-
                 setTimeout(() => {
                     navigate('/dashboard/my-orders');
                 }, 2000);

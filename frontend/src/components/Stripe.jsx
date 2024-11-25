@@ -24,8 +24,8 @@ const Stripe = ({ price, orderId }) => {
             const { data } = await axios.post(
                 'http://localhost:5000/api/order/create-payment',
                 { 
-                    price: Math.round(price * 100),
-                    currency: 'php'
+                    price, // Remove the multiplication here
+                    currency: 'php'  // Keep PHP if that's your desired currency
                 },
                 { withCredentials: true }
             );

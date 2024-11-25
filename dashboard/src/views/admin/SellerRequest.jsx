@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'; 
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaEye } from "react-icons/fa";
 import { useDispatch, useSelector } from 'react-redux';
@@ -29,13 +29,43 @@ import {
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 
+// Mobile Request Card Component
+const RequestCard = ({ request, index }) => (
+  <div className="p-4 border rounded-lg mb-4 space-y-3">
+    <div className="flex justify-between items-start">
+      <div>
+        <div className="font-medium">{request.name}</div>
+        <div className="text-sm text-gray-500">{request.email}</div>
+      </div>
+      <Button variant="ghost" size="sm" asChild>
+        <Link to={`/admin/dashboard/seller/details/${request._id}`}>
+          <FaEye className="mr-2" /> View
+        </Link>
+      </Button>
+    </div>
+    <div className="flex justify-between items-center pt-2">
+      <div>
+        <span className="text-sm text-gray-500 block mb-1">Payment Status</span>
+        <Badge variant="outline">{request.payment}</Badge>
+      </div>
+      <div className="text-right">
+        <span className="text-sm text-gray-500 block mb-1">Status</span>
+        <Badge variant={request.status === 'active' ? 'success' : 'secondary'}>
+          {request.status}
+        </Badge>
+      </div>
+    </div>
+  </div>
+);
+
+// Pagination Component
 const Pagination = ({ pageNumber, setPageNumber, totalItem, parPage, showItem }) => {
   const totalPages = Math.ceil(totalItem / parPage);
   const startPage = Math.max(1, pageNumber - Math.floor(showItem / 2));
   const endPage = Math.min(totalPages, startPage + showItem - 1);
 
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-2 overflow-x-auto pb-2">
       <Button
         variant="outline"
         size="sm"
@@ -87,7 +117,33 @@ const SellerRequest = () => {
                 <CardTitle>Seller Requests</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="flex justify-between items-center mb-4">
+                {/* Mobile Filters */}
+                <div className="md:hidden space-y-4 mb-4">
+                    <Input
+                        className="w-full"
+                        type="text"
+                        placeholder="Search requests..."
+                        value={searchValue}
+                        onChange={(e) => setSearchValue(e.target.value)}
+                    />
+                    <Select 
+                        value={parPage.toString()} 
+                        onValueChange={(value) => setParPage(parseInt(value))}
+                        className="w-full"
+                    >
+                        <SelectTrigger>
+                            <SelectValue placeholder="Requests per page" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="5">5 per page</SelectItem>
+                            <SelectItem value="10">10 per page</SelectItem>
+                            <SelectItem value="20">20 per page</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {/* Desktop Filters */}
+                <div className="hidden md:flex justify-between items-center mb-4">
                     <Select value={parPage.toString()} onValueChange={(value) => setParPage(parseInt(value))}>
                         <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="Requests per page" />
@@ -106,40 +162,59 @@ const SellerRequest = () => {
                         onChange={(e) => setSearchValue(e.target.value)}
                     />
                 </div>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>No</TableHead>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Payment Status</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Action</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {sellers.map((d, i) => (
-                            <TableRow key={i}>
-                                <TableCell>{i + 1}</TableCell>
-                                <TableCell className="font-medium">{d.name}</TableCell>
-                                <TableCell>{d.email}</TableCell>
-                                <TableCell>
-                                    <Badge variant="outline">{d.payment}</Badge>
-                                </TableCell>
-                                <TableCell>
-                                    <Badge variant={d.status === 'active' ? 'success' : 'secondary'}>{d.status}</Badge>
-                                </TableCell>
-                                <TableCell>
-                                    <Button variant="ghost" size="sm" asChild>
-                                        <Link to={`/admin/dashboard/seller/details/${d._id}`}>
-                                            <FaEye className="mr-2" /> View
-                                        </Link>
-                                    </Button>
-                                </TableCell>
+
+                {/* Desktop Table View */}
+                <div className="hidden md:block">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>No</TableHead>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Email</TableHead>
+                                <TableHead>Payment Status</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Action</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {sellers.map((d, i) => (
+                                <TableRow key={i}>
+                                    <TableCell>{i + 1}</TableCell>
+                                    <TableCell className="font-medium">{d.name}</TableCell>
+                                    <TableCell>{d.email}</TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline">{d.payment}</Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant={d.status === 'active' ? 'success' : 'secondary'}>
+                                            {d.status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Button variant="ghost" size="sm" asChild>
+                                            <Link to={`/admin/dashboard/seller/details/${d._id}`}>
+                                                <FaEye className="mr-2" /> View
+                                            </Link>
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden">
+                    {sellers.map((request, i) => (
+                        <RequestCard 
+                            key={request._id || i} 
+                            request={request} 
+                            index={i}
+                        />
+                    ))}
+                </div>
+
+                {/* Pagination */}
                 <div className="flex justify-end mt-4">
                     <Pagination
                         pageNumber={currentPage}

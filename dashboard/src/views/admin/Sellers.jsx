@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { get_active_sellers } from '../../store/Reducers/sellerReducer';
 import { Link } from 'react-router-dom';
-import { Eye, ArrowUpDown, ChevronDown } from "lucide-react";
+import { Eye, ArrowUpDown, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import {
   Card,
@@ -35,6 +35,93 @@ import {
 } from "../../components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
 import { Badge } from "../../components/ui/badge";
+
+// Mobile Card Component
+const SellerCard = ({ seller, visibleColumns }) => (
+  <div className="p-4 border rounded-lg mb-4 space-y-4">
+    <div className="flex items-center space-x-4">
+      {visibleColumns.image && (
+        <Avatar>
+          <AvatarImage src={seller.image} alt={seller.name} />
+          <AvatarFallback>{seller.name.charAt(0)}</AvatarFallback>
+        </Avatar>
+      )}
+      <div className="flex-1">
+        {visibleColumns.name && <div className="font-medium">{seller.name}</div>}
+        {visibleColumns.email && <div className="text-sm text-gray-500">{seller.email}</div>}
+      </div>
+      <Link to={`/admin/dashboard/seller/details/${seller._id}`}>
+        <Button variant="ghost" size="sm">
+          <Eye className="h-4 w-4" />
+        </Button>
+      </Link>
+    </div>
+    
+    <div className="grid grid-cols-2 gap-4 text-sm">
+      {visibleColumns.shopName && (
+        <div>
+          <span className="text-gray-500">Shop Name</span>
+          <div className="font-medium">{seller.shopInfo?.shopName}</div>
+        </div>
+      )}
+      {visibleColumns.district && (
+        <div>
+          <span className="text-gray-500">District</span>
+          <div className="font-medium">{seller.shopInfo?.district}</div>
+        </div>
+      )}
+      {visibleColumns.payment && (
+        <div>
+          <span className="text-gray-500">Payment</span>
+          <div>
+            <Badge variant={seller.payment === 'verified' ? 'success' : 'warning'}>
+              {seller.payment}
+            </Badge>
+          </div>
+        </div>
+      )}
+      {visibleColumns.status && (
+        <div>
+          <span className="text-gray-500">Status</span>
+          <div>
+            <Badge variant={seller.status === 'active' ? 'success' : 'secondary'}>
+              {seller.status}
+            </Badge>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+// Pagination Component
+const Pagination = ({ currentPage, setCurrentPage, totalItems, parPage }) => {
+  const totalPages = Math.ceil(totalItems / parPage);
+  
+  return (
+    <div className="flex items-center justify-center gap-2 mt-4">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+        disabled={currentPage === 1}
+      >
+        Previous
+      </Button>
+      <span className="text-sm">
+        Page {currentPage} of {totalPages}
+      </span>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+        disabled={currentPage === totalPages}
+      >
+        Next
+      </Button>
+    </div>
+  );
+};
 
 const Sellers = () => {
   const dispatch = useDispatch();
@@ -75,12 +162,19 @@ const Sellers = () => {
   const sortedSellers = [...sellers].sort((a, b) => {
     if (!sortColumn) return 0;
     
-    const aValue = sortColumn.includes('.') ? sortColumn.split('.').reduce((obj, key) => obj[key], a) : a[sortColumn];
-    const bValue = sortColumn.includes('.') ? sortColumn.split('.').reduce((obj, key) => obj[key], b) : b[sortColumn];
+    const aValue = sortColumn.includes('.') ? 
+      sortColumn.split('.').reduce((obj, key) => obj?.[key], a) : 
+      a[sortColumn];
+    const bValue = sortColumn.includes('.') ? 
+      sortColumn.split('.').reduce((obj, key) => obj?.[key], b) : 
+      b[sortColumn];
 
-    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-    return 0;
+    if (!aValue) return sortDirection === 'asc' ? -1 : 1;
+    if (!bValue) return sortDirection === 'asc' ? 1 : -1;
+    
+    return sortDirection === 'asc' ? 
+      aValue.localeCompare(bValue) : 
+      bValue.localeCompare(aValue);
   });
 
   return (
@@ -90,7 +184,56 @@ const Sellers = () => {
         <CardDescription>Manage and view all active sellers on the platform.</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex justify-between items-center mb-4">
+        {/* Mobile Filters */}
+        <div className="md:hidden space-y-4 mb-4">
+          <Input
+            placeholder="Search sellers..."
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            className="w-full"
+          />
+          <div className="flex gap-2">
+            <Select 
+              value={parPage.toString()} 
+              onValueChange={(value) => setParPage(parseInt(value))}
+              className="flex-1"
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Rows per page" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5 rows</SelectItem>
+                <SelectItem value="10">10 rows</SelectItem>
+                <SelectItem value="20">20 rows</SelectItem>
+                <SelectItem value="50">50 rows</SelectItem>
+              </SelectContent>
+            </Select>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <SlidersHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {Object.keys(visibleColumns).map((column) => (
+                  <DropdownMenuCheckboxItem
+                    key={column}
+                    className="capitalize"
+                    checked={visibleColumns[column]}
+                    onCheckedChange={(value) =>
+                      setVisibleColumns((prev) => ({ ...prev, [column]: value }))
+                    }
+                  >
+                    {column.replace(/([A-Z])/g, ' $1').trim()}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        {/* Desktop Filters */}
+        <div className="hidden md:flex justify-between items-center mb-4">
           <div className="flex items-center space-x-2">
             <Input
               placeholder="Search sellers..."
@@ -100,7 +243,7 @@ const Sellers = () => {
             />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto">
+                <Button variant="outline">
                   Columns <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -114,7 +257,7 @@ const Sellers = () => {
                       setVisibleColumns((prev) => ({ ...prev, [column]: value }))
                     }
                   >
-                    {column}
+                    {column.replace(/([A-Z])/g, ' $1').trim()}
                   </DropdownMenuCheckboxItem>
                 ))}
               </DropdownMenuContent>
@@ -132,7 +275,9 @@ const Sellers = () => {
             </SelectContent>
           </Select>
         </div>
-        <div className="rounded-md border">
+
+        {/* Desktop Table View */}
+        <div className="hidden md:block rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -202,7 +347,25 @@ const Sellers = () => {
             </TableBody>
           </Table>
         </div>
-        {/* Add pagination component here */}
+
+        {/* Mobile Card View */}
+        <div className="md:hidden space-y-4">
+          {sortedSellers.map((seller) => (
+            <SellerCard 
+              key={seller._id} 
+              seller={seller} 
+              visibleColumns={visibleColumns}
+            />
+          ))}
+        </div>
+
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          totalItems={totalSeller}
+          parPage={parPage}
+        />
       </CardContent>
     </Card>
   );

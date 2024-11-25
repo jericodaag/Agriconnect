@@ -116,13 +116,6 @@ export const generateAlerts = (products) => {
         return b.timestamp - a.timestamp;
     });
 
-    // Sort by timestamp (most recent first) and then by priority
-    return alerts.sort((a, b) => {
-        if (b.timestamp - a.timestamp === 0) {
-            return a.priority - b.priority;
-        }
-        return b.timestamp - a.timestamp;
-    });
 };
 
 export const calculateQualityScore = (product) => {
