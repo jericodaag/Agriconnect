@@ -39,7 +39,7 @@ AgriConnect is a comprehensive e-commerce solution developed to bridge the gap b
  <details>
    <summary>Click to view platform features</summary>
 
-### 🏠 Homepage Interface
+### Homepage Interface
 ![Screenshot 2024-11-23 140054](https://github.com/user-attachments/assets/3c6ab739-cc66-4e39-a056-362b80e6cbe9)
 ![Screenshot 2024-11-23 140103](https://github.com/user-attachments/assets/c6f492e7-ebe5-4508-a2c5-09ca3c430b7e)
 ![Screenshot 2024-11-23 140114](https://github.com/user-attachments/assets/a2b1542e-732f-4a6d-bddb-ab1be71be58d)
@@ -49,11 +49,11 @@ AgriConnect is a comprehensive e-commerce solution developed to bridge the gap b
 ![Screenshot 2024-11-23 140137](https://github.com/user-attachments/assets/977d29ff-a359-4211-8927-e996ec9b38e6)
 <p><em>Shop Page with Category Filters</em></p>
 
-### 👤 Customer Dashboard
+### Customer Dashboard
 ![Screenshot 2024-11-23 140202](https://github.com/user-attachments/assets/735bad7a-11a3-4221-a0d8-d31fb93d1ead)
 <p><em>Order Management</em></p>
 
-### 👨‍💼 Admin Dashboard
+### Admin Dashboard
 ![Screenshot 2024-11-23 140223](https://github.com/user-attachments/assets/10957e6b-1427-4b7b-bb34-a22d655c5bbb)
 <p><em>Admin Overview & Analytics</em></p>
 
@@ -75,7 +75,7 @@ AgriConnect is a comprehensive e-commerce solution developed to bridge the gap b
 ![Screenshot 2024-11-23 140451](https://github.com/user-attachments/assets/81fe56c2-bb7c-4b92-9fea-6f7e71f2592a)
 <p><em>Seller Details Interface</em></p>
 
-### 👨‍🌾 Seller Dashboard
+### Seller Dashboard
 ![Screenshot 2024-11-23 140548](https://github.com/user-attachments/assets/5a40f6b6-d671-4eb5-a011-4e3f49259639)
 <p><em>Seller Overview & Analytics</em></p>
 
@@ -88,7 +88,7 @@ AgriConnect is a comprehensive e-commerce solution developed to bridge the gap b
 ![Screenshot 2024-11-23 140529](https://github.com/user-attachments/assets/8a5841af-e2f9-462e-a3ef-ad12f13e23a1)
 <p><em>Seller Profile</em></p>
 
-### 📊 Analytics & Management
+### Analytics & Management
 ![Screenshot 2024-11-23 140553](https://github.com/user-attachments/assets/dcdf2e58-9575-4edf-b313-030b5147527c)
 <p><em>Product Analytics Interface</em></p>
 
@@ -98,12 +98,12 @@ AgriConnect is a comprehensive e-commerce solution developed to bridge the gap b
 ![Screenshot 2024-11-23 141157](https://github.com/user-attachments/assets/c637a0ed-0de6-4f49-a0a5-73a56cb20aaf)
 <p><em>Product Marketability Tab</em></p>
 
-### 💰 Financial Features
+### Financial Features
 ![image](https://github.com/user-attachments/assets/a2ca0a38-9988-442e-83fd-549796898169)
 <p><em>Financial Overview Dashboard</em></p>
 
 
-### 🔐 Authentication
+### Authentication
 ![Screenshot 2024-11-23 140646](https://github.com/user-attachments/assets/5f96584e-c276-4695-a225-e08aefb8aa4c)
 <p><em>Login Interface</em></p>
 
