@@ -1,13 +1,13 @@
-# AgriConnect 🌾
+# AgriConnect
 <div align="center">
   <h3>A Web and Mobile E-commerce Platform for Agricultural Products</h3>
   <p>Connecting farmers, cooperatives, and consumers in Mabalacat City, Pampanga</p>
 </div>
 
-## 🌟 Overview
+## Overview
 AgriConnect is a comprehensive e-commerce solution developed to bridge the gap between small-scale farmers and consumers through agricultural cooperatives. The platform features real-time product tracking, secure payment processing, and an innovative freshness monitoring system.
 
-## ✨ Key Features
+## Key Features
 
 ### For Farmers & Cooperatives
 - 📊 Advanced analytics dashboard
@@ -25,7 +25,7 @@ AgriConnect is a comprehensive e-commerce solution developed to bridge the gap b
 - ⭐ Product review system
 - 💬 Direct communication with sellers
 
-## 🛠️ Tech Stack
+## Tech Stack
 - **Frontend:** React.js, Tailwind CSS
 - **Backend:** Node.js, Express.js
 - **Database:** MongoDB
@@ -33,7 +33,7 @@ AgriConnect is a comprehensive e-commerce solution developed to bridge the gap b
 - **Payment Integration:** Stripe
 - **Deployment:** Render
 
-## 📱 Screenshots
+## Screenshots
 
 <div align="center">
  <details>
@@ -113,7 +113,7 @@ AgriConnect is a comprehensive e-commerce solution developed to bridge the gap b
  </details>
 </div>
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 ```bash
